@@ -4,32 +4,19 @@ import React, { useState, useEffect } from 'react'
 
 export default function ClientTransition({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
-  const [progress, setProgress] = useState(0)
+  const [isExiting, setIsExiting] = useState(false)
 
   useEffect(() => {
-    // Longer duration (2.5 seconds total)
-    const duration = 2500
-    const interval = 20
-    const increment = (interval / duration) * 100
-    
-    const progressTimer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressTimer)
-          return 100
-        }
-        return prev + increment
-      })
-    }, interval)
+    // Stage 1: Loading duration
+    const timer = setTimeout(() => {
+      setIsExiting(true)
+      // Stage 2: Exit animation duration
+      setTimeout(() => {
+        setLoading(false)
+      }, 800)
+    }, 2800)
 
-    const totalTimer = setTimeout(() => {
-      setLoading(false)
-    }, duration + 200) // Slight buffer for completion feel
-
-    return () => {
-      clearInterval(progressTimer)
-      clearTimeout(totalTimer)
-    }
+    return () => clearTimeout(timer)
   }, [])
 
   if (loading) {
@@ -49,63 +36,90 @@ export default function ClientTransition({ children }: { children: React.ReactNo
           right: 0,
           bottom: 0,
           zIndex: 9999,
+          // Fade out the whole background slightly at the end for seamlessness
+          opacity: isExiting ? 0 : 1,
+          transition: 'opacity 0.8s ease-in-out',
+          pointerEvents: isExiting ? 'none' : 'all',
         }}
       >
-        <div style={{ width: '100%', maxWidth: 240, textAlign: 'center' }}>
-          {/* Large COLLECT Logo - Bold Serif */}
+        <div 
+          style={{ 
+            width: '100%', 
+            maxWidth: 240, 
+            textAlign: 'center',
+            transform: isExiting ? 'translateY(-60px)' : 'translateY(0)',
+            opacity: isExiting ? 0 : 1,
+            transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-in',
+          }}
+        >
+          {/* Large COLLECT Logo - Bold Serif (matching title font) */}
           <h1
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: 42,
+              fontSize: 48,
               fontWeight: 700,
               color: 'var(--sumi)',
-              letterSpacing: '0.1em',
-              marginBottom: 48,
-              opacity: 0.9,
+              letterSpacing: '0.15em',
+              marginBottom: 40,
+              fontVariantCaps: 'all-small-caps',
             }}
           >
             COLLECT
           </h1>
           
-          {/* Progress Bar Container */}
+          {/* Progress Bar - Pure CSS for maximum smoothness */}
           <div 
             style={{ 
               width: '100%', 
-              height: 2, 
-              background: 'var(--fog)', 
+              height: 1, 
+              background: 'rgba(26, 23, 20, 0.1)', 
               borderRadius: 1,
               overflow: 'hidden',
               position: 'relative'
             }}
           >
-            {/* Active Progress Bar */}
             <div 
               style={{ 
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 height: '100%',
-                width: `${progress}%`,
+                width: '100%',
                 background: 'var(--sumi)',
-                transition: 'width 0.1s linear',
+                transformOrigin: 'left',
+                animation: 'loadingBar 2.6s cubic-bezier(0.65, 0, 0.35, 1) forwards',
               }}
             />
           </div>
-          
-          <p
-            style={{
-              fontFamily: 'var(--font-zen, serif)',
-              fontSize: 10,
-              letterSpacing: '0.3em',
-              color: 'var(--ash)',
-              textTransform: 'uppercase',
-              marginTop: 16,
-              opacity: 0.6,
-            }}
-          >
-            Loading Request
-          </p>
         </div>
+
+        {/* Signature at bottom right */}
+        <p
+          style={{
+            position: 'absolute',
+            bottom: 40,
+            right: 40,
+            fontFamily: 'var(--font-zen, serif)',
+            fontSize: 9,
+            letterSpacing: '0.2em',
+            color: 'var(--ash)',
+            textTransform: 'uppercase',
+            opacity: isExiting ? 0 : 0.5,
+            transition: 'opacity 0.4s ease',
+            fontWeight: 400,
+          }}
+        >
+          by ADAM LIU
+        </p>
+
+        <style jsx global>{`
+          @keyframes loadingBar {
+            0% { transform: scaleX(0); }
+            30% { transform: scaleX(0.4); }
+            60% { transform: scaleX(0.7); }
+            100% { transform: scaleX(1); }
+          }
+        `}</style>
       </main>
     )
   }
