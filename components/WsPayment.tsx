@@ -4,21 +4,32 @@ import React, { useState, useEffect } from 'react'
 
 export function WsIcon() {
   return (
-    <div style={{ 
-      width: 48, 
-      height: 48, 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      fontSize: 24,
-      fontWeight: 700,
-      fontFamily: 'var(--font-zen, serif)',
-      color: 'var(--sumi)',
-      marginBottom: 4,
-      background: 'var(--fog)',
-      borderRadius: '50%'
-    }}>
-      W
+    <div 
+      className="wabi-circle"
+      style={{ 
+        width: 64, 
+        height: 64, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: 'rgba(255,255,255,0.2)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-51%, -50%)', // Slight offset for 'W' balance
+        fontSize: 28,
+        fontWeight: 700,
+        fontFamily: 'var(--font-zen, serif)',
+        color: 'var(--sumi)',
+        letterSpacing: '-0.05em'
+      }}>
+        W
+      </div>
     </div>
   )
 }
@@ -45,9 +56,12 @@ export default function WsPayment({ email }: { email: string }) {
       if (document.hidden) preventFallback()
     }, { once: true })
 
-    // Attempt to open the app directly
-    // Using wealthsimple://pay or wealthsimple:// as a base
-    window.location.href = wsUri
+    // Attempt to open the app directly using a more robust method
+    const link = document.createElement('a')
+    link.href = wsUri
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     
     // Fallback timer
     timeoutId = setTimeout(() => {
@@ -83,6 +97,7 @@ export default function WsPayment({ email }: { email: string }) {
       <button
         onClick={handleOpenApp}
         disabled={loading}
+        className={`hover-lift ${loading ? 'fade-out' : ''}`}
         style={{
           width: '100%',
           padding: '16px 20px',
@@ -92,18 +107,16 @@ export default function WsPayment({ email }: { email: string }) {
           borderRadius: 4,
           fontSize: 14,
           fontWeight: 400,
-          letterSpacing: '0.1em',
+          letterSpacing: '0.12em',
           cursor: loading ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 12,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          transition: 'all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
           opacity: loading ? 0.9 : 1
         }}
-        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '0.8')}
-        onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '1')}
       >
         {loading ? (
           <svg className="premium-loader" viewBox="0 0 50 50">

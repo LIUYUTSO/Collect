@@ -78,17 +78,17 @@ export default async function RequestPage({
 
         {/* Amount Card */}
         <div
-          className="animate-in delay-100"
+          className="animate-in delay-100 glass-panel"
           style={{
             width: '100%',
             maxWidth: 390,
-            marginTop: 36,
-            padding: '32px 28px',
-            border: '1px solid var(--fog)',
-            borderRadius: 3,
-            background: isPaid ? 'rgba(74, 82, 64, 0.05)' : 'rgba(255,255,255,0.4)',
+            marginTop: 40,
+            padding: '40px 32px',
+            borderRadius: 2,
+            background: isPaid ? 'rgba(74, 82, 64, 0.05)' : 'rgba(255,255,255,0.5)',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: '0 15px 40px rgba(26, 23, 20, 0.04)',
           }}
         >
           {/* Subtle corner mark - wabi-sabi */}
@@ -200,8 +200,15 @@ export default async function RequestPage({
             textAlign: 'center',
           }}
         >
-          <div className="brush-line" style={{ marginBottom: 24 }} />
-          <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'var(--fog)' }}>
+          <div className="brush-line" style={{ marginBottom: 32 }} />
+          
+          <div className="animate-in delay-400" style={{ marginBottom: 32 }}>
+            <p className="cursive-signature" style={{ marginBottom: 8 }}>
+              {yourName}
+            </p>
+          </div>
+
+          <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--fog)', fontWeight: 400 }}>
             {formatDate(request.createdAt)} · 請款
           </p>
         </div>

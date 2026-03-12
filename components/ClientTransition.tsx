@@ -121,24 +121,6 @@ export default function ClientTransition({ children, title }: { children: React.
           )}
         </div>
 
-        {/* Signature at bottom right */}
-        <p
-          style={{
-            position: 'absolute',
-            bottom: 40,
-            right: 40,
-            fontFamily: 'var(--font-zen, serif)',
-            fontSize: 9,
-            letterSpacing: '0.2em',
-            color: 'var(--ash)',
-            textTransform: 'uppercase',
-            opacity: isExiting ? 0 : 0.5,
-            transition: 'opacity 0.4s ease',
-            fontWeight: 400,
-          }}
-        >
-          by ADAM LIU
-        </p>
 
         <style jsx global>{`
           @keyframes loadingBar {
