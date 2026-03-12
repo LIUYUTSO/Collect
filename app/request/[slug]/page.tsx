@@ -60,7 +60,7 @@ export default async function RequestPage({
           <p
             className="cursive-signature"
             style={{
-              marginBottom: 8,
+              marginBottom: 12,
               textAlign: 'left',
             }}
           >

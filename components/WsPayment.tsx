@@ -4,20 +4,22 @@ import React, { useState, useEffect } from 'react'
 
 export function WsIcon() {
   return (
-    <svg viewBox="0 0 40 40" fill="none" style={{ width: 48, height: 48, color: 'var(--sumi)', marginBottom: 4 }}>
-      {/* Hand-drawn Wabi-Sabi 'W' (WealthSimple) */}
-      <path 
-        d="M8 12L14 30L20 15L26 30L32 12" 
-        stroke="currentColor" 
-        strokeWidth="2.5" 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-      />
-      {/* Decorative dots */}
-      <circle cx="14" cy="33" r="1.5" fill="var(--clay)" />
-      <circle cx="26" cy="33" r="1.5" fill="var(--moss)" />
-      <path d="M6 36C10 35.5 30 35.5 34 36" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-    </svg>
+    <div style={{ 
+      width: 48, 
+      height: 48, 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      fontSize: 24,
+      fontWeight: 700,
+      fontFamily: 'var(--font-zen, serif)',
+      color: 'var(--sumi)',
+      marginBottom: 4,
+      background: 'var(--fog)',
+      borderRadius: '50%'
+    }}>
+      W
+    </div>
   )
 }
 
@@ -43,8 +45,12 @@ export default function WsPayment({ email }: { email: string }) {
       if (document.hidden) preventFallback()
     }, { once: true })
 
-    // Attempt to open the app
-    window.location.href = wsUri
+    // Attempt to open the app using a more robust method
+    const link = document.createElement('a')
+    link.href = wsUri
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     
     // Fallback timer
     timeoutId = setTimeout(() => {
@@ -107,7 +113,7 @@ export default function WsPayment({ email }: { email: string }) {
             <circle cx="25" cy="25" r="20" fill="none"></circle>
           </svg>
         ) : (
-          '開啟 WealthSimple App 轉帳'
+          '開啟 WealthSimple 轉帳'
         )}
       </button>
       
@@ -131,7 +137,7 @@ export default function WsPayment({ email }: { email: string }) {
           transition: 'all 0.2s'
         }}
       >
-        {copied ? '✓ 已複製電郵' : '複製 @wealthsimple.me 電郵'}
+        {copied ? '✓ 已複製' : '複製 Interac 地址'}
       </button>
     </div>
   )

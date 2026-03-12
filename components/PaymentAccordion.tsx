@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TdPayment, { TdIcon } from './TdPayment'
-import WsPayment from './WsPayment'
+import WsPayment, { WsIcon } from './WsPayment'
 
 interface PaymentAccordionProps {
   tdEmail: string
@@ -26,16 +26,18 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
         選擇付款方式 · CHOOSE METHOD
       </p>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 24, marginBottom: 20 }}>
+      {/* Tabs - Equal Width */}
+      <div style={{ display: 'flex', width: '100%', marginBottom: 20, padding: '0 8px' }}>
         <div 
           className={`method-tab ${activeMethod === 'td' ? 'active' : ''}`}
+          style={{ flex: 1, textAlign: 'center' }}
           onClick={() => setActiveMethod('td')}
         >
           TD Bank
         </div>
         <div 
           className={`method-tab ${activeMethod === 'ws' ? 'active' : ''}`}
+          style={{ flex: 1, textAlign: 'center' }}
           onClick={() => setActiveMethod('ws')}
         >
           WealthSimple
@@ -57,24 +59,20 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
               <TdIcon />
             </div>
-            <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac e-Transfer</p>
+            <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac</p>
             <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{tdEmail}</p>
             <TdPayment email={tdEmail} />
           </div>
         ) : (
           <div key="ws-content" className="animate-in" style={{ animationDuration: '0.4s' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <img 
-                src="/assets/ws-logo.png" 
-                alt="WealthSimple" 
-                style={{ width: 48, height: 48, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
-              />
+              <WsIcon />
             </div>
             <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>WealthSimple Interac</p>
             <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>
-              {wsHandle}@wealthsimple.me
+              {wsHandle.includes('@') ? wsHandle : `${wsHandle}@wealthsimple.me`}
             </p>
-            <WsPayment email={`${wsHandle}@wealthsimple.me`} />
+            <WsPayment email={wsHandle.includes('@') ? wsHandle : `${wsHandle}@wealthsimple.me`} />
           </div>
         )}
 

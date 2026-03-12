@@ -4,23 +4,22 @@ import React, { useState, useEffect } from 'react'
 
 export function TdIcon() {
   return (
-    <svg viewBox="0 0 40 40" fill="none" style={{ width: 48, height: 48, color: 'var(--sumi)', marginBottom: 4 }}>
-      {/* Base step */}
-      <path d="M8 32C12 31.5 28 31.5 32 32" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M6 34.5C10 34 30 34 34 34.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
-      
-      {/* Pillars */}
-      <path d="M13 32V19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M20 31V17" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
-      <path d="M27 32V19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      
-      {/* Gable Roof */}
-      <path d="M10 19L20 12L30 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 20.5L20 10.5L32 20.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
-      
-      {/* Clay Dot at Apex */}
-      <circle cx="20" cy="8.5" r="1.8" fill="var(--clay)" />
-    </svg>
+    <div style={{ 
+      width: 48, 
+      height: 48, 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      fontSize: 24,
+      fontWeight: 700,
+      fontFamily: 'var(--font-zen, serif)',
+      color: 'var(--sumi)',
+      marginBottom: 4,
+      background: 'var(--fog)',
+      borderRadius: '50%'
+    }}>
+      TD
+    </div>
   )
 }
 
@@ -46,8 +45,12 @@ export default function TdPayment({ email }: { email: string }) {
       if (document.hidden) preventFallback()
     }, { once: true })
 
-    // Attempt to open the app
-    window.location.href = tdUri
+    // Attempt to open the app using a more robust method
+    const link = document.createElement('a')
+    link.href = tdUri
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
     
     // Fallback timer
     timeoutId = setTimeout(() => {
@@ -134,7 +137,7 @@ export default function TdPayment({ email }: { email: string }) {
           transition: 'all 0.2s'
         }}
       >
-        {copied ? '✓ 已複製電郵' : '複製 Interac 電郵地址'}
+        {copied ? '✓ 已複製' : '複製 Interac 地址'}
       </button>
     </div>
   )
