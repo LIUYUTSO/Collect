@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export function TdIcon() {
   return (
@@ -26,37 +26,59 @@ export function TdIcon() {
 
 export default function TdPayment({ email }: { email: string }) {
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleOpenApp = () => {
-    // Try to open TD App using documented/undocumented schemes
+    setLoading(true)
     const tdUri = 'tdct://'
+    let didHide = false
+
+    const handleHiding = () => {
+      didHide = true
+      setLoading(false)
+    }
+
+    // Multiple listeners for better iOS/Android detection
+    window.addEventListener('pagehide', handleHiding, { once: true })
+    window.addEventListener('visibilitychange', () => {
+      if (document.hidden) handleHiding()
+    }, { once: true })
+    window.addEventListener('blur', handleHiding, { once: true })
+
+    // Attempt to open the app
     window.location.href = tdUri
     
-    // Fallback timer
-    const start = Date.now()
+    // Check after a delay if the page was ever hidden
     setTimeout(() => {
-      // If user stayed on page for more than 1.5s, app probably didn't open
-      if (Date.now() - start < 2000) {
+      // Cleanup
+      window.removeEventListener('pagehide', handleHiding)
+      window.removeEventListener('blur', handleHiding)
+      
+      if (!didHide) {
+        setLoading(false)
         const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isiOS) {
-          window.location.href = 'https://apps.apple.com/ca/app/td/id358817284'
-        } else {
-          window.location.href = 'https://play.google.com/store/apps/details?id=com.td'
-        }
+        const storeUrl = isiOS 
+          ? 'https://apps.apple.com/ca/app/td/id358817284'
+          : 'https://play.google.com/store/apps/details?id=com.td'
+        
+        window.location.href = storeUrl
       }
-    }, 1500)
+    }, 3000) // 3s is safer for slow iOS transitions
   }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(email)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(email)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   return (
-    <div style={{ marginTop: 28 }}>
+    <div style={{ marginTop: 28 }} className={loading ? 'fade-out' : ''}>
       <button
         onClick={handleOpenApp}
+        disabled={loading}
         style={{
           width: '100%',
           padding: '16px 20px',
@@ -67,18 +89,25 @@ export default function TdPayment({ email }: { email: string }) {
           fontSize: 14,
           fontWeight: 400,
           letterSpacing: '0.1em',
-          cursor: 'pointer',
+          cursor: loading ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 12,
-          transition: 'opacity 0.2s',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          opacity: loading ? 0.9 : 1
         }}
-        onMouseDown={(e) => (e.currentTarget.style.opacity = '0.8')}
-        onMouseUp={(e) => (e.currentTarget.style.opacity = '1')}
+        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '0.8')}
+        onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '1')}
       >
-        開啟 TD App 轉帳
+        {loading ? (
+          <svg className="premium-loader" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" fill="none"></circle>
+          </svg>
+        ) : (
+          '開啟 TD App 轉帳'
+        )}
       </button>
       
       <button
