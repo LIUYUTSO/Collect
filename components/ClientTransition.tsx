@@ -4,13 +4,32 @@ import React, { useState, useEffect } from 'react'
 
 export default function ClientTransition({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    // Artificial delay to ensure the "premium" animation is seen (Google Motion feel)
-    const timer = setTimeout(() => {
+    // Longer duration (2.5 seconds total)
+    const duration = 2500
+    const interval = 20
+    const increment = (interval / duration) * 100
+    
+    const progressTimer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressTimer)
+          return 100
+        }
+        return prev + increment
+      })
+    }, interval)
+
+    const totalTimer = setTimeout(() => {
       setLoading(false)
-    }, 1500)
-    return () => clearTimeout(timer)
+    }, duration + 200) // Slight buffer for completion feel
+
+    return () => {
+      clearInterval(progressTimer)
+      clearTimeout(totalTimer)
+    }
   }, [])
 
   if (loading) {
@@ -32,44 +51,61 @@ export default function ClientTransition({ children }: { children: React.ReactNo
           zIndex: 9999,
         }}
       >
-        <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
+        <div style={{ width: '100%', maxWidth: 240, textAlign: 'center' }}>
+          {/* Large COLLECT Logo - Bold Serif */}
+          <h1
+            style={{
+              fontFamily: 'var(--font-zen, serif)',
+              fontSize: 42,
+              fontWeight: 700,
+              color: 'var(--sumi)',
+              letterSpacing: '0.1em',
+              marginBottom: 48,
+              opacity: 0.9,
+            }}
+          >
+            COLLECT
+          </h1>
+          
+          {/* Progress Bar Container */}
+          <div 
+            style={{ 
+              width: '100%', 
+              height: 2, 
+              background: 'var(--fog)', 
+              borderRadius: 1,
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            {/* Active Progress Bar */}
+            <div 
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                height: '100%',
+                width: `${progress}%`,
+                background: 'var(--sumi)',
+                transition: 'width 0.1s linear',
+              }}
+            />
+          </div>
+          
           <p
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: 11,
-              letterSpacing: '0.4em',
+              fontSize: 10,
+              letterSpacing: '0.3em',
               color: 'var(--ash)',
               textTransform: 'uppercase',
-              marginBottom: 24,
+              marginTop: 16,
               opacity: 0.6,
             }}
           >
-            COLLECT · 讀取中
+            Loading Request
           </p>
-          
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <svg 
-              className="premium-loader" 
-              viewBox="0 0 50 50" 
-              style={{ width: 32, height: 32, color: 'var(--sumi)' }}
-            >
-              <circle cx="25" cy="25" r="20" fill="none"></circle>
-            </svg>
-          </div>
         </div>
-        
-        <p 
-          style={{ 
-            position: 'absolute', 
-            bottom: 48, 
-            fontSize: 10, 
-            letterSpacing: '0.1em', 
-            color: 'var(--fog)',
-            fontFamily: 'var(--font-zen, serif)'
-          }}
-        >
-          WABI-SABI DESIGN
-        </p>
       </main>
     )
   }
