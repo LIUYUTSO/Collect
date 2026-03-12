@@ -1,0 +1,138 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+
+export function WsIcon() {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" style={{ width: 48, height: 48, color: 'var(--sumi)', marginBottom: 4 }}>
+      {/* Hand-drawn Wabi-Sabi 'W' (WealthSimple) */}
+      <path 
+        d="M8 12L14 30L20 15L26 30L32 12" 
+        stroke="currentColor" 
+        strokeWidth="2.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+      />
+      {/* Decorative dots */}
+      <circle cx="14" cy="33" r="1.5" fill="var(--clay)" />
+      <circle cx="26" cy="33" r="1.5" fill="var(--moss)" />
+      <path d="M6 36C10 35.5 30 35.5 34 36" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+    </svg>
+  )
+}
+
+export default function WsPayment({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleOpenApp = () => {
+    setLoading(true)
+    const wsUri = 'wealthsimple://'
+    const start = Date.now()
+    let timeoutId: NodeJS.Timeout
+
+    const preventFallback = () => {
+      clearTimeout(timeoutId)
+      setLoading(false)
+    }
+
+    // Capture app launch events to kill the fallback timer immediately
+    window.addEventListener('pagehide', preventFallback, { once: true })
+    window.addEventListener('blur', preventFallback, { once: true })
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) preventFallback()
+    }, { once: true })
+
+    // Attempt to open the app
+    window.location.href = wsUri
+    
+    // Fallback timer
+    timeoutId = setTimeout(() => {
+      const delta = Date.now() - start
+      
+      // If the timeout took much longer than 3s, the browser was likely suspended
+      // by the app opening. Don't trigger the fallback.
+      if (delta > 3500) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(false)
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const storeUrl = isiOS 
+        ? 'https://apps.apple.com/ca/app/wealthsimple/id948086167'
+        : 'https://play.google.com/store/apps/details?id=com.wealthsimple'
+      
+      window.location.href = storeUrl
+    }, 3000)
+  }
+
+  const handleCopy = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(email)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 28 }} className={loading ? 'fade-out' : ''}>
+      <button
+        onClick={handleOpenApp}
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: '16px 20px',
+          background: 'var(--sumi)',
+          color: 'var(--washi)',
+          border: 'none',
+          borderRadius: 4,
+          fontSize: 14,
+          fontWeight: 400,
+          letterSpacing: '0.1em',
+          cursor: loading ? 'default' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          opacity: loading ? 0.9 : 1
+        }}
+        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '0.8')}
+        onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '1')}
+      >
+        {loading ? (
+          <svg className="premium-loader" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" fill="none"></circle>
+          </svg>
+        ) : (
+          '開啟 WealthSimple App 轉帳'
+        )}
+      </button>
+      
+      <button
+        onClick={handleCopy}
+        style={{
+          width: '100%',
+          marginTop: 12,
+          padding: '12px 16px',
+          background: 'transparent',
+          color: 'var(--ash)',
+          border: '1px solid var(--fog)',
+          borderRadius: 4,
+          fontSize: 12,
+          letterSpacing: '0.05em',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          transition: 'all 0.2s'
+        }}
+      >
+        {copied ? '✓ 已複製電郵' : '複製 @wealthsimple.me 電郵'}
+      </button>
+    </div>
+  )
+}

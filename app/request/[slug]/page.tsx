@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { formatCAD, formatDate, getPaymentInstructions } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import TdPayment, { TdIcon } from '@/components/TdPayment'
+import WsPayment, { WsIcon } from '@/components/WsPayment'
 import ClientTransition from '@/components/ClientTransition'
 
 export default async function RequestPage({
@@ -219,24 +220,33 @@ export default async function RequestPage({
                 textAlign: request.method === 'td' ? 'center' : 'left'
               }}
             >
-              {request.method === 'td' ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                    <TdIcon />
-                  </div>
-                  <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac e-Transfer</p>
-                  <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
-                  <TdPayment email={process.env.TD_EMAIL || ''} />
-                </>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <span style={{ fontSize: 22, marginTop: 2 }}>{payment.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 400, color: 'var(--sumi)', marginBottom: 4 }}>{payment.label}</p>
-                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--sumi)', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{payment.detail}</p>
-                  </div>
+            {request.method === 'td' ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <TdIcon />
                 </div>
-              )}
+                <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac e-Transfer</p>
+                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
+                <TdPayment email={process.env.TD_EMAIL || ''} />
+              </>
+            ) : request.method === 'wealthsimple' ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <WsIcon />
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>WealthSimple Interac</p>
+                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
+                <WsPayment email={payment.detail} />
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <span style={{ fontSize: 22, marginTop: 2 }}>{payment.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 400, color: 'var(--sumi)', marginBottom: 4 }}>{payment.label}</p>
+                  <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--sumi)', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{payment.detail}</p>
+                </div>
+              </div>
+            )}
 
               <div className="brush-line" style={{ margin: '24px 0' }} />
 

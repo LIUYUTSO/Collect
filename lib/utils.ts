@@ -25,7 +25,7 @@ export function getPaymentInstructions(method: string) {
   }
   return {
     label: 'WealthSimple Interac',
-    detail: process.env.WS_HANDLE || '',
+    detail: process.env.WS_HANDLE ? `${process.env.WS_HANDLE}@wealthsimple.me` : '',
     icon: '🌿',
     color: '#3D4B3E',
   }
