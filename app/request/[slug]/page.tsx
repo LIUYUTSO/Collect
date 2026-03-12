@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { formatCAD, formatDate, getPaymentInstructions } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import TdPayment, { TdIcon } from '@/components/TdPayment'
 
 export default async function RequestPage({
   params,
@@ -207,40 +208,33 @@ export default async function RequestPage({
 
           <div
             style={{
-              padding: '24px 28px',
+              padding: '28px 24px',
               border: '1px solid var(--fog)',
               borderRadius: 3,
               background: 'rgba(255,255,255,0.3)',
+              textAlign: request.method === 'td' ? 'center' : 'left'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-              <span style={{ fontSize: 22, marginTop: 2 }}>{payment.icon}</span>
-              <div style={{ flex: 1 }}>
-                <p
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 400,
-                    color: 'var(--sumi)',
-                    marginBottom: 4,
-                  }}
-                >
-                  {payment.label}
-                </p>
-                <p
-                  style={{
-                    fontFamily: 'DM Mono, monospace',
-                    fontSize: 15,
-                    color: 'var(--sumi)',
-                    letterSpacing: '0.02em',
-                    wordBreak: 'break-all',
-                  }}
-                >
-                  {payment.detail}
-                </p>
+            {request.method === 'td' ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <TdIcon />
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac e-Transfer</p>
+                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
+                <TdPayment email={process.env.TD_EMAIL || ''} />
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <span style={{ fontSize: 22, marginTop: 2 }}>{payment.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 400, color: 'var(--sumi)', marginBottom: 4 }}>{payment.label}</p>
+                  <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--sumi)', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{payment.detail}</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="brush-line" style={{ margin: '20px 0' }} />
+            <div className="brush-line" style={{ margin: '24px 0' }} />
 
             <p style={{ fontSize: 12, color: 'var(--ash)', lineHeight: 1.7 }}>
               請使用 Interac e-Transfer 轉帳。
