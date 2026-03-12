@@ -3,6 +3,7 @@ import { formatCAD, formatDate, getPaymentInstructions } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import TdPayment, { TdIcon } from '@/components/TdPayment'
 import WsPayment, { WsIcon } from '@/components/WsPayment'
+import PaymentAccordion from '@/components/PaymentAccordion'
 import ClientTransition from '@/components/ClientTransition'
 
 export default async function RequestPage({
@@ -57,16 +58,13 @@ export default async function RequestPage({
           }}
         >
           <p
+            className="cursive-signature"
             style={{
-              fontFamily: 'var(--font-zen, serif)',
-              fontSize: 11,
-              letterSpacing: '0.25em',
-              color: 'var(--ash)',
-              textTransform: 'uppercase',
               marginBottom: 8,
+              textAlign: 'left',
             }}
           >
-            來自 · {yourName}
+            {yourName}
           </p>
           <h1
             style={{
@@ -190,72 +188,13 @@ export default async function RequestPage({
           </div>
         )}
 
-        {/* Payment Instructions */}
+        {/* Interactive Payment Switcher (Folding Card) */}
         {!isPaid && (
-          <div
-            className="animate-in delay-300"
-            style={{
-              width: '100%',
-              maxWidth: 390,
-              marginTop: 32,
-            }}
-          >
-            <p
-              style={{
-                fontSize: 11,
-                letterSpacing: '0.2em',
-                color: 'var(--ash)',
-                marginBottom: 16,
-              }}
-            >
-              付款方式 · HOW TO PAY
-            </p>
-
-            <div
-              style={{
-                padding: '28px 24px',
-                border: '1px solid var(--fog)',
-                borderRadius: 3,
-                background: 'rgba(255,255,255,0.3)',
-                textAlign: request.method === 'td' ? 'center' : 'left'
-              }}
-            >
-            {request.method === 'td' ? (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                  <TdIcon />
-                </div>
-                <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac e-Transfer</p>
-                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
-                <TdPayment email={process.env.TD_EMAIL || ''} />
-              </>
-            ) : request.method === 'wealthsimple' ? (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-                  <WsIcon />
-                </div>
-                <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>WealthSimple Interac</p>
-                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{payment.detail}</p>
-                <WsPayment email={payment.detail} />
-              </>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <span style={{ fontSize: 22, marginTop: 2 }}>{payment.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 400, color: 'var(--sumi)', marginBottom: 4 }}>{payment.label}</p>
-                  <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--sumi)', letterSpacing: '0.02em', wordBreak: 'break-all' }}>{payment.detail}</p>
-                </div>
-              </div>
-            )}
-
-              <div className="brush-line" style={{ margin: '24px 0' }} />
-
-              <p style={{ fontSize: 12, color: 'var(--ash)', lineHeight: 1.7 }}>
-                請使用 Interac e-Transfer 轉帳。
-                備註欄填入「<strong style={{ color: 'var(--sumi)' }}>{request.title}</strong>」。
-              </p>
-            </div>
-          </div>
+          <PaymentAccordion 
+            tdEmail={process.env.TD_EMAIL || ''} 
+            wsHandle={process.env.WS_HANDLE || ''}
+            title={request.title}
+          />
         )}
 
         {/* Footer */}

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Pinyon+Script&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -131,4 +131,46 @@ input, textarea, select, button {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Folding Card Effect */
+.fold-container {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 390px;
+}
+
+.fold-content {
+  transform-origin: top;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+  transform: rotateX(-10deg);
+  opacity: 0.9;
+}
+
+.fold-content.active {
+  transform: rotateX(0deg);
+  opacity: 1;
+}
+
+.cursive-signature {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 24px;
+  color: var(--sumi);
+  opacity: 0.8;
+}
+
+.method-tab {
+  padding: 8px 16px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s;
+  color: var(--ash);
+}
+
+.method-tab.active {
+  color: var(--sumi);
+  border-bottom: 1px solid var(--sumi);
 }
