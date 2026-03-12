@@ -3,8 +3,9 @@ import { db } from '@/lib/db'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = req.headers.get('x-admin-key')
   if (auth !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,7 +18,7 @@ export async function PATCH(
     SET status = ${status}, 
         paid_at = ${status === 'paid' ? new Date().toISOString() : null},
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = ${params.id}
+    WHERE id = ${id}
     RETURNING *
   `;
 
@@ -26,13 +27,14 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = req.headers.get('x-admin-key')
   if (auth !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  await db.sql`DELETE FROM requests WHERE id = ${params.id}`
+  await db.sql`DELETE FROM requests WHERE id = ${id}`
   return NextResponse.json({ ok: true })
 }

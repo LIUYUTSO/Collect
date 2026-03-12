@@ -9,10 +9,11 @@ import ClientTransition from '@/components/ClientTransition'
 export default async function RequestPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
+  const { slug } = await params;
   const { rows } = await db.sql`
-    SELECT * FROM requests WHERE slug = ${params.slug} LIMIT 1
+    SELECT * FROM requests WHERE slug = ${slug} LIMIT 1
   `
   const request = rows[0]
 
