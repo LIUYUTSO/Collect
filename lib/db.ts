@@ -3,6 +3,12 @@ import { sql } from '@vercel/postgres';
 export const db = sql;
 
 export async function ensureTables() {
+  console.log('Postgres Env Check:', {
+    hasURL: !!process.env.POSTGRES_URL,
+    hasDirectURL: !!process.env.POSTGRES_URL_NON_POOLING,
+    hasDatabaseURL: !!process.env.DATABASE_URL,
+  });
+
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS requests (

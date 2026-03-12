@@ -29,9 +29,13 @@ export async function POST(req: NextRequest) {
     `;
 
     return NextResponse.json({ slug, id })
-  } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  } catch (error: any) {
+    console.error('API Error:', error)
+    return NextResponse.json({ 
+      error: 'Server error', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }
 
