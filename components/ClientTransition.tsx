@@ -68,13 +68,35 @@ export default function ClientTransition({ children, title }: { children: React.
           </h1>
           
           {/* Progress Bar - Pure CSS for maximum smoothness */}
+          <div 
+            style={{ 
+              width: '100%', 
+              height: 1, 
+              background: 'rgba(26, 23, 20, 0.1)', 
+              borderRadius: 1,
+              overflow: 'hidden',
+              position: 'relative',
+              marginBottom: 20
+            }}
+          >
+            <div 
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                height: '100%',
+                width: '100%',
+                background: 'var(--sumi)',
+                transformOrigin: 'left',
+                animation: 'loadingBar 2.6s cubic-bezier(0.65, 0, 0.35, 1) forwards',
+              }}
+            />
           </div>
-          
+
           {/* Bill-style Description below Progress Bar */}
           {title && (
             <div 
               style={{ 
-                marginTop: 20, 
                 padding: '12px',
                 border: '1px solid rgba(0,0,0,0.05)',
                 background: 'rgba(255,255,255,0.2)',
