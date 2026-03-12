@@ -154,6 +154,109 @@ export default function Dashboard() {
   const paid = requests.filter((r) => r.status === 'paid')
   const totalPending = pending.reduce((s, r) => s + r.amount, 0)
 
+  const toBase64Url = (buf: ArrayBuffer) => {
+    return btoa(Array.from(new Uint8Array(buf)).map(b => String.fromCharCode(b)).join(''))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '')
+  }
+
+  const fromBase64Url = (str: string) => {
+    const base64 = str.replace(/-/g, '+').replace(/_/g, '/')
+    const bin = atob(base64)
+    const buf = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+    return buf.buffer
+  }
+
+  const handleWebAuthnLogin = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const optsRes = await fetch('/api/auth/webauthn', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'login-options' }),
+      })
+      const options = await optsRes.json()
+      
+      options.challenge = fromBase64Url(options.challenge)
+      options.allowCredentials = options.allowCredentials.map((c: any) => ({
+        ...c,
+        id: fromBase64Url(c.id),
+      }))
+
+      const assertion = await navigator.credentials.get({ publicKey: options }) as any
+      
+      const verifyRes = await fetch('/api/auth/webauthn', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'login-verify',
+          data: {
+            id: assertion.id,
+            rawId: toBase64Url(assertion.rawId),
+            response: {
+              authenticatorData: toBase64Url(assertion.response.authenticatorData),
+              clientDataJSON: toBase64Url(assertion.response.clientDataJSON),
+              signature: toBase64Url(assertion.response.signature),
+              userHandle: assertion.response.userHandle ? toBase64Url(assertion.response.userHandle) : null,
+            },
+          },
+        }),
+      })
+
+      const result = await verifyRes.json()
+      if (result.success) {
+        setAdminKey(result.token)
+        fetchRequests(result.token)
+        setView('list')
+      } else {
+        setError('認證失敗')
+      }
+    } catch (err: any) {
+      console.error(err)
+      setError('不支援生物辨識或已取消')
+    }
+    setLoading(false)
+  }
+
+  const handleRegisterPasskey = async () => {
+    setCreating(true)
+    try {
+      const optsRes = await fetch('/api/auth/webauthn', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+        body: JSON.stringify({ action: 'register-options' }),
+      })
+      const options = await optsRes.json()
+
+      options.challenge = fromBase64Url(options.challenge)
+      options.user.id = fromBase64Url(options.user.id)
+
+      const credential = await navigator.credentials.create({ publicKey: options }) as any
+      
+      await fetch('/api/auth/webauthn', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+        body: JSON.stringify({
+          action: 'register-verify',
+          data: {
+            id: credential.id,
+            rawId: toBase64Url(credential.rawId),
+            response: {
+              attestationObject: toBase64Url(credential.response.attestationObject),
+              clientDataJSON: toBase64Url(credential.response.clientDataJSON),
+            },
+          },
+        }),
+      })
+      alert('FaceID / TouchID 設定成功！')
+    } catch (err) {
+      console.error(err)
+      alert('設定失敗')
+    }
+    setCreating(false)
+  }
+
   // ─── LOGIN ─────────────────────────────────────────────────────────
   if (view === 'login') {
     return (
@@ -178,7 +281,7 @@ export default function Dashboard() {
             
             <button 
               type="button" 
-              onClick={() => alert('生物辨識功能開發中')} 
+              onClick={handleWebAuthnLogin} 
               style={{ ...ghostBtn, width: '100%', marginTop: 16, fontSize: 12, color: 'var(--sumi)' }}
             >
               使用 FaceID / TouchID 登入
@@ -329,7 +432,10 @@ export default function Dashboard() {
             <p style={{ fontFamily: 'var(--font-zen, serif)', fontSize: 11, letterSpacing: '0.25em', color: 'var(--ash)', marginBottom: 4 }}>管理後台</p>
             <h1 style={{ fontFamily: 'var(--font-zen, serif)', fontSize: 26, fontWeight: 700, color: 'var(--sumi)' }}>請款紀錄</h1>
           </div>
-          <button onClick={() => setView('create')} style={btnStyle}>+ 新增</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleRegisterPasskey} style={{ ...smallBtn, padding: '10px 12px' }}>🔒 設定 FaceID</button>
+            <button onClick={() => setView('create')} style={btnStyle}>+ 新增</button>
+          </div>
         </div>
 
         {/* Summary */}
