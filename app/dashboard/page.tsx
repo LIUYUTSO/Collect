@@ -537,6 +537,14 @@ function RequestCard({
         <button onClick={() => onCopy(r.slug)} style={smallBtn}>
           {copied === r.slug ? '✓ 已複製' : '複製連結'}
         </button>
+        <a 
+          href={`/request/${r.slug}`} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ ...smallBtn, textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+        >
+          開啟連結
+        </a>
         <button
           onClick={() => onPaid(r.id, r.status)}
           style={{ ...smallBtn, background: paid ? 'transparent' : 'rgba(74,82,64,0.1)', color: paid ? 'var(--ash)' : 'var(--moss)', borderColor: paid ? 'var(--fog)' : 'rgba(74,82,64,0.2)' }}

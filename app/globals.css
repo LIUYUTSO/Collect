@@ -127,3 +127,8 @@ input, textarea, select, button {
   filter: blur(1px);
   transition: all 0.4s ease;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
