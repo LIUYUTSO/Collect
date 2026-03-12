@@ -28,6 +28,11 @@ export default function Dashboard() {
   const [copied, setCopied] = useState('')
 
   // Create form state
+  const [mode, setMode] = useState<'single' | 'split'>('single')
+  const [totalAmount, setTotalAmount] = useState('')
+  const [splitEqually, setSplitEqually] = useState(true)
+  const [recipients, setRecipients] = useState([{ name: '', amount: '' }])
+  
   const [form, setForm] = useState({
     title: '',
     amount: '',
@@ -36,7 +41,7 @@ export default function Dashboard() {
     fromName: '',
   })
   const [creating, setCreating] = useState(false)
-  const [newSlug, setNewSlug] = useState('')
+  const [newRequests, setNewRequests] = useState<any[]>([])
 
   const fetchRequests = useCallback(async (key: string) => {
     setLoading(true)
@@ -68,23 +73,50 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  const addRecipient = () => setRecipients([...recipients, { name: '', amount: '' }])
+  const removeRecipient = (i: number) => setRecipients(recipients.filter((_, idx) => idx !== i))
+  const updateRecipient = (i: number, field: string, val: string) => {
+    const next = [...recipients]
+    next[i] = { ...next[i], [field]: val }
+    setRecipients(next)
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreating(true)
     setError('')
+
+    let payload: any = []
+    if (mode === 'single') {
+      payload = [form]
+    } else {
+      payload = recipients.map(r => ({
+        title: form.title,
+        amount: splitEqually ? (parseFloat(totalAmount) / recipients.length).toFixed(2) : r.amount,
+        note: form.note,
+        method: form.method,
+        fromName: r.name
+      }))
+    }
+
     const res = await fetch('/api/requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-admin-key': adminKey,
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     })
+
     if (res.ok) {
       const data = await res.json()
-      setNewSlug(data.slug)
+      setNewRequests(Array.isArray(data) ? data : [data])
       fetchRequests(adminKey)
       setForm({ title: '', amount: '', note: '', method: 'td', fromName: '' })
+      setRecipients([{ name: '', amount: '' }])
+      setTotalAmount('')
+    } else {
+      setError('建立失敗')
     }
     setCreating(false)
   }
@@ -143,6 +175,14 @@ export default function Dashboard() {
             <button type="submit" disabled={loading} style={{ ...btnStyle, marginTop: 24, width: '100%' }}>
               {loading ? '驗證中…' : '進入'}
             </button>
+            
+            <button 
+              type="button" 
+              onClick={() => alert('生物辨識功能開發中')} 
+              style={{ ...ghostBtn, width: '100%', marginTop: 16, fontSize: 12, color: 'var(--sumi)' }}
+            >
+              使用 FaceID / TouchID 登入
+            </button>
           </form>
         </div>
       </main>
@@ -156,39 +196,85 @@ export default function Dashboard() {
         <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
-            <button onClick={() => { setView('list'); setNewSlug('') }} style={ghostBtn}>← 返回</button>
+            <button onClick={() => { setView('list'); setNewRequests([]) }} style={ghostBtn}>← 返回</button>
             <p style={{ fontFamily: 'var(--font-zen, serif)', fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)' }}>新增請款</p>
             <div style={{ width: 48 }} />
           </div>
 
           {/* Success state */}
-          {newSlug ? (
+          {newRequests.length > 0 ? (
             <div style={{ animation: 'fadeIn 0.5s ease' }}>
-              <div style={{ padding: '28px 24px', border: '1px solid rgba(74,82,64,0.3)', borderRadius: 3, background: 'rgba(74,82,64,0.05)', marginBottom: 24 }}>
-                <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--moss)', marginBottom: 12 }}>請款連結已建立 ✓</p>
-                <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'var(--sumi)', wordBreak: 'break-all', marginBottom: 16 }}>
-                  {typeof window !== 'undefined' ? `${window.location.origin}/request/${newSlug}` : `/request/${newSlug}`}
-                </p>
-                <button onClick={() => copyLink(newSlug)} style={{ ...btnStyle, width: '100%' }}>
-                  {copied === newSlug ? '已複製 ✓' : '複製連結'}
-                </button>
+              <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--moss)', marginBottom: 20 }}>請款連結已建立 ✓</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {newRequests.map((req, idx) => (
+                  <div key={idx} style={{ padding: '16px 20px', border: '1px solid rgba(74,82,64,0.2)', borderRadius: 3, background: 'rgba(255,255,255,0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <p style={{ fontSize: 13, color: 'var(--sumi)' }}>{req.fromName || '朋友'} · {req.title}</p>
+                      <button onClick={() => copyLink(req.slug)} style={{ ...ghostBtn, padding: 0, color: 'var(--moss)' }}>
+                        {copied === req.slug ? '已複製 ✓' : '複製'}
+                      </button>
+                    </div>
+                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--ash)', wordBreak: 'break-all' }}>
+                      {typeof window !== 'undefined' ? `${window.location.origin}/request/${req.slug}` : `/request/${req.slug}`}
+                    </p>
+                  </div>
+                ))}
               </div>
-              <button onClick={() => setNewSlug('')} style={{ ...ghostBtn, width: '100%', textAlign: 'center' }}>
+              <button onClick={() => setNewRequests([])} style={{ ...btnStyle, width: '100%', marginTop: 32 }}>
                 再新增一筆
               </button>
             </div>
           ) : (
             <form onSubmit={handleCreate}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                {['single', 'split'].map(v => (
+                  <button key={v} type="button" onClick={() => setMode(v as any)} style={{ ...smallBtn, flex: 1, padding: '10px', background: mode === v ? 'var(--sumi)' : 'transparent', color: mode === v ? 'var(--washi)' : 'var(--ash)', borderColor: mode === v ? 'var(--sumi)' : 'var(--fog)' }}>
+                    {v === 'single' ? '單人模式' : '多人平分'}
+                  </button>
+                ))}
+              </div>
+
               <FieldLabel>事由</FieldLabel>
               <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="聚餐費用、電影票…" style={inputStyle} required />
 
-              <FieldLabel style={{ marginTop: 20 }}>金額（CAD）</FieldLabel>
-              <input type="number" step="0.01" min="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" style={{ ...inputStyle, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
+              {mode === 'single' ? (
+                <>
+                  <FieldLabel style={{ marginTop: 20 }}>金額（CAD）</FieldLabel>
+                  <input type="number" step="0.01" min="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" style={{ ...inputStyle, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
 
-              <FieldLabel style={{ marginTop: 20 }}>給誰（選填）</FieldLabel>
-              <input value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="朋友名字" style={inputStyle} />
+                  <FieldLabel style={{ marginTop: 20 }}>給誰（選填）</FieldLabel>
+                  <input value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="朋友名字" style={inputStyle} />
+                </>
+              ) : (
+                <>
+                  <FieldLabel style={{ marginTop: 20 }}>總金額（CAD）</FieldLabel>
+                  <input type="number" step="0.01" min="0.01" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} placeholder="0.00" style={{ ...inputStyle, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 20 }}>
+                    <FieldLabel style={{ marginBottom: 0 }}>名單</FieldLabel>
+                    <label style={{ fontSize: 11, color: 'var(--ash)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={splitEqually} onChange={e => setSplitEqually(e.target.checked)} /> 平均分配
+                    </label>
+                  </div>
 
-              <FieldLabel style={{ marginTop: 20 }}>備註（選填）</FieldLabel>
+                  <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {recipients.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 8 }}>
+                        <input value={r.name} onChange={e => updateRecipient(i, 'name', e.target.value)} placeholder="名字" style={{ ...inputStyle, padding: '10px 12px' }} required />
+                        {!splitEqually && (
+                          <input type="number" step="0.01" value={r.amount} onChange={e => updateRecipient(i, 'amount', e.target.value)} placeholder="金額" style={{ ...inputStyle, width: 80, padding: '10px 8px', fontFamily: 'DM Mono, monospace' }} required />
+                        )}
+                        {recipients.length > 1 && (
+                          <button type="button" onClick={() => removeRecipient(i)} style={{ ...ghostBtn, color: 'var(--rust)', padding: '0 4px' }}>✕</button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" onClick={addRecipient} style={{ ...ghostBtn, textAlign: 'left', color: 'var(--moss)', marginTop: 4 }}>+ 增加人數</button>
+                  </div>
+                </>
+              )}
+
+              <FieldLabel style={{ marginTop: 24 }}>備註（選填）</FieldLabel>
               <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="補充說明…" rows={3} style={{ ...inputStyle, resize: 'none' }} />
 
               <FieldLabel style={{ marginTop: 20 }}>收款方式</FieldLabel>
@@ -313,8 +399,6 @@ function RequestCard({
   copied: string
   paid?: boolean
 }) {
-  const [expanded, setExpanded] = useState(false)
-
   return (
     <div
       style={{

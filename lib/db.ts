@@ -33,6 +33,17 @@ export async function ensureTables() {
     } catch (e) {
       // Ignore if already TEXT or other issues
     }
+    // For WebAuthn / Biometric login
+    await sql`
+      CREATE TABLE IF NOT EXISTS credentials (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        credential_id TEXT UNIQUE NOT NULL,
+        public_key TEXT NOT NULL,
+        counter INTEGER DEFAULT 0,
+        name TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
     console.log('Database tables ensured');
   } catch (error) {
     console.error('Error ensuring tables:', error);

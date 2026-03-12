@@ -11,24 +11,30 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    await ensureTables()
     const body = await req.json()
-    const { title, amount, note, method, fromName } = body
+    const items = Array.isArray(body) ? body : [body]
+    const results = []
 
-    if (!title || !amount || !method) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    for (const item of items) {
+      const { title, amount, note, method, fromName } = item
+      if (!title || !amount || !method) continue
+
+      const slug = generateSlug()
+      const id = nanoid()
+
+      await db.sql`
+        INSERT INTO requests (id, slug, title, amount, note, method, from_name)
+        VALUES (${id}, ${slug}, ${title}, ${parseFloat(amount)}, ${note || null}, ${method}, ${fromName || null})
+      `;
+      results.push({ id, slug, title })
     }
 
-    await ensureTables()
-    
-    const slug = generateSlug()
-    const id = nanoid()
+    if (results.length === 0) {
+      return NextResponse.json({ error: 'No valid data provided' }, { status: 400 })
+    }
 
-    await db.sql`
-      INSERT INTO requests (id, slug, title, amount, note, method, from_name)
-      VALUES (${id}, ${slug}, ${title}, ${parseFloat(amount)}, ${note || null}, ${method}, ${fromName || null})
-    `;
-
-    return NextResponse.json({ slug, id })
+    return NextResponse.json(Array.isArray(body) ? results : results[0])
   } catch (error: any) {
     console.error('API Error:', error)
     return NextResponse.json({ 
