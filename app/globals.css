@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-zen: 'Zen Old Mincho', serif;
+  --font-mono: 'DM Mono', monospace;
+  --washi: #F2EDE4;
+  --sumi: #1A1714;
+  --ash: #8C8880;
+  --fog: #D4CFC8;
+  --rust: #8B4A3C;
+  --moss: #4A5240;
+  --clay: #C4A882;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--washi);
+  color: var(--sumi);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 300;
+  min-height: 100dvh;
+  letter-spacing: 0.02em;
+  /* Subtle paper texture */
+  background-image: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Wabi-sabi divider */
+.brush-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ash) 20%, var(--ash) 80%, transparent);
+  opacity: 0.4;
+}
+
+/* Imperfect circle decoration */
+.wabi-circle {
+  border-radius: 50%;
+  border: 1px solid var(--clay);
+  opacity: 0.3;
+  transform: rotate(-3deg) scale(0.97, 1.03);
+}
+
+/* Selection color */
+::selection {
+  background: var(--clay);
+  color: var(--washi);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: var(--washi);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--fog);
+  border-radius: 2px;
+}
+
+/* Input reset */
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 1px solid var(--ash);
+  outline-offset: 3px;
+}
+
+/* Animation utilities */
+.animate-in {
+  animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.delay-100 { animation-delay: 0.1s; opacity: 0; }
+.delay-200 { animation-delay: 0.2s; opacity: 0; }
+.delay-300 { animation-delay: 0.3s; opacity: 0; }
+.delay-400 { animation-delay: 0.4s; opacity: 0; }
