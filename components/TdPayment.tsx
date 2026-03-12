@@ -31,39 +31,43 @@ export default function TdPayment({ email }: { email: string }) {
   const handleOpenApp = () => {
     setLoading(true)
     const tdUri = 'tdct://'
-    let didHide = false
+    const start = Date.now()
+    let timeoutId: NodeJS.Timeout
 
-    const handleHiding = () => {
-      didHide = true
+    const preventFallback = () => {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
 
-    // Multiple listeners for better iOS/Android detection
-    window.addEventListener('pagehide', handleHiding, { once: true })
-    window.addEventListener('visibilitychange', () => {
-      if (document.hidden) handleHiding()
+    // Capture app launch events to kill the fallback timer immediately
+    window.addEventListener('pagehide', preventFallback, { once: true })
+    window.addEventListener('blur', preventFallback, { once: true })
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) preventFallback()
     }, { once: true })
-    window.addEventListener('blur', handleHiding, { once: true })
 
     // Attempt to open the app
     window.location.href = tdUri
     
-    // Check after a delay if the page was ever hidden
-    setTimeout(() => {
-      // Cleanup
-      window.removeEventListener('pagehide', handleHiding)
-      window.removeEventListener('blur', handleHiding)
+    // Fallback timer
+    timeoutId = setTimeout(() => {
+      const delta = Date.now() - start
       
-      if (!didHide) {
+      // If the timeout took much longer than 3s, the browser was likely suspended
+      // by the app opening. Don't trigger the fallback.
+      if (delta > 3500) {
         setLoading(false)
-        const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const storeUrl = isiOS 
-          ? 'https://apps.apple.com/ca/app/td/id358817284'
-          : 'https://play.google.com/store/apps/details?id=com.td'
-        
-        window.location.href = storeUrl
+        return
       }
-    }, 3000) // 3s is safer for slow iOS transitions
+
+      setLoading(false)
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const storeUrl = isiOS 
+        ? 'https://apps.apple.com/ca/app/td/id358817284'
+        : 'https://play.google.com/store/apps/details?id=com.td'
+      
+      window.location.href = storeUrl
+    }, 3000)
   }
 
   const handleCopy = () => {

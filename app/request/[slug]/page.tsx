@@ -27,6 +27,7 @@ export default async function RequestPage({
 
   return (
     <main
+      className="animate-in"
       style={{
         minHeight: '100dvh',
         display: 'flex',
@@ -35,6 +36,7 @@ export default async function RequestPage({
         padding: '0 24px',
         paddingTop: 'env(safe-area-inset-top)',
         background: 'var(--washi)',
+        animationDuration: '1.2s', /* Slower, more premium reveal */
       }}
     >
       {/* Top decoration */}
