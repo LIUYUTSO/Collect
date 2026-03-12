@@ -29,7 +29,7 @@ export default function WsPayment({ email }: { email: string }) {
 
   const handleOpenApp = () => {
     setLoading(true)
-    const wsUri = 'wealthsimple://'
+    const wsUri = 'wstrade://'
     const start = Date.now()
     let timeoutId: NodeJS.Timeout
 
