@@ -45,12 +45,9 @@ export default function WsPayment({ email }: { email: string }) {
       if (document.hidden) preventFallback()
     }, { once: true })
 
-    // Attempt to open the app using a more robust method
-    const link = document.createElement('a')
-    link.href = wsUri
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    // Attempt to open the app directly
+    // Using wealthsimple://pay or wealthsimple:// as a base
+    window.location.href = wsUri
     
     // Fallback timer
     timeoutId = setTimeout(() => {

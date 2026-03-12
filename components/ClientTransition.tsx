@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 
-export default function ClientTransition({ children }: { children: React.ReactNode }) {
+export default function ClientTransition({ children, title }: { children: React.ReactNode, title?: string }) {
   const [loading, setLoading] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
 
@@ -90,7 +90,33 @@ export default function ClientTransition({ children }: { children: React.ReactNo
                 animation: 'loadingBar 2.6s cubic-bezier(0.65, 0, 0.35, 1) forwards',
               }}
             />
-          </div>
+          {/* Bill-style Description below Progress Bar */}
+          {title && (
+            <div 
+              style={{ 
+                marginTop: 20, 
+                padding: '12px',
+                border: '1px solid rgba(0,0,0,0.05)',
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: 2,
+                textAlign: 'left',
+                fontFamily: 'DM Mono, monospace',
+                fontSize: 10,
+                color: 'var(--ash)',
+                letterSpacing: '0.05em',
+                lineHeight: 1.5,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span>ITEM:</span>
+                <span style={{ color: 'var(--sumi)' }}>{title}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, opacity: 0.6 }}>
+                <span>TYPE:</span>
+                <span>INVOICE / COLLECT</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Signature at bottom right */}

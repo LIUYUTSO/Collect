@@ -29,7 +29,7 @@ export default async function RequestPage({
   const yourName = process.env.YOUR_NAME || '朋友'
 
   return (
-    <ClientTransition>
+    <ClientTransition title={request.title}>
       <main
         className="animate-in"
         style={{
@@ -57,15 +57,6 @@ export default async function RequestPage({
             paddingTop: 32,
           }}
         >
-          <p
-            className="cursive-signature"
-            style={{
-              marginBottom: 12,
-              textAlign: 'left',
-            }}
-          >
-            {yourName}
-          </p>
           <h1
             style={{
               fontFamily: 'var(--font-zen, serif)',
