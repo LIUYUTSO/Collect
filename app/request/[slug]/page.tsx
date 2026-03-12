@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 import { formatCAD, formatDate, getPaymentInstructions } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 
@@ -7,9 +7,16 @@ export default async function RequestPage({
 }: {
   params: { slug: string }
 }) {
-  const request = await prisma.request.findUnique({
-    where: { slug: params.slug },
-  })
+  const { rows } = await db.sql`
+    SELECT * FROM requests WHERE slug = ${params.slug} LIMIT 1
+  `
+  const request = rows[0]
+
+  if (request) {
+    // Map snake_case to camelCase
+    request.fromName = request.from_name;
+    request.createdAt = request.created_at;
+  }
 
   if (!request) return notFound()
 

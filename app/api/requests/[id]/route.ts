@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db } from '@/lib/db'
 
 export async function PATCH(
   req: NextRequest,
@@ -12,15 +12,16 @@ export async function PATCH(
 
   const { status } = await req.json()
 
-  const request = await prisma.request.update({
-    where: { id: params.id },
-    data: {
-      status,
-      paidAt: status === 'paid' ? new Date() : null,
-    },
-  })
+  const { rows } = await db.sql`
+    UPDATE requests 
+    SET status = ${status}, 
+        paid_at = ${status === 'paid' ? new Date().toISOString() : null},
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = ${params.id}
+    RETURNING *
+  `;
 
-  return NextResponse.json(request)
+  return NextResponse.json(rows[0])
 }
 
 export async function DELETE(
@@ -32,6 +33,6 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  await prisma.request.delete({ where: { id: params.id } })
+  await db.sql`DELETE FROM requests WHERE id = ${params.id}`
   return NextResponse.json({ ok: true })
 }

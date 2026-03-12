@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { db, ensureTables } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
+import { nanoid } from 'nanoid'
 
 export async function POST(req: NextRequest) {
   // Simple admin auth
@@ -17,20 +18,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    await ensureTables()
+    
     const slug = generateSlug()
+    const id = nanoid()
 
-    const request = await prisma.request.create({
-      data: {
-        slug,
-        title,
-        amount: parseFloat(amount),
-        note: note || null,
-        method,
-        fromName: fromName || null,
-      },
-    })
+    await db.sql`
+      INSERT INTO requests (id, slug, title, amount, note, method, from_name)
+      VALUES (${id}, ${slug}, ${title}, ${parseFloat(amount)}, ${note || null}, ${method}, ${fromName || null})
+    `;
 
-    return NextResponse.json({ slug: request.slug, id: request.id })
+    return NextResponse.json({ slug, id })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
@@ -43,10 +41,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const requests = await prisma.request.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-  })
+  await ensureTables()
+  
+  const { rows } = await db.sql`
+    SELECT * FROM requests 
+    ORDER BY created_at DESC 
+    LIMIT 50
+  `;
+
+  // Map database naming (snake_case) to client naming (camelCase) if necessary
+  const requests = rows.map(r => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    amount: parseFloat(r.amount),
+    note: r.note,
+    method: r.method,
+    status: r.status,
+    fromName: r.from_name,
+    paidAt: r.paid_at,
+    createdAt: r.created_at
+  }))
 
   return NextResponse.json(requests)
 }
