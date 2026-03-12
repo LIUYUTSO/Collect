@@ -45,17 +45,18 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
       </div>
 
       <div 
-        className={`fold-content glass-panel ${activeMethod ? 'active' : ''}`}
+        className={`fold-content ${activeMethod ? 'active' : ''}`}
         style={{
-          padding: '40px 32px',
-          borderRadius: 2,
-          textAlign: 'center',
-          boxShadow: '0 20px 50px rgba(26, 23, 20, 0.05)',
+          padding: '28px 24px',
+          border: '1px solid var(--fog)',
+          borderRadius: 3,
+          background: 'rgba(255,255,255,0.3)',
+          textAlign: 'center'
         }}
       >
         {activeMethod === 'td' ? (
-          <div key="td-content" className="animate-in" style={{ animationDuration: '0.5s' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <div key="td-content" className="animate-in" style={{ animationDuration: '0.4s' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
               <TdIcon />
             </div>
             <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac</p>
