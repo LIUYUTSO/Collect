@@ -266,6 +266,16 @@ export default async function RequestPage({
           }}>
             Collect
           </p>
+          <p style={{ 
+            fontSize: 8, 
+            letterSpacing: '0.2em', 
+            color: 'var(--ash)', 
+            marginTop: 8,
+            opacity: 0.6,
+            fontWeight: 500
+          }}>
+            © BY ADAM LIU
+          </p>
         </div>
       </main>
     </ClientTransition>

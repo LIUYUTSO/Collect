@@ -215,7 +215,7 @@ input, textarea, select, button {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 24px;
+  width: 8px; /* Ultra narrow */
   pointer-events: none;
   z-index: 20;
 }
