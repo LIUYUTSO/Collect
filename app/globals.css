@@ -245,7 +245,7 @@ input, textarea, select, button {
 }
 
 .payment-card {
-  flex: 0 0 92%; /* Peeking at 90% width + gap */
+  flex: 0 0 88%; /* Perfect peeking at this scale */
   scroll-snap-align: center;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 0 4px;
@@ -256,7 +256,7 @@ input, textarea, select, button {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 16px;
   margin-bottom: 24px;
 }
 

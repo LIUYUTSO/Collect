@@ -30,8 +30,14 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
   }
 
   return (
-    <div className="animate-in delay-300" style={{ width: '100%', maxWidth: '100%', marginTop: 24 }}>
-      <div style={{ padding: '0 8px', marginBottom: 16 }}>
+    <div className="animate-in delay-300" style={{ 
+      width: 'calc(100% + 48px)', 
+      marginLeft: -24, 
+      marginRight: -24, 
+      marginTop: 24,
+      position: 'relative'
+    }}>
+      <div style={{ padding: '0 32px', marginBottom: 16 }}>
         <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', fontWeight: 700 }}>
           PAY BY 付款
         </p>
@@ -42,9 +48,10 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
           ref={sliderRef}
           onScroll={handleScroll}
           className="payment-slider"
+          style={{ paddingLeft: 24, paddingRight: 24 }}
         >
           {/* TD Card */}
-          <div className="payment-card">
+          <div className="payment-card" style={{ padding: '0 6px' }}>
             <div style={{ 
               background: '#00D100', 
               color: 'black', 
@@ -53,7 +60,7 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
               minHeight: 340,
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 1px 2px rgba(0, 50, 0, 0.2)'
+              boxShadow: '0 1px 3px rgba(0, 50, 0, 0.2)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em' }}>TD</span>
@@ -68,7 +75,7 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
           </div>
 
           {/* Wealthsimple Card */}
-          <div className="payment-card">
+          <div className="payment-card" style={{ padding: '0 6px' }}>
             <div style={{ 
               background: 'black', 
               color: 'white', 
@@ -77,7 +84,7 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
               minHeight: 340,
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)'
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
             }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.05em' }}>Wealthsimple</span>

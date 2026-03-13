@@ -33,7 +33,6 @@ export default async function RequestPage({
   return (
     <ClientTransition title={request.title}>
       <main
-        className="animate-in"
         style={{
           minHeight: '100dvh',
           display: 'flex',
@@ -42,7 +41,6 @@ export default async function RequestPage({
           padding: '0 24px',
           paddingTop: 'env(safe-area-inset-top)',
           background: 'var(--washi)',
-          animationDuration: '1.2s', /* Slower, more premium reveal */
         }}
       >
         {/* Top decoration */}
@@ -52,7 +50,6 @@ export default async function RequestPage({
 
         {/* Header */}
         <div
-          className="animate-in"
           style={{
             width: '100%',
             maxWidth: 390,
@@ -74,15 +71,15 @@ export default async function RequestPage({
           <h1
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: `calc(40px - ${Math.max(0, request.title.length - 6) * 1.2}px)`,
-              minFontSize: '20px',
+              fontSize: `clamp(24px, calc((100vw - 48px) / ${Math.max(1, request.title.length) * 0.55}), 48px)`,
               fontWeight: 800,
               color: 'var(--sumi)',
-              lineHeight: 1.1,
+              lineHeight: 1,
               marginBottom: 8,
               whiteSpace: 'nowrap',
               width: '100%',
-              textAlign: 'left'
+              textAlign: 'left',
+              letterSpacing: '-0.02em'
             } as any}
           >
             {request.title}
@@ -93,7 +90,7 @@ export default async function RequestPage({
               color: 'var(--ash)', 
               marginTop: 4,
               fontWeight: 500,
-              opacity: 1 /* Darkened as requested */
+              opacity: 1
             }}>
               {request.location}
             </p>
@@ -113,7 +110,7 @@ export default async function RequestPage({
                 alignItems: 'center',
                 gap: 6
               }}>
-                <span style={{ opacity: 0.7, fontSize: 10 }}>給</span> {request.payerName} <span style={{ opacity: 0.7, fontSize: 10 }}>已代付</span>
+                <span style={{ opacity: 0.5, fontSize: 10 }}>給</span> {request.payerName} <span style={{ opacity: 0.5, fontSize: 10 }}>已代付</span>
               </div>
             ) : (
               request.fromName && (
