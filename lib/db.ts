@@ -33,6 +33,13 @@ export async function ensureTables() {
     } catch (e) {
       // Ignore if already TEXT or other issues
     }
+    await sql`
+      CREATE TABLE IF NOT EXISTS payees (
+        id TEXT PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
     // For WebAuthn / Biometric login
     await sql`
       CREATE TABLE IF NOT EXISTS credentials (

@@ -16,6 +16,11 @@ type Request = {
   createdAt: string
 }
 
+type Payee = {
+  id: string
+  name: string
+}
+
 type View = 'login' | 'list' | 'create'
 
 export default function Dashboard() {
@@ -23,6 +28,7 @@ export default function Dashboard() {
   const [password, setPassword] = useState('')
   const [adminKey, setAdminKey] = useState('')
   const [requests, setRequests] = useState<Request[]>([])
+  const [payees, setPayees] = useState<Payee[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
@@ -45,12 +51,18 @@ export default function Dashboard() {
 
   const fetchRequests = useCallback(async (key: string) => {
     setLoading(true)
-    const res = await fetch('/api/requests', {
-      headers: { 'x-admin-key': key },
-    })
-    if (res.ok) {
-      const data = await res.json()
+    const [reqRes, payeeRes] = await Promise.all([
+      fetch('/api/requests', { headers: { 'x-admin-key': key } }),
+      fetch('/api/payees', { headers: { 'x-admin-key': key } })
+    ])
+    
+    if (reqRes.ok) {
+      const data = await reqRes.json()
       setRequests(data)
+    }
+    if (payeeRes.ok) {
+      const data = await payeeRes.json()
+      setPayees(data)
     }
     setLoading(false)
   }, [])
@@ -143,11 +155,43 @@ export default function Dashboard() {
     fetchRequests(adminKey)
   }
 
-  const copyLink = (slug: string) => {
+  const shareLink = async (slug: string, title?: string, amount?: number) => {
     const url = `${window.location.origin}/request/${slug}`
-    navigator.clipboard.writeText(url)
-    setCopied(slug)
-    setTimeout(() => setCopied(''), 2000)
+    if (typeof navigator !== 'undefined' && (navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: `請款 · ${title}`,
+          text: `請支付 ${formatCAD(amount || 0)} 給我，謝謝！`,
+          url: url,
+        })
+      } catch (err) {
+        // user cancelled or failed
+        console.error('Share failed', err)
+      }
+    } else {
+      navigator.clipboard.writeText(url)
+      setCopied(slug)
+      setTimeout(() => setCopied(''), 2000)
+    }
+  }
+
+  const handleSavePayee = async (name: string) => {
+    if (!name) return
+    const res = await fetch('/api/payees', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify({ name }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setPayees(prev => {
+        if (prev.find(p => p.id === data.id)) return prev
+        return [...prev, data].sort((a, b) => a.name.localeCompare(b.name))
+      })
+    }
   }
 
   const pending = requests.filter((r) => r.status === 'pending')
@@ -311,10 +355,10 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {newRequests.map((req, idx) => (
                   <div key={idx} style={{ padding: '16px 20px', border: '1px solid rgba(74,82,64,0.2)', borderRadius: 3, background: 'rgba(255,255,255,0.3)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
                       <p style={{ fontSize: 13, color: 'var(--sumi)' }}>{req.fromName || '朋友'} · {req.title}</p>
-                      <button onClick={() => copyLink(req.slug)} style={{ ...ghostBtn, padding: 0, color: 'var(--moss)' }}>
-                        {copied === req.slug ? '已複製 ✓' : '複製'}
+                      <button onClick={() => shareLink(req.slug, req.title, req.amount)} style={{ ...ghostBtn, padding: 0, color: 'var(--moss)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <ShareIcon size={14} /> {copied === req.slug ? '已複製' : '分享'}
                       </button>
                     </div>
                     <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--ash)', wordBreak: 'break-all' }}>
@@ -346,7 +390,30 @@ export default function Dashboard() {
                   <input type="number" step="0.01" min="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" style={{ ...inputStyle, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
 
                   <FieldLabel style={{ marginTop: 20 }}>給誰（選填）</FieldLabel>
-                  <input value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="朋友名字" style={inputStyle} />
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {payees.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setForm({ ...form, fromName: p.name })}
+                        style={{
+                          ...smallTag,
+                          background: form.fromName === p.name ? 'var(--sumi)' : 'rgba(255,255,255,0.4)',
+                          color: form.fromName === p.name ? 'var(--washi)' : 'var(--sumi)',
+                        }}
+                      >
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="朋友名字" style={inputStyle} />
+                    {form.fromName && !payees.find(p => p.name === form.fromName) && (
+                      <button type="button" onClick={() => handleSavePayee(form.fromName)} style={smallBtn}>
+                        保存姓名
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -455,7 +522,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>待收 · PENDING</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {pending.map((r) => (
-                <RequestCard key={r.id} r={r} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />
+                <RequestCard key={r.id} r={r} onShare={shareLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />
               ))}
             </div>
           </section>
@@ -467,7 +534,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>已收 · RECEIVED</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {paid.map((r) => (
-                <RequestCard key={r.id} r={r} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} paid />
+                <RequestCard key={r.id} r={r} onShare={shareLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} paid />
               ))}
             </div>
           </section>
@@ -496,10 +563,10 @@ function FieldLabel({ children, style }: { children: React.ReactNode; style?: Re
 }
 
 function RequestCard({
-  r, onCopy, onPaid, onDelete, copied, paid = false,
+  r, onShare, onPaid, onDelete, copied, paid = false,
 }: {
   r: Request
-  onCopy: (slug: string) => void
+  onShare: (slug: string, title?: string, amount?: number) => void
   onPaid: (id: string, status: string) => void
   onDelete: (id: string) => void
   copied: string
@@ -534,8 +601,8 @@ function RequestCard({
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-        <button onClick={() => onCopy(r.slug)} style={smallBtn}>
-          {copied === r.slug ? '✓ 已複製' : '複製連結'}
+        <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...smallBtn, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <ShareIcon size={12} /> {copied === r.slug ? '已複製' : '分享連結'}
         </button>
         <a 
           href={`/request/${r.slug}`} 
@@ -605,4 +672,24 @@ const smallBtn: React.CSSProperties = {
   fontSize: 11,
   letterSpacing: '0.08em',
   cursor: 'pointer',
+}
+
+const smallTag: React.CSSProperties = {
+  padding: '4px 8px',
+  border: '1px solid var(--fog)',
+  borderRadius: 2,
+  fontSize: 10,
+  letterSpacing: '0.05em',
+  cursor: 'pointer',
+  transition: 'all 0.2s',
+}
+
+function ShareIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+      <polyline points="16 6 12 2 8 6"></polyline>
+      <line x1="12" y1="2" x2="12" y2="15"></line>
+    </svg>
+  )
 }
