@@ -58,6 +58,17 @@ export default async function RequestPage({
             paddingTop: 32,
           }}
         >
+          {request.eventDate && (
+            <p style={{ 
+              fontSize: 12, 
+              color: 'var(--clay)', 
+              letterSpacing: '0.15em', 
+              marginBottom: 8,
+              fontFamily: 'var(--font-mono)'
+            }}>
+              {formatDate(request.eventDate)}
+            </p>
+          )}
           <h1
             style={{
               fontFamily: 'var(--font-zen, serif)',
@@ -70,8 +81,21 @@ export default async function RequestPage({
           >
             {request.title}
           </h1>
+          {request.location && (
+            <p style={{ 
+              fontSize: 11, 
+              color: 'var(--ash)', 
+              marginTop: 6,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              opacity: 0.8
+            }}>
+              {request.location}
+            </p>
+          )}
           {request.fromName && (
-            <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 8 }}>
               給 {request.fromName}
             </p>
           )}

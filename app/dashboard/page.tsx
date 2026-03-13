@@ -139,6 +139,12 @@ export default function Dashboard() {
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
 
+  // New fields
+  const [eventDate, setEventDate] = useState('')
+  const [location, setLocation] = useState('')
+  const [locationResults, setLocationResults] = useState<any[]>([])
+  const [searchingLocation, setSearchingLocation] = useState(false)
+
   // Contacts management
   const [newContactName, setNewContactName] = useState('')
   const [savingContact, setSavingContact] = useState(false)
@@ -170,6 +176,18 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  const handleLocationSearch = async (query: string) => {
+    setLocation(query)
+    if (query.length < 2) { setLocationResults([]); return }
+    setSearchingLocation(true)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
+      const data = await res.json()
+      setLocationResults(data)
+    } catch (e) { console.error('OSM error', e) }
+    setSearchingLocation(false)
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     const currentTitle = titleRef.current?.textContent?.trim() || ''
@@ -181,6 +199,14 @@ export default function Dashboard() {
     setCreating(true); setError('')
 
     let payload: any;
+    const commonFields = { 
+      title: currentTitle, 
+      note: currentNote, 
+      method: 'all', 
+      eventDate: eventDate || null, 
+      location: location || null 
+    }
+
     if (groupRequest && isMultiple) {
       const recipientItems = validRecipients.map(r => {
         const payee = payees.find(p => p.id === r.payeeId)
@@ -190,14 +216,14 @@ export default function Dashboard() {
         return { name: payee?.name || '', amount: parseFloat(amt as string) }
       })
       const totalAmt = recipientItems.reduce((sum, item) => sum + item.amount, 0)
-      payload = { title: currentTitle, amount: totalAmt, note: currentNote, method: 'all', payees: recipientItems }
+      payload = { ...commonFields, amount: totalAmt, payees: recipientItems }
     } else {
       payload = validRecipients.map(r => {
         const payee = payees.find(p => p.id === r.payeeId)
         const amt = isMultiple && splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { title: currentTitle, amount: amt, note: currentNote, method: 'all', fromName: payee?.name || '' }
+        return { ...commonFields, amount: amt, fromName: payee?.name || '' }
       })
     }
 
@@ -217,6 +243,7 @@ export default function Dashboard() {
       setTitle(''); setNote('')
       setRecipients([{ payeeId: '', amount: '' }])
       setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
+      setEventDate(''); setLocation(''); setLocationResults([])
     } else setError('建立失敗')
     setCreating(false)
   }
@@ -413,6 +440,46 @@ export default function Dashboard() {
             />
 
             <div style={{ height: 16 }} />
+
+            {/* Section: 日期與地點 */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>日期</p>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={e => setEventDate(e.target.value)}
+                  style={{ ...capsule, padding: '12px 16px' }}
+                />
+              </div>
+              <div style={{ flex: 1.5, position: 'relative' }}>
+                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>地點</p>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={e => handleLocationSearch(e.target.value)}
+                  placeholder="搜尋地點…"
+                  style={{ ...capsule, padding: '12px 16px' }}
+                />
+                {locationResults.length > 0 && (
+                  <div style={{ 
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, 
+                    background: 'white', border: `1px solid ${fog}`, borderRadius: 12, 
+                    marginTop: 4, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+                  }}>
+                    {locationResults.map((r, i) => (
+                      <div 
+                        key={i} 
+                        onClick={() => { setLocation(r.display_name); setLocationResults([]) }}
+                        style={{ padding: '10px 16px', fontSize: 13, borderBottom: i === locationResults.length - 1 ? 'none' : `1px solid ${fog}`, cursor: 'pointer' }}
+                      >
+                        {r.display_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Section: 備註 */}
             <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>備註（選填）</p>

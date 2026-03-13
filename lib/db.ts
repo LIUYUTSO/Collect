@@ -22,17 +22,21 @@ export async function ensureTables() {
         status TEXT DEFAULT 'pending',
         from_name TEXT,
         payees JSONB,
+        event_date DATE,
+        location TEXT,
         paid_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
     
-    // Migration: Add payees column if it doesn't exist
+    // Migration: Add columns if they don't exist
     try {
       await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS payees JSONB;`;
+      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS event_date DATE;`;
+      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS location TEXT;`;
     } catch (e) {
-      // Ignore if column exists or other issues
+      // Ignore if columns exist or other issues
     }
     await sql`
       CREATE TABLE IF NOT EXISTS payees (
