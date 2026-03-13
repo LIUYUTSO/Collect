@@ -155,8 +155,16 @@ export default function Dashboard() {
     fetchRequests(adminKey)
   }
 
+  const getUrl = (slug: string) => `${window.location.origin}/request/${slug}`
+
+  const copyLink = (slug: string) => {
+    navigator.clipboard.writeText(getUrl(slug))
+    setCopied(slug)
+    setTimeout(() => setCopied(''), 2000)
+  }
+
   const shareLink = async (slug: string, title?: string, amount?: number) => {
-    const url = `${window.location.origin}/request/${slug}`
+    const url = getUrl(slug)
     if (typeof navigator !== 'undefined' && (navigator as any).share) {
       try {
         await (navigator as any).share({
@@ -165,13 +173,10 @@ export default function Dashboard() {
           url: url,
         })
       } catch (err) {
-        // user cancelled or failed
         console.error('Share failed', err)
       }
     } else {
-      navigator.clipboard.writeText(url)
-      setCopied(slug)
-      setTimeout(() => setCopied(''), 2000)
+      copyLink(slug)
     }
   }
 
@@ -355,15 +360,25 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {newRequests.map((req, idx) => (
                   <div key={idx} style={{ padding: '16px 20px', border: '1px solid rgba(74,82,64,0.2)', borderRadius: 3, background: 'rgba(255,255,255,0.3)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
-                      <p style={{ fontSize: 13, color: 'var(--sumi)' }}>{req.fromName || '朋友'} · {req.title}</p>
-                      <button onClick={() => shareLink(req.slug, req.title, req.amount)} style={{ ...ghostBtn, padding: 0, color: 'var(--moss)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <ShareIcon size={14} /> {copied === req.slug ? '已複製' : '分享'}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                      <p style={{ fontSize: 13, color: 'var(--sumi)', fontWeight: 500 }}>
+                        {req.fromName || '朋友'} · {req.title}
+                      </p>
+                      <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'var(--moss)' }}>
+                        {formatCAD(req.amount)}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => copyLink(req.slug)} style={smallBtn}>
+                        {copied === req.slug ? '✓ 已複製' : '傳統複製'}
+                      </button>
+                      <a href={`/request/${req.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...smallBtn, textDecoration: 'none' }}>
+                        預覽
+                      </a>
+                      <button onClick={() => shareLink(req.slug, req.title, req.amount)} style={{ ...smallBtn, background: 'var(--sumi)', color: 'var(--washi)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <ShareIcon size={12} /> 分享
                       </button>
                     </div>
-                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'var(--ash)', wordBreak: 'break-all' }}>
-                      {typeof window !== 'undefined' ? `${window.location.origin}/request/${req.slug}` : `/request/${req.slug}`}
-                    </p>
                   </div>
                 ))}
               </div>
@@ -522,7 +537,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>待收 · PENDING</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {pending.map((r) => (
-                <RequestCard key={r.id} r={r} onShare={shareLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />
+                <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />
               ))}
             </div>
           </section>
@@ -534,7 +549,7 @@ export default function Dashboard() {
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>已收 · RECEIVED</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {paid.map((r) => (
-                <RequestCard key={r.id} r={r} onShare={shareLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} paid />
+                <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} paid />
               ))}
             </div>
           </section>
@@ -585,24 +600,24 @@ function RequestCard({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 14, color: 'var(--sumi)', fontWeight: 400, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {r.title}
+          <p style={{ fontSize: 14, color: 'var(--sumi)', fontWeight: 500, marginBottom: 2 }}>
+            {r.fromName || '未命名'}
           </p>
-          {r.fromName && <p style={{ fontSize: 11, color: 'var(--ash)' }}>給 {r.fromName}</p>}
+          <p style={{ fontSize: 11, color: 'var(--ash)' }}>{r.title}</p>
         </div>
         <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: paid ? 'var(--moss)' : 'var(--sumi)', marginLeft: 12, whiteSpace: 'nowrap' }}>
           {formatCAD(r.amount)}
         </p>
       </div>
 
-      <p style={{ fontSize: 11, color: 'var(--ash)', marginTop: 6 }}>
+      <p style={{ fontSize: 10, color: 'var(--fog)', marginTop: 6, letterSpacing: '0.05em' }}>
         {formatDate(r.createdAt)} · {r.method === 'td' ? 'TD' : 'WS'}
       </p>
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-        <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...smallBtn, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ShareIcon size={12} /> {copied === r.slug ? '已複製' : '分享連結'}
+        <button onClick={() => onCopy(r.slug)} style={smallBtn}>
+          {copied === r.slug ? '✓ 已複製' : '傳統複製'}
         </button>
         <a 
           href={`/request/${r.slug}`} 
@@ -610,8 +625,11 @@ function RequestCard({
           rel="noopener noreferrer" 
           style={{ ...smallBtn, textDecoration: 'none', display: 'flex', alignItems: 'center' }}
         >
-          開啟連結
+          預覽
         </a>
+        <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...smallBtn, background: paid ? 'transparent' : 'var(--sumi)', color: paid ? 'var(--sumi)' : 'var(--washi)', display: 'flex', alignItems: 'center', gap: 6, border: paid ? '1px solid var(--fog)' : 'none' }}>
+          <ShareIcon size={12} /> 分享
+        </button>
         <button
           onClick={() => onPaid(r.id, r.status)}
           style={{ ...smallBtn, background: paid ? 'transparent' : 'rgba(74,82,64,0.1)', color: paid ? 'var(--ash)' : 'var(--moss)', borderColor: paid ? 'var(--fog)' : 'rgba(74,82,64,0.2)' }}
