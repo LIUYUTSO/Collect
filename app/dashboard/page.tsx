@@ -488,13 +488,39 @@ export default function Dashboard() {
 
                   <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {recipients.map((r, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 8 }}>
-                        <input value={r.name} onChange={e => updateRecipient(i, 'name', e.target.value)} placeholder="名字" style={{ ...inputStyle, padding: '10px 12px' }} required autoComplete="off" autoCorrect="off" spellCheck={false} />
-                        {!splitEqually && (
-                          <input type="number" step="0.01" value={r.amount} onChange={e => updateRecipient(i, 'amount', e.target.value)} placeholder="金額" style={{ ...inputStyle, width: 80, padding: '10px 8px', fontFamily: 'DM Mono, monospace' }} required />
-                        )}
-                        {recipients.length > 1 && (
-                          <button type="button" onClick={() => removeRecipient(i)} style={{ ...ghostBtn, color: 'var(--rust)', padding: '0 4px' }}>✕</button>
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 10, borderBottom: i === recipients.length - 1 ? 'none' : '1px solid var(--fog)' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <div style={{ flex: 1, position: 'relative' }}>
+                            <input 
+                              list={`payee-list-split-${i}`}
+                              value={r.name} 
+                              onChange={e => updateRecipient(i, 'name', e.target.value)} 
+                              placeholder="名字" 
+                              style={{ ...inputStyle, padding: '10px 12px' }} 
+                              required 
+                              autoComplete="off" 
+                              autoCorrect="off" 
+                              spellCheck={false} 
+                            />
+                            <datalist id={`payee-list-split-${i}`}>
+                              {payees.map(p => <option key={p.id} value={p.name} />)}
+                            </datalist>
+                          </div>
+                          {!splitEqually && (
+                            <input type="number" step="0.01" value={r.amount} onChange={e => updateRecipient(i, 'amount', e.target.value)} placeholder="金額" style={{ ...inputStyle, width: 80, padding: '10px 8px', fontFamily: 'DM Mono, monospace' }} required />
+                          )}
+                          {recipients.length > 1 && (
+                            <button type="button" onClick={() => removeRecipient(i)} style={{ ...ghostBtn, color: 'var(--rust)', padding: '0 4px' }}>✕</button>
+                          )}
+                        </div>
+                        {r.name && !payees.find(p => p.name === r.name) && (
+                          <button 
+                            type="button" 
+                            onClick={() => handleSavePayee(r.name)} 
+                            style={{ ...smallBtn, alignSelf: 'flex-start', fontSize: 10, padding: '4px 8px', background: 'rgba(74,82,64,0.1)', color: 'var(--moss)' }}
+                          >
+                            + 保存「{r.name}」到名單
+                          </button>
                         )}
                       </div>
                     ))}
