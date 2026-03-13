@@ -8,11 +8,16 @@
   --font-mono: 'DM Mono', monospace;
   --washi: #F2EDE4;
   --sumi: #1A1714;
-  --ash: #5C5850;
+  --ash: #3D3933; /* Darkened further */
   --fog: #D4CFC8;
   --rust: #8B4A3C;
   --moss: #4A5240;
-  --clay: #8C7352;
+  --clay: #6D5A42; /* Darkened further */
+}
+
+::placeholder {
+  color: #3D3933 !important;
+  opacity: 0.8 !important;
 }
 
 * {
@@ -142,9 +147,16 @@ input, textarea, select, button {
 }
 
 .no-wrap {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex-shrink: 0 !important;
+}
+
+.fixed-h {
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .fold-content {

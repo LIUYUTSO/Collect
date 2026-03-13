@@ -117,50 +117,67 @@ function TrashIcon({ size = 15 }: { size?: number }) {
   )
 }
 
+function LockIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  )
+}
+
+function ContactIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  )
+}
+
 function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
   const payeeList = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
   
   return (
-    <div style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)', opacity: paid ? 0.7 : 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-        <div style={{ overflow: 'hidden', flex: 1 }}>
-          <p style={{ fontSize: 13, color: ash, marginBottom: 2 }} className="no-wrap">{r.title}</p>
-          <p style={{ fontSize: 11, color: fog }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
+    <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div style={{ overflow: 'hidden', flex: 1, paddingRight: 12 }}>
+          <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 500 }} className="no-wrap">{r.title}</p>
+          <p style={{ fontSize: 11, color: ash, opacity: 0.9 }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '6px 10px', background: sumi, color: washi, border: 'none' }} title="Share">
-            <ShareIcon size={14} />
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px', background: sumi, color: washi, border: 'none' }}>
+            <ShareIcon size={13} />
           </button>
-          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '6px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }} title="Preview">
-            <PreviewIcon size={14} />
+          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <PreviewIcon size={13} />
           </a>
-          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '6px 10px' }} title="Edit">
-            <EditIcon size={14} />
+          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '7px' }}>
+            <EditIcon size={13} />
           </button>
-          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '6px 10px', background: rust, color: washi, border: 'none' }} title="Delete">
-            <TrashIcon size={14} />
+          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px', background: rust, color: washi, border: 'none' }}>
+            <TrashIcon size={13} />
           </button>
         </div>
       </div>
 
-      <div style={{ borderTop: `1px solid ${fog}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ borderTop: `1px solid ${fog}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {payeeList.map((p: any, idx: number) => (
           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 14, fontWeight: 500, color: sumi }} className="no-wrap">{p.name}</p>
-              <p style={{ fontSize: 12, color: ash, fontFamily: 'DM Mono, monospace' }}>{formatCAD(p.amount)}</p>
+            <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: sumi }} className="no-wrap">{p.name}</p>
+              <p style={{ fontSize: 12, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
             </div>
             <button 
               onClick={() => onPayeePaid(r, idx)} 
               style={{
-                width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: 'none', cursor: 'pointer', fontSize: 14,
-                background: p.paid ? moss : rust,
-                color: 'white',
-                transition: 'all 0.2s'
+                padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6,
+                border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                background: p.paid ? moss : 'rgba(139, 74, 60, 0.1)',
+                color: p.paid ? 'white' : rust,
+                transition: 'all 0.2s',
+                letterSpacing: '0.05em'
               }}
             >
-              {p.paid ? '💰' : '✕'}
+              {p.paid ? 'PAID 💰' : 'UNPAID'}
             </button>
           </div>
         ))}
@@ -625,43 +642,63 @@ export default function Dashboard() {
 
   // ─── LIST ────────────────────────────────────────────────────────────────
   return (
-    <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
+    <main style={{ minHeight: '100dvh', padding: '0 20px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
         <div style={{ paddingTop: 56, paddingBottom: 8 }}><div className="brush-line" /></div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: 28, paddingBottom: 24 }}>
-          <div>
-            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.25em', color: ash, marginBottom: 4 }}>ADMIN PORTAL</p>
-            <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 26, fontWeight: 700, color: sumi }}>HISTORY</h1>
+        
+        <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 10, letterSpacing: '0.3em', color: ash, fontWeight: 600 }}>ADMIN PORTAL</p>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 14px', fontSize: 11, fontWeight: 700 }}>+ NEW</button>
+              <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                <ContactIcon size={12} /> Contacts
+              </button>
+              <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                <LockIcon size={11} /> FaceID
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 12 }}>👥 Contacts</button>
-            <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 12 }}>🔒 FaceID</button>
-            <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 16px' }}>+ NEW</button>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-          <input value={searchTitle} onChange={e => setSearchTitle(e.target.value)} placeholder="Search Purpose..." style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13 }} />
-          <select value={searchName} onChange={e => setSearchName(e.target.value)} style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13, color: searchName ? sumi : ash }}>
-            <option value="">All Contacts</option>
-            {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-          </select>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ position: 'relative', flex: 1.2 }}>
+              <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: ash, opacity: 0.7 }}>
+                <PreviewIcon size={14} />
+              </div>
+              <input 
+                value={searchTitle} 
+                onChange={e => setSearchTitle(e.target.value)} 
+                placeholder="Search..." 
+                style={{ ...capsule, paddingLeft: 38, fontSize: 13, height: 46, fontWeight: 500 }} 
+              />
+            </div>
+            <div style={{ position: 'relative', flex: 1 }}>
+               <select 
+                value={searchName} 
+                onChange={e => setSearchName(e.target.value)} 
+                style={{ ...capsule, fontSize: 13, height: 46, color: sumi, fontWeight: 500 }}
+              >
+                <option value="">All Contacts</option>
+                {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
 
         {pendingRequests.length > 0 && (
-          <div style={{ padding: '20px 24px', border: `1px solid ${fog}`, borderRadius: 12, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)' }}>
+          <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
             <div>
-              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: ash, marginBottom: 4 }}>PENDING TOTAL</p>
-              <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 22, color: rust, fontWeight: 300 }}>{formatCAD(totalPending)}</p>
+              <p style={{ fontSize: 10, letterSpacing: '0.15em', color: ash, marginBottom: 4, fontWeight: 600 }}>PENDING TOTAL</p>
+              <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: rust, fontWeight: 400 }}>{formatCAD(totalPending)}</p>
             </div>
-            <p style={{ fontSize: 12, color: ash }}>{pendingRequests.length} items</p>
+            <p style={{ fontSize: 11, color: ash, fontWeight: 600 }}>{pendingRequests.length} items</p>
           </div>
         )}
 
         {filteredPending.length > 0 && (
           <section style={{ marginBottom: 36 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>PENDING ({filteredPending.length})</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 14, fontWeight: 700 }}>PENDING ({filteredPending.length})</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} />)}
             </div>
           </section>
