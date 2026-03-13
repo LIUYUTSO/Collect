@@ -80,7 +80,7 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
         {/* TD Card */}
         <div className="payment-card" style={{ padding: '0 4px' }}>
           <div style={{ 
-            background: '#00D100', /* Brighter saturated TD green */
+            background: '#00D100', 
             color: 'black', 
             borderRadius: 16, 
             padding: '40px 32px',
@@ -114,8 +114,8 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)'
           }}>
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em' }}>W</span>
-              <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, letterSpacing: '0.05em' }}>WEALTHSIMPLE</span>
+              <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.05em' }}>Wealthsimple</span>
+              <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, letterSpacing: '0.05em' }}>INTERAC®</span>
             </div>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Pay to:</p>
             <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, fontWeight: 400, marginBottom: 20 }}>
@@ -126,6 +126,12 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Slider Indicators */}
+      <div className="slider-dots">
+        <div className={`dot ${activeTab === 'td' ? 'active' : ''}`} />
+        <div className={`dot ${activeTab === 'ws' ? 'active' : ''}`} />
       </div>
     </div>
   )

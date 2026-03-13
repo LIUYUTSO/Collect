@@ -72,15 +72,16 @@ export default async function RequestPage({
             </p>
           )}
           <h1
-            className="no-wrap"
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: 32,
+              fontSize: `calc(32px - ${Math.max(0, request.title.length - 8) * 0.8}px)`,
+              minFontSize: '16px',
               fontWeight: 700,
               color: 'var(--sumi)',
               lineHeight: 1.2,
               marginBottom: 6,
-            }}
+              whiteSpace: 'nowrap',
+            } as any}
           >
             {request.title}
           </h1>
@@ -158,10 +159,10 @@ export default async function RequestPage({
             style={{
               fontSize: 10,
               letterSpacing: '0.25em',
-              color: 'var(--fog)',
+              color: 'var(--ash)', /* Darkened */
               marginBottom: 20,
               textAlign: 'center',
-              fontWeight: 600
+              fontWeight: 800
             }}
           >
             {request.payerName ? 'BILLING INVOICE' : 'COLLECT RECEIPT'}
@@ -204,7 +205,7 @@ export default async function RequestPage({
           <div className="receipt-dashed" style={{ marginBottom: 0, marginTop: 24 }} />
           
           <div style={{ marginTop: 16, textAlign: 'center' }}>
-             <p style={{ fontSize: 10, color: 'var(--fog)', letterSpacing: '0.1em' }}>
+             <p style={{ fontSize: 10, color: 'var(--ash)', letterSpacing: '0.1em', fontWeight: 600 }}>
                {formatDate(request.createdAt)}
              </p>
           </div>

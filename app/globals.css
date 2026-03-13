@@ -246,8 +246,32 @@ input, textarea, select, button {
   display: none;
 }
 
-.payment-card {
-  flex: 0 0 100%;
-  scroll-snap-align: center;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* Slider Dots */
+.slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fog);
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background: var(--sumi);
+  width: 14px;
+  border-radius: 4px;
+}
+
+/* Dynamic Font Sizing Utility */
+.dynamic-title {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
 }

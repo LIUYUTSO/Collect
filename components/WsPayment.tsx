@@ -80,36 +80,36 @@ export default function WsPayment({ email, darkMode }: { email: string, darkMode
   }
 
   return (
-    <div style={{ marginTop: 8 }} className={loading ? 'fade-out' : ''}>
+    <div style={{ marginTop: 8 }}>
       <button
         onClick={handleOpenApp}
         disabled={loading}
         style={{
           width: '100%',
-          padding: '18px 20px',
+          padding: '16px 24px',
           background: primaryBg,
           color: primaryText,
           border: 'none',
-          borderRadius: 8,
-          fontSize: 15,
-          fontWeight: 600,
-          letterSpacing: '0.05em',
+          borderRadius: 40,
+          fontSize: 14,
+          fontWeight: 700,
+          letterSpacing: '0.02em',
           cursor: loading ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 12,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          gap: 10,
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          opacity: loading ? 0.9 : 1
         }}
       >
         {loading ? (
-          <svg className="premium-loader" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="20" fill="none"></circle>
-          </svg>
+          <div style={{ width: 14, height: 14, border: `2px solid ${primaryText}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         ) : (
-          '開啟 WealthSimple 轉帳'
+          <>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            Open Wealthsimple app
+          </>
         )}
       </button>
       
@@ -117,15 +117,15 @@ export default function WsPayment({ email, darkMode }: { email: string, darkMode
         onClick={handleCopy}
         style={{
           width: '100%',
-          marginTop: 16,
-          padding: '12px 16px',
+          marginTop: 12,
+          padding: '12px 24px',
           background: 'transparent',
           color: textColor,
-          border: `1px solid ${secondaryBorder}`,
-          borderRadius: 8,
+          border: `1.5px solid ${secondaryBorder}`,
+          borderRadius: 40,
           fontSize: 13,
-          fontWeight: 500,
-          letterSpacing: '0.05em',
+          fontWeight: 600,
+          letterSpacing: '0.02em',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -134,7 +134,8 @@ export default function WsPayment({ email, darkMode }: { email: string, darkMode
           transition: 'all 0.2s'
         }}
       >
-        {copied ? '✓ 已複製' : '按此複製 WealthSimple 地址'}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        {copied ? 'Copied' : 'Copy Wealthsimple address'}
       </button>
     </div>
   )
