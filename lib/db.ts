@@ -21,17 +21,18 @@ export async function ensureTables() {
         method TEXT NOT NULL,
         status TEXT DEFAULT 'pending',
         from_name TEXT,
+        payees JSONB,
         paid_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
     
-    // Migration: Change UUID to TEXT if already exists
+    // Migration: Add payees column if it doesn't exist
     try {
-      await sql`ALTER TABLE requests ALTER COLUMN id TYPE TEXT;`;
+      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS payees JSONB;`;
     } catch (e) {
-      // Ignore if already TEXT or other issues
+      // Ignore if column exists or other issues
     }
     await sql`
       CREATE TABLE IF NOT EXISTS payees (

@@ -76,12 +76,6 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
           </div>
         )}
 
-        <div className="brush-line" style={{ margin: '24px 0' }} />
-
-        <p style={{ fontSize: 12, color: 'var(--ash)', lineHeight: 1.7 }}>
-          請使用 Interac 轉帳。
-          備註欄填入「<strong style={{ color: 'var(--sumi)' }}>{title}</strong>」。
-        </p>
       </div>
     </div>
   )

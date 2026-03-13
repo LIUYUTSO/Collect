@@ -134,6 +134,7 @@ export default function Dashboard() {
   const [note, setNote] = useState('')
   const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '' }])
   const [splitEqually, setSplitEqually] = useState(false)
+  const [groupRequest, setGroupRequest] = useState(false)
   const [totalAmount, setTotalAmount] = useState('')
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
@@ -179,13 +180,26 @@ export default function Dashboard() {
     if (validRecipients.length === 0) { setError('請選擇至少一位收款人'); return }
     setCreating(true); setError('')
 
-    const payload = validRecipients.map(r => {
-      const payee = payees.find(p => p.id === r.payeeId)
-      const amt = isMultiple && splitEqually
-        ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
-        : r.amount
-      return { title: currentTitle, amount: amt, note: currentNote, method: 'all', fromName: payee?.name || '' }
-    })
+    let payload: any;
+    if (groupRequest && isMultiple) {
+      const recipientItems = validRecipients.map(r => {
+        const payee = payees.find(p => p.id === r.payeeId)
+        const amt = splitEqually
+          ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
+          : r.amount
+        return { name: payee?.name || '', amount: parseFloat(amt as string) }
+      })
+      const totalAmt = recipientItems.reduce((sum, item) => sum + item.amount, 0)
+      payload = { title: currentTitle, amount: totalAmt, note: currentNote, method: 'all', payees: recipientItems }
+    } else {
+      payload = validRecipients.map(r => {
+        const payee = payees.find(p => p.id === r.payeeId)
+        const amt = isMultiple && splitEqually
+          ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
+          : r.amount
+        return { title: currentTitle, amount: amt, note: currentNote, method: 'all', fromName: payee?.name || '' }
+      })
+    }
 
     const res = await fetch('/api/requests', {
       method: 'POST',
@@ -202,7 +216,7 @@ export default function Dashboard() {
       if (noteRef.current) noteRef.current.textContent = ''
       setTitle(''); setNote('')
       setRecipients([{ payeeId: '', amount: '' }])
-      setSplitEqually(false); setTotalAmount('')
+      setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
     } else setError('建立失敗')
     setCreating(false)
   }
@@ -417,10 +431,16 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash }}>收款人</p>
               {isMultiRecipient && (
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ash, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={splitEqually} onChange={e => setSplitEqually(e.target.checked)} />
-                  平均分配
-                </label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ash, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={groupRequest} onChange={e => setGroupRequest(e.target.checked)} />
+                    整合為一個連結
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ash, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={splitEqually} onChange={e => setSplitEqually(e.target.checked)} />
+                    平均分配
+                  </label>
+                </div>
               )}
             </div>
 

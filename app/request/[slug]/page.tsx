@@ -117,18 +117,36 @@ export default async function RequestPage({
           >
             金額 · AMOUNT
           </p>
-          <p
-            style={{
-              fontFamily: 'DM Mono, monospace',
-              fontSize: 42,
-              fontWeight: 300,
-              color: isPaid ? 'var(--moss)' : 'var(--sumi)',
-              letterSpacing: '-0.02em',
-              lineHeight: 1,
-            }}
-          >
-            {formatCAD(request.amount)}
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {!request.payees ? (
+              <p
+                style={{
+                  fontFamily: 'DM Mono, monospace',
+                  fontSize: 42,
+                  fontWeight: 300,
+                  color: isPaid ? 'var(--moss)' : 'var(--sumi)',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                }}
+              >
+                {formatCAD(request.amount)}
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(request.payees as any[]).map((p, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 15, color: 'var(--sumi)' }}>{p.name}</span>
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 18, color: 'var(--sumi)', fontWeight: 300 }}>{formatCAD(p.amount)}</span>
+                  </div>
+                ))}
+                <div style={{ height: 1, background: 'var(--fog)', margin: '8px 0' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--ash)' }}>TOTAL</span>
+                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 400 }}>{formatCAD(request.amount)}</span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {isPaid && (
             <div
@@ -202,9 +220,12 @@ export default async function RequestPage({
           }}
         >
           <div className="brush-line" style={{ marginBottom: 24 }} />
-          <p style={{ fontSize: 11, letterSpacing: '0.15em', color: 'var(--fog)' }}>
-            {formatDate(request.createdAt)} · 請款
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--clay)', opacity: 0.6 }} />
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--fog)', textTransform: 'uppercase' }}>
+              Collect
+            </p>
+          </div>
         </div>
       </main>
     </ClientTransition>
