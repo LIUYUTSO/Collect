@@ -17,21 +17,21 @@ export async function POST(req: NextRequest) {
     const results = []
 
     for (const item of items) {
-      const { title, amount, note, method = 'all', fromName, payees, eventDate, location } = item
+      const { title, amount, note, method = 'all', fromName, payerName, payees, eventDate, location } = item
       if (!title || (!amount && (!payees || payees.length === 0))) continue
 
       const slug = generateSlug()
       const id = nanoid()
 
       await db.sql`
-        INSERT INTO requests (id, slug, title, amount, note, method, from_name, payees, event_date, location)
+        INSERT INTO requests (id, slug, title, amount, note, method, from_name, payer_name, payees, event_date, location)
         VALUES (
           ${id}, ${slug}, ${title}, ${parseFloat(amount || 0)}, ${note || null}, 
-          ${method}, ${fromName || null}, ${payees ? JSON.stringify(payees) : null},
+          ${method}, ${fromName || null}, ${payerName || null}, ${payees ? JSON.stringify(payees) : null},
           ${eventDate || null}, ${location || null}
         )
       `;
-      results.push({ id, slug, title, amount: parseFloat(amount || 0), fromName: fromName || null, payees, eventDate, location })
+      results.push({ id, slug, title, amount: parseFloat(amount || 0), fromName: fromName || null, payerName: payerName || null, payees, eventDate, location })
     }
 
     if (results.length === 0) {
@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
     method: r.method,
     status: r.status,
     fromName: r.from_name,
+    payerName: r.payer_name,
     payees: r.payees,
     eventDate: r.event_date,
     location: r.location,

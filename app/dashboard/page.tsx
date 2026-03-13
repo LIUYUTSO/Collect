@@ -140,8 +140,14 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
     <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 600 }} className="no-wrap">{r.title}</p>
-        <p style={{ fontSize: 11, color: ash, opacity: 0.9, marginBottom: 12 }} className="no-wrap">{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
+        <p style={{ fontSize: 11, color: ash, opacity: 0.9, marginBottom: 8 }} className="no-wrap">{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
         
+        {r.payerName && (
+          <p style={{ fontSize: 11, color: rust, fontWeight: 700, marginBottom: 12 }} className="no-wrap">
+            CREDITOR: {r.payerName?.toUpperCase()}
+          </p>
+        )}
+
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} className="no-wrap">
           <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px 10px', background: sumi, color: washi, border: 'none' }}>
             <ShareIcon size={13} />
@@ -207,14 +213,15 @@ export default function Dashboard() {
   const [splitEqually, setSplitEqually] = useState(false)
   const [groupRequest, setGroupRequest] = useState(false)
   const [totalAmount, setTotalAmount] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [location, setLocation] = useState('')
+  const [payerName, setPayerName] = useState('')
+  const [locationResults, setLocationResults] = useState<any[]>([])
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
   const [editingRequest, setEditingRequest] = useState<Request | null>(null)
 
   // New fields
-  const [eventDate, setEventDate] = useState('')
-  const [location, setLocation] = useState('')
-  const [locationResults, setLocationResults] = useState<any[]>([])
   const [searchingLocation, setSearchingLocation] = useState(false)
 
   // Contacts management
@@ -273,6 +280,7 @@ export default function Dashboard() {
       if (noteRef.current) noteRef.current.textContent = editingRequest.note || ''
       setEventDate((editingRequest as any).eventDate?.split('T')[0] || '')
       setLocation((editingRequest as any).location || '')
+      setPayerName((editingRequest as any).payerName || '')
       
       const isGroup = !!editingRequest.payees
       setGroupRequest(isGroup)
@@ -303,7 +311,8 @@ export default function Dashboard() {
       note: currentNote, 
       method: 'all', 
       eventDate: eventDate || null, 
-      location: location || null 
+      location: location || null,
+      payerName: payerName || null
     }
 
     let payload: any;
@@ -315,7 +324,7 @@ export default function Dashboard() {
           : r.amount
         return { name: payee?.name || '', amount: parseFloat(amt as string), paid: false }
       })
-      const totalAmt = recipientItems.reduce((sum, item) => sum + item.amount, 0)
+      const totalAmt = parseFloat(totalAmount) || recipientItems.reduce((sum, item) => sum + item.amount, 0)
       payload = { ...commonFields, amount: totalAmt, payees: recipientItems }
     } else {
       payload = validRecipients.map(r => {
@@ -347,7 +356,7 @@ export default function Dashboard() {
         setTitle(''); setNote('')
         setRecipients([{ payeeId: '', amount: '' }])
         setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
-        setEventDate(''); setLocation('')
+        setEventDate(''); setLocation(''); setPayerName('')
       }
       setEditingRequest(null)
     } else setError(editingRequest ? 'Update failed' : 'Creation failed')
@@ -578,7 +587,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>NOTE (OPTIONAL)</p>
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8, fontWeight: 700 }}>ADVANCED BY (PAYER)</p>
+              <select 
+                value={payerName} 
+                onChange={e => setPayerName(e.target.value)} 
+                style={{ ...capsule, color: payerName ? sumi : ash, fontWeight: 500 }}
+              >
+                <option value="">Select who paid (None)</option>
+                {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
+            </div>
+
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8, fontWeight: 700 }}>NOTE (OPTIONAL)</p>
             <div ref={noteRef} contentEditable suppressContentEditableWarning data-placeholder="Details..." onInput={e => setNote((e.target as HTMLElement).textContent || '')} style={{ ...capsuleDiv, borderRadius: 12, minHeight: 80 }} />
 
             <div style={{ height: 24 }} />

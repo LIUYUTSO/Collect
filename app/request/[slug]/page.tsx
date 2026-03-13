@@ -20,6 +20,7 @@ export default async function RequestPage({
   if (request) {
     // Map snake_case to camelCase
     request.fromName = request.from_name;
+    request.payerName = request.payer_name;
     request.createdAt = request.created_at;
   }
 
@@ -94,10 +95,16 @@ export default async function RequestPage({
               {request.location}
             </p>
           )}
-          {request.fromName && (
-            <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 8 }}>
-              給 {request.fromName}
+          {request.payerName ? (
+            <p style={{ fontSize: 13, color: 'var(--rust)', marginTop: 8, fontWeight: 700 }}>
+              給 {request.payerName} (已代付)
             </p>
+          ) : (
+            request.fromName && (
+              <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 8 }}>
+                給 {request.fromName}
+              </p>
+            )
           )}
         </div>
 
@@ -116,7 +123,7 @@ export default async function RequestPage({
             overflow: 'hidden',
           }}
         >
-          {/* Subtle corner mark - wabi-sabi */}
+          {/* Subtle decoration */}
           <div
             style={{
               position: 'absolute',
@@ -126,7 +133,7 @@ export default async function RequestPage({
               height: 80,
               borderRadius: '50%',
               border: '1px solid var(--clay)',
-              opacity: 0.15,
+              opacity: 0.1,
               transform: 'rotate(-8deg)',
             }}
           />
@@ -139,7 +146,7 @@ export default async function RequestPage({
               marginBottom: 12,
             }}
           >
-            金額 · AMOUNT
+            {request.payerName ? '應付金額 · OWED TO PAYER' : '金額 · AMOUNT'}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {!request.payees ? (
