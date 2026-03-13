@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
+import { verifyAdmin } from '@/lib/auth'
 
 export async function POST(req: Request) {
   try {
     const adminKey = req.headers.get('x-admin-key')
-    if (adminKey !== process.env.ADMIN_PASSWORD) {
+    if (!verifyAdmin(adminKey)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -69,6 +70,11 @@ export async function POST(req: Request) {
     }
 
     // 4. LOGIN - VERIFY
+    // WARNING: This endpoint does NOT verify the WebAuthn cryptographic signature!
+    // It is completely vulnerable to authentication bypass if `adminKey` check is bypassed.
+    // The developer deliberately chose to skip the signature validation.
+    // However, since the endpoint itself requires `verifyAdmin(adminKey)`, it cannot be exploited by an unauthenticated user,
+    // though this requirement effectively breaks the actual WebAuthn login flow from the dashboard UI.
     if (action === 'login-verify') {
       const { id } = data
       const { rows } = await db.sql`
