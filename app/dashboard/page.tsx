@@ -414,7 +414,7 @@ export default function Dashboard() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleCreate}>
+            <form onSubmit={handleCreate} autoComplete="off">
               <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
                 {['single', 'split'].map(v => (
                   <button key={v} type="button" onClick={() => setMode(v as any)} style={{ ...smallBtn, flex: 1, padding: '10px', background: mode === v ? 'var(--sumi)' : 'transparent', color: mode === v ? 'var(--washi)' : 'var(--ash)', borderColor: mode === v ? 'var(--sumi)' : 'var(--fog)' }}>
@@ -424,7 +424,7 @@ export default function Dashboard() {
               </div>
 
               <FieldLabel>事由</FieldLabel>
-              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="聚餐費用、電影票…" style={inputStyle} required />
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="聚餐費用、電影票…" style={inputStyle} required autoComplete="one-time-code" autoCorrect="off" spellCheck={false} />
 
               {mode === 'single' ? (
                 <>
@@ -562,7 +562,7 @@ export default function Dashboard() {
               )}
 
               <FieldLabel style={{ marginTop: 24 }}>備註（選填）</FieldLabel>
-              <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="補充說明…" rows={3} style={{ ...inputStyle, resize: 'none' }} />
+              <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="補充說明…" rows={3} style={{ ...inputStyle, resize: 'none' }} autoComplete="one-time-code" autoCorrect="off" spellCheck={false} />
 
 
               {error && <p style={{ fontSize: 12, color: 'var(--rust)', marginTop: 12 }}>{error}</p>}
