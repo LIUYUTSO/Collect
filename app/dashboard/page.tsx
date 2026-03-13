@@ -32,6 +32,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
+  
+  // Search states
+  const [searchTitle, setSearchTitle] = useState('')
+  const [searchName, setSearchName] = useState('')
 
   // Create form state
   const [mode, setMode] = useState<'single' | 'split'>('single')
@@ -202,6 +206,12 @@ export default function Dashboard() {
   const pending = requests.filter((r) => r.status === 'pending')
   const paid = requests.filter((r) => r.status === 'paid')
   const totalPending = pending.reduce((s, r) => s + r.amount, 0)
+
+  const filteredPending = pending.filter(r => {
+    const matchTitle = r.title.toLowerCase().includes(searchTitle.toLowerCase())
+    const matchName = (r.fromName || '').toLowerCase().includes(searchName.toLowerCase())
+    return matchTitle && matchName
+  })
 
   const toBase64Url = (buf: ArrayBuffer) => {
     return btoa(Array.from(new Uint8Array(buf)).map(b => String.fromCharCode(b)).join(''))
@@ -422,7 +432,16 @@ export default function Dashboard() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input value={form.fromName} onChange={(e) => setForm({ ...form, fromName: e.target.value })} placeholder="朋友名字" style={inputStyle} />
+                    <input 
+                      list="payee-list"
+                      value={form.fromName} 
+                      onChange={(e) => setForm({ ...form, fromName: e.target.value })} 
+                      placeholder="朋友名字" 
+                      style={inputStyle} 
+                    />
+                    <datalist id="payee-list">
+                      {payees.map(p => <option key={p.id} value={p.name} />)}
+                    </datalist>
                     {form.fromName && !payees.find(p => p.name === form.fromName) && (
                       <button type="button" onClick={() => handleSavePayee(form.fromName)} style={smallBtn}>
                         保存姓名
@@ -496,6 +515,28 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 10, color: 'var(--ash)', marginBottom: 4 }}>篩選事由</p>
+            <input 
+              value={searchTitle} 
+              onChange={e => setSearchTitle(e.target.value)} 
+              placeholder="搜尋標題…" 
+              style={{ ...inputStyle, padding: '8px 12px', fontSize: 13 }} 
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 10, color: 'var(--ash)', marginBottom: 4 }}>篩選收款人</p>
+            <input 
+              value={searchName} 
+              onChange={e => setSearchName(e.target.value)} 
+              placeholder="搜尋姓名…" 
+              style={{ ...inputStyle, padding: '8px 12px', fontSize: 13 }} 
+            />
+          </div>
+        </div>
+
         {/* Summary */}
         {pending.length > 0 && (
           <div style={{ padding: '20px 24px', border: '1px solid var(--fog)', borderRadius: 3, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -508,11 +549,11 @@ export default function Dashboard() {
         )}
 
         {/* Pending */}
-        {pending.length > 0 && (
+        {filteredPending.length > 0 && (
           <section style={{ marginBottom: 36 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>待收 · PENDING</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 14 }}>待收 · PENDING ({filteredPending.length})</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {pending.map((r) => (
+              {filteredPending.map((r) => (
                 <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />
               ))}
             </div>
