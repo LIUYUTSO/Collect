@@ -79,6 +79,9 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
     }
   }
 
+  const primaryHeight = 56
+  const secondaryHeight = 42
+
   return (
     <div style={{ marginTop: 8 }}>
       <button
@@ -86,12 +89,12 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
         disabled={loading}
         style={{
           width: '100%',
-          padding: '16px 24px',
+          height: primaryHeight,
           background: primaryBg,
           color: primaryText,
           border: 'none',
-          borderRadius: 40,
-          fontSize: 14,
+          borderRadius: primaryHeight / 2,
+          fontSize: 15,
           fontWeight: 700,
           letterSpacing: '0.02em',
           cursor: loading ? 'default' : 'pointer',
@@ -101,14 +104,16 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
           gap: 10,
           transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          padding: '0 24px',
+          whiteSpace: 'nowrap'
         }}
       >
         {loading ? (
-          <div className="premium-loader" style={{ width: 14, height: 14, border: `2px solid ${primaryText}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div className="premium-loader" style={{ width: 16, height: 16, border: `2px solid ${primaryText}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         ) : (
           <>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            Open TD app
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span style={{ flexShrink: 0 }}>Open TD app</span>
           </>
         )}
       </button>
@@ -117,12 +122,12 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
         onClick={handleCopy}
         style={{
           width: '100%',
+          height: secondaryHeight,
           marginTop: 12,
-          padding: '12px 24px',
           background: 'transparent',
           color: textColor,
           border: `1.5px solid ${secondaryBorder}`,
-          borderRadius: 40,
+          borderRadius: secondaryHeight / 2,
           fontSize: 13,
           fontWeight: 600,
           letterSpacing: '0.02em',
@@ -131,11 +136,13 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
+          padding: '0 24px',
+          whiteSpace: 'nowrap'
         }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        {copied ? 'Copied' : 'Copy e-Transfer address'}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span style={{ flexShrink: 0 }}>{copied ? 'Copied' : 'Copy e-Transfer address'}</span>
       </button>
     </div>
   )

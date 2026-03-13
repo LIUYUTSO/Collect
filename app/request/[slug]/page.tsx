@@ -74,13 +74,15 @@ export default async function RequestPage({
           <h1
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: `calc(32px - ${Math.max(0, request.title.length - 8) * 0.8}px)`,
-              minFontSize: '16px',
-              fontWeight: 700,
+              fontSize: `calc(40px - ${Math.max(0, request.title.length - 6) * 1.2}px)`,
+              minFontSize: '20px',
+              fontWeight: 800,
               color: 'var(--sumi)',
-              lineHeight: 1.2,
-              marginBottom: 6,
+              lineHeight: 1.1,
+              marginBottom: 8,
               whiteSpace: 'nowrap',
+              width: '100%',
+              textAlign: 'left'
             } as any}
           >
             {request.title}
