@@ -22,7 +22,7 @@ export async function PATCH(
         status = COALESCE(${status}, status),
         method = COALESCE(${method}, method),
         from_name = COALESCE(${fromName}, from_name),
-        payees = COALESCE(${payees ? JSON.stringify(payees) : null}, payees),
+        payees = COALESCE(${payees ? (typeof payees === 'string' ? payees : JSON.stringify(payees)) : null}, payees),
         event_date = COALESCE(${eventDate}, event_date),
         location = COALESCE(${location}, location),
         paid_at = ${status === 'paid' ? new Date().toISOString() : (status === 'pending' ? null : undefined)},

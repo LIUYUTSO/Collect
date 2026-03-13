@@ -6,7 +6,7 @@ import { formatCAD, formatDate } from '@/lib/utils'
 type Request = {
   id: string; slug: string; title: string; amount: number
   note?: string; method: string; status: string; fromName?: string
-  paidAt?: string; createdAt: string
+  paidAt?: string; createdAt: string; payees?: any[]
 }
 type Payee = { id: string; name: string }
 type View = 'login' | 'list' | 'create' | 'contacts'
@@ -15,7 +15,7 @@ type Recipient = { payeeId: string; amount: string }
 // ─── Styles ────────────────────────────────────────────────────────────────
 const washi = '#F2EDE4'
 const sumi = '#1A1714'
-const ash = '#8C8880'
+const ash = 'var(--ash)' // Using darkened variable from CSS
 const fog = '#D4CFC8'
 const rust = '#8B4A3C'
 const moss = '#4A5240'
@@ -93,28 +93,77 @@ function ShareIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function RequestCard({ r, onShare, onCopy, onPaid, onDelete, onEdit, copied, paid }: any) {
+function PreviewIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  )
+}
+
+function EditIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  )
+}
+
+function TrashIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+  )
+}
+
+function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
+  const payeeList = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
+  
   return (
     <div style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)', opacity: paid ? 0.7 : 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div style={{ overflow: 'hidden', flex: 1 }}>
-          {r.fromName && <p style={{ fontSize: 15, fontWeight: 600, color: sumi, marginBottom: 2 }} className="no-wrap">{r.fromName}</p>}
-          <p style={{ fontSize: 13, color: ash }} className="no-wrap">{r.title}</p>
-          <p style={{ fontSize: 11, color: fog, marginTop: 4 }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
+          <p style={{ fontSize: 13, color: ash, marginBottom: 2 }} className="no-wrap">{r.title}</p>
+          <p style={{ fontSize: 11, color: fog }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
         </div>
-        <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: paid ? ash : rust, fontWeight: 300, flexShrink: 0, marginLeft: 12 }}>{formatCAD(r.amount)}</p>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '6px 10px', background: sumi, color: washi, border: 'none' }} title="Share">
+            <ShareIcon size={14} />
+          </button>
+          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '6px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }} title="Preview">
+            <PreviewIcon size={14} />
+          </a>
+          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '6px 10px' }} title="Edit">
+            <EditIcon size={14} />
+          </button>
+          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '6px 10px', background: rust, color: washi, border: 'none' }} title="Delete">
+            <TrashIcon size={14} />
+          </button>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}>
-        <button onClick={() => onCopy(r.slug)} style={{ ...pill, fontSize: 11 }}>{copied === r.slug ? '✓ 已複製' : '複製'}</button>
-        <button onClick={() => onEdit(r)} style={{ ...pill, fontSize: 11 }}>修改</button>
-        <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, fontSize: 11, textDecoration: 'none' }}>預覽</a>
-        <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, fontSize: 11, background: sumi, color: washi, border: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <ShareIcon size={11} /> 分享
-        </button>
-        <button onClick={() => onPaid(r.id, r.status)} style={{ ...pill, fontSize: 11, marginLeft: 'auto' }}>
-          {r.status === 'paid' ? '取消收款' : '標記已收'}
-        </button>
-        <button onClick={() => onDelete(r.id)} style={{ ...btnGhost, fontSize: 11, color: rust, whiteSpace: 'nowrap' }}>刪除</button>
+
+      <div style={{ borderTop: `1px solid ${fog}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {payeeList.map((p: any, idx: number) => (
+          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: sumi }} className="no-wrap">{p.name}</p>
+              <p style={{ fontSize: 12, color: ash, fontFamily: 'DM Mono, monospace' }}>{formatCAD(p.amount)}</p>
+            </div>
+            <button 
+              onClick={() => onPayeePaid(r, idx)} 
+              style={{
+                width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: 'none', cursor: 'pointer', fontSize: 14,
+                background: p.paid ? moss : rust,
+                color: 'white',
+                transition: 'all 0.2s'
+              }}
+            >
+              {p.paid ? '💰' : '✕'}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -176,10 +225,11 @@ export default function Dashboard() {
     const res = await fetch('/api/requests', { headers: { 'x-admin-key': password } })
     if (res.ok) {
       setAdminKey(password)
-      setRequests(await res.json())
+      const data = await res.json()
+      setRequests(data)
       fetchData(password)
       setView('list')
-    } else setError('密碼錯誤')
+    } else setError('Incorrect password')
     setLoading(false)
   }
 
@@ -199,10 +249,8 @@ export default function Dashboard() {
     setEditingRequest(r)
     setView('create')
     setNewRequests([])
-    // We'll populate refs in a useEffect or wait for next render
   }
 
-  // Populate form when editingRequest changes
   useEffect(() => {
     if (editingRequest && view === 'create') {
       if (titleRef.current) titleRef.current.textContent = editingRequest.title
@@ -210,10 +258,10 @@ export default function Dashboard() {
       setEventDate((editingRequest as any).eventDate?.split('T')[0] || '')
       setLocation((editingRequest as any).location || '')
       
-      const isGroup = !!(editingRequest as any).payees
+      const isGroup = !!editingRequest.payees
       setGroupRequest(isGroup)
       if (isGroup) {
-        setRecipients((editingRequest as any).payees.map((p: any) => {
+        setRecipients(editingRequest.payees!.map((p: any) => {
             const payee = payees.find(contact => contact.name === p.name)
             return { payeeId: payee?.id || '', amount: p.amount.toString() }
         }))
@@ -229,13 +277,11 @@ export default function Dashboard() {
     e.preventDefault()
     const currentTitle = titleRef.current?.textContent?.trim() || ''
     const currentNote = noteRef.current?.textContent?.trim() || ''
-    if (!currentTitle) { setError('請填寫事由'); return }
-    const isMultiple = recipients.length > 1
+    if (!currentTitle) { setError('Please fill in the purpose'); return }
     const validRecipients = recipients.filter(r => r.payeeId)
-    if (validRecipients.length === 0) { setError('請選擇至少一位收款人'); return }
+    if (validRecipients.length === 0) { setError('Please select at least one recipient'); return }
     setCreating(true); setError('')
 
-    let payload: any;
     const commonFields = { 
       title: currentTitle, 
       note: currentNote, 
@@ -244,25 +290,26 @@ export default function Dashboard() {
       location: location || null 
     }
 
-    if (groupRequest && isMultiple) {
+    let payload: any;
+    if (groupRequest && validRecipients.length > 1) {
       const recipientItems = validRecipients.map(r => {
         const payee = payees.find(p => p.id === r.payeeId)
         const amt = splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { name: payee?.name || '', amount: parseFloat(amt as string) }
+        return { name: payee?.name || '', amount: parseFloat(amt as string), paid: false }
       })
       const totalAmt = recipientItems.reduce((sum, item) => sum + item.amount, 0)
       payload = { ...commonFields, amount: totalAmt, payees: recipientItems }
     } else {
       payload = validRecipients.map(r => {
         const payee = payees.find(p => p.id === r.payeeId)
-        const amt = isMultiple && splitEqually
+        const amt = validRecipients.length > 1 && splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { ...commonFields, amount: amt, fromName: payee?.name || '' }
+        return { ...commonFields, amount: parseFloat(amt as string), fromName: payee?.name || '' }
       })
-      if (!Array.isArray(payload)) payload = [payload]
+      if (editingRequest) payload = payload[0]
     }
 
     const url = editingRequest ? `/api/requests/${editingRequest.id}` : '/api/requests'
@@ -271,22 +318,23 @@ export default function Dashboard() {
     const res = await fetch(url, {
       method: method,
       headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-      body: JSON.stringify(editingRequest ? (Array.isArray(payload) ? payload[0] : payload) : payload),
+      body: JSON.stringify(payload),
     })
 
     if (res.ok) {
       const data = await res.json()
       setNewRequests(Array.isArray(data) ? data : [data])
       fetchData(adminKey)
-      // Reset
-      if (titleRef.current) titleRef.current.textContent = ''
-      if (noteRef.current) noteRef.current.textContent = ''
-      setTitle(''); setNote('')
-      setRecipients([{ payeeId: '', amount: '' }])
-      setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
-      setEventDate(''); setLocation(''); setLocationResults([])
+      if (!editingRequest) {
+        if (titleRef.current) titleRef.current.textContent = ''
+        if (noteRef.current) noteRef.current.textContent = ''
+        setTitle(''); setNote('')
+        setRecipients([{ payeeId: '', amount: '' }])
+        setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
+        setEventDate(''); setLocation('')
+      }
       setEditingRequest(null)
-    } else setError(editingRequest ? '更新失敗' : '建立失敗')
+    } else setError(editingRequest ? 'Update failed' : 'Creation failed')
     setCreating(false)
   }
 
@@ -309,20 +357,34 @@ export default function Dashboard() {
   }
 
   const handleDeleteContact = async (id: string) => {
-    if (!confirm('確定刪除此聯絡人？')) return
+    if (!confirm('Are you sure you want to delete this contact?')) return
     await fetch(`/api/payees/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
     setPayees(prev => prev.filter(p => p.id !== id))
   }
 
-  const markPaid = async (id: string, current: string) => {
-    const newStatus = current === 'paid' ? 'pending' : 'paid'
-    await fetch(`/api/requests/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey }, body: JSON.stringify({ status: newStatus }) })
+  const deleteRequest = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this request?')) return
+    await fetch(`/api/requests/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
     fetchData(adminKey)
   }
 
-  const deleteRequest = async (id: string) => {
-    if (!confirm('確定刪除？')) return
-    await fetch(`/api/requests/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
+  const onPayeePaid = async (r: any, index: number) => {
+    const payeesList = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
+    const updatedPayees = [...payeesList]
+    updatedPayees[index].paid = !updatedPayees[index].paid
+    
+    // Determine overall status
+    const allPaid = updatedPayees.every((p: any) => p.paid)
+    const newStatus = allPaid ? 'paid' : 'pending'
+
+    await fetch(`/api/requests/${r.id}`, { 
+      method: 'PATCH', 
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey }, 
+      body: JSON.stringify({ 
+        payees: updatedPayees,
+        status: newStatus
+      }) 
+    })
     fetchData(adminKey)
   }
 
@@ -331,11 +393,11 @@ export default function Dashboard() {
   const shareLink = async (slug: string, title?: string, amount?: number) => {
     const url = getUrl(slug)
     if (typeof navigator !== 'undefined' && (navigator as any).share) {
-      try { await (navigator as any).share({ title: `請款 · ${title}`, text: `請支付 ${formatCAD(amount || 0)}`, url }) } catch {}
+      try { await (navigator as any).share({ title: `Collect · ${title}`, text: `Payment Request: ${formatCAD(amount || 0)}`, url }) } catch {}
     } else copyLink(slug)
   }
 
-  // WebAuthn helpers
+  // WebAuthn
   const toBase64Url = (buf: ArrayBuffer) => btoa(Array.from(new Uint8Array(buf)).map(b => String.fromCharCode(b)).join('')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
   const fromBase64Url = (str: string) => { const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); return buf.buffer }
 
@@ -347,8 +409,8 @@ export default function Dashboard() {
       opts.allowCredentials = opts.allowCredentials.map((c: any) => ({ ...c, id: fromBase64Url(c.id) }))
       const assertion = await navigator.credentials.get({ publicKey: opts }) as any
       const result = await (await fetch('/api/auth/webauthn', { method: 'POST', body: JSON.stringify({ action: 'login-verify', data: { id: assertion.id, rawId: toBase64Url(assertion.rawId), response: { authenticatorData: toBase64Url(assertion.response.authenticatorData), clientDataJSON: toBase64Url(assertion.response.clientDataJSON), signature: toBase64Url(assertion.response.signature), userHandle: assertion.response.userHandle ? toBase64Url(assertion.response.userHandle) : null } } }) })).json()
-      if (result.success) { setAdminKey(result.token); fetchData(result.token); setView('list') } else setError('認證失敗')
-    } catch { setError('不支援生物辨識或已取消') }
+      if (result.success) { setAdminKey(result.token); fetchData(result.token); setView('list') } else setError('Authentication failed')
+    } catch { setError('Biometrics not supported or cancelled') }
     setLoading(false)
   }
 
@@ -360,17 +422,17 @@ export default function Dashboard() {
       opts.user.id = fromBase64Url(opts.user.id)
       const cred = await navigator.credentials.create({ publicKey: opts }) as any
       await fetch('/api/auth/webauthn', { method: 'POST', headers: { 'x-admin-key': adminKey }, body: JSON.stringify({ action: 'register-verify', data: { id: cred.id, rawId: toBase64Url(cred.rawId), response: { attestationObject: toBase64Url(cred.response.attestationObject), clientDataJSON: toBase64Url(cred.response.clientDataJSON) } } }) })
-      alert('FaceID / TouchID 設定成功！')
-    } catch { alert('設定失敗') }
+      alert('FaceID / TouchID setup success!')
+    } catch { alert('Setup failed') }
     setCreating(false)
   }
 
-  const pending = requests.filter(r => r.status === 'pending')
-  const paid = requests.filter(r => r.status === 'paid')
-  const totalPending = pending.reduce((s, r) => s + r.amount, 0)
-  const filteredPending = pending.filter(r => {
+  const pendingRequests = requests.filter(r => r.status === 'pending')
+  const paidRequests = requests.filter(r => r.status === 'paid')
+  const totalPending = pendingRequests.reduce((s, r) => s + r.amount, 0)
+  const filteredPending = pendingRequests.filter(r => {
     const matchTitle = r.title.toLowerCase().includes(searchTitle.toLowerCase())
-    const matchName = searchName ? (r.fromName || '') === searchName : true
+    const matchName = searchName ? (r.fromName || '').includes(searchName) : true
     return matchTitle && matchName
   })
 
@@ -380,13 +442,13 @@ export default function Dashboard() {
   if (view === 'login') return (
     <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>管理後台</p>
-        <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}>請款系統</h1>
+        <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
+        <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}>COLLECT</h1>
         <form onSubmit={handleLogin} autoComplete="off">
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="密碼" style={{ ...capsule, marginBottom: 12 }} autoFocus />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ ...capsule, marginBottom: 12 }} autoFocus />
           {error && <p style={{ fontSize: 12, color: rust, marginBottom: 12 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={btnPrimary}>{loading ? '驗證中…' : '進入'}</button>
-          <button type="button" onClick={handleWebAuthnLogin} style={{ ...btnGhost, width: '100%', marginTop: 16, textAlign: 'center' }}>使用 FaceID / TouchID 登入</button>
+          <button type="submit" disabled={loading} style={btnPrimary}>{loading ? 'Verifying…' : 'Sign In'}</button>
+          <button type="button" onClick={handleWebAuthnLogin} style={{ ...btnGhost, width: '100%', marginTop: 16, textAlign: 'center' }}>Login with FaceID / TouchID</button>
         </form>
       </div>
     </main>
@@ -397,8 +459,8 @@ export default function Dashboard() {
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
-          <button onClick={() => setView('list')} style={btnGhost}>← 返回</button>
-          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>聯絡人管理</p>
+          <button onClick={() => setView('list')} style={btnGhost}>← BACK</button>
+          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>CONTACTS</p>
           <div style={{ width: 48 }} />
         </div>
 
@@ -407,23 +469,23 @@ export default function Dashboard() {
             type="text"
             value={newContactName}
             onChange={e => setNewContactName(e.target.value)}
-            placeholder="輸入姓名"
+            placeholder="Name"
             autoComplete="off"
             style={{ ...capsule, flex: 1 }}
           />
           <button type="submit" disabled={savingContact || !newContactName.trim()} style={{ ...btnPrimary, width: 'auto', padding: '14px 24px', flexShrink: 0 }}>
-            {savingContact ? '…' : '+ 新增'}
+            {savingContact ? '…' : '+ ADD'}
           </button>
         </form>
 
         {payees.length === 0 ? (
-          <p style={{ fontSize: 13, color: fog, textAlign: 'center', paddingTop: 32 }}>尚無聯絡人，請新增</p>
+          <p style={{ fontSize: 13, color: fog, textAlign: 'center', paddingTop: 32 }}>No contacts yet.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {payees.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', border: `1px solid ${fog}`, borderRadius: 16, background: 'rgba(255,255,255,0.4)' }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }}>
                 <p style={{ fontSize: 15, color: sumi }}>{p.name}</p>
-                <button onClick={() => handleDeleteContact(p.id)} style={{ ...btnGhost, color: rust, fontSize: 12 }}>刪除</button>
+                <button onClick={() => handleDeleteContact(p.id)} style={{ ...btnGhost, color: rust, fontSize: 12 }}>DELETE</button>
               </div>
             ))}
           </div>
@@ -438,201 +500,124 @@ export default function Dashboard() {
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
-          <button onClick={() => { setView('list'); setNewRequests([]) }} style={btnGhost}>← 返回</button>
-          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>新增請款</p>
+          <button onClick={() => { setView('list'); setNewRequests([]); setEditingRequest(null) }} style={btnGhost}>← BACK</button>
+          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>{editingRequest ? 'EDIT REQUEST' : 'NEW REQUEST'}</p>
           <div style={{ width: 48 }} />
         </div>
 
         {newRequests.length > 0 ? (
           <div style={{ animation: 'fadeIn 0.4s ease' }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: moss, marginBottom: 20 }}>請款連結已建立 ✓</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: moss, marginBottom: 20 }}>LINKS CREATED ✓</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {newRequests.map((req, idx) => (
-                <div key={idx} style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 16, background: 'rgba(255,255,255,0.4)' }}>
+                <div key={idx} style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
-                    <div>
-                      {req.fromName && <p style={{ fontSize: 15, fontWeight: 600, color: sumi }}>{req.fromName}</p>}
-                      <p style={{ fontSize: 13, color: ash }}>{req.title}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {req.fromName && <p style={{ fontSize: 15, fontWeight: 600, color: sumi }} className="no-wrap">{req.fromName}</p>}
+                      <p style={{ fontSize: 13, color: ash }} className="no-wrap">{req.title}</p>
                     </div>
-                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: moss }}>{formatCAD(Number(req.amount))}</p>
+                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: moss, marginLeft: 12, flexShrink: 0 }}>{formatCAD(Number(req.amount))}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => copyLink(req.slug)} style={pill}>{copied === req.slug ? '✓ 已複製' : '複製'}</button>
-                    <a href={`/request/${req.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, textDecoration: 'none' }}>預覽</a>
+                    <button onClick={() => copyLink(req.slug)} style={pill}>{copied === req.slug ? '✓ COPIED' : 'COPY'}</button>
+                    <a href={`/request/${req.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, textDecoration: 'none' }}>PREVIEW</a>
                     <button onClick={() => shareLink(req.slug, req.title, req.amount)} style={{ ...pill, background: sumi, color: washi, border: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <ShareIcon size={11} /> 分享
+                      <ShareIcon size={11} /> SHARE
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-            <button onClick={() => setNewRequests([])} style={{ ...btnPrimary, marginTop: 28 }}>再新增一筆</button>
+            <button onClick={() => setNewRequests([])} style={{ ...btnPrimary, marginTop: 28 }}>CREATE ANOTHER</button>
           </div>
         ) : (
           <form onSubmit={handleCreate} autoComplete="off">
-            {/* Section: 事由 */}
-            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>事由</p>
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>PURPOSE</p>
             <div
               ref={titleRef}
               contentEditable
               suppressContentEditableWarning
-              data-placeholder="聚餐費用、電影票…"
+              data-placeholder="Lunch, Movie tickets..."
               onInput={e => setTitle((e.target as HTMLElement).textContent || '')}
               style={capsuleDiv}
             />
 
             <div style={{ height: 16 }} />
 
-            {/* Section: 日期與地點 */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>日期</p>
-                <input
-                  type="date"
-                  value={eventDate}
-                  onChange={e => setEventDate(e.target.value)}
-                  style={{ ...capsule, padding: '12px 16px' }}
-                />
+                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>DATE</p>
+                <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} style={{ ...capsule, padding: '12px 16px' }} />
               </div>
               <div style={{ flex: 1.5, position: 'relative' }}>
-                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>地點</p>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={e => handleLocationSearch(e.target.value)}
-                  placeholder="搜尋地點…"
-                  style={{ ...capsule, padding: '12px 16px' }}
-                />
+                <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>LOCATION</p>
+                <input type="text" value={location} onChange={e => handleLocationSearch(e.target.value)} placeholder="Search location..." style={{ ...capsule, padding: '12px 16px' }} />
                 {locationResults.length > 0 && (
-                  <div style={{ 
-                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, 
-                    background: 'white', border: `1px solid ${fog}`, borderRadius: 12, 
-                    marginTop: 4, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-                  }}>
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: `1px solid ${fog}`, borderRadius: 12, marginTop: 4, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                     {locationResults.map((r, i) => (
-                      <div 
-                        key={i} 
-                        onClick={() => { setLocation(r.display_name); setLocationResults([]) }}
-                        style={{ padding: '10px 16px', fontSize: 13, borderBottom: i === locationResults.length - 1 ? 'none' : `1px solid ${fog}`, cursor: 'pointer' }}
-                      >
-                        {r.display_name}
-                      </div>
+                      <div key={i} onClick={() => { setLocation(r.display_name); setLocationResults([]) }} style={{ padding: '10px 16px', fontSize: 13, borderBottom: i === locationResults.length - 1 ? 'none' : `1px solid ${fog}`, cursor: 'pointer' }}>{r.display_name}</div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Section: 備註 */}
-            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>備註（選填）</p>
-            <div
-              ref={noteRef}
-              contentEditable
-              suppressContentEditableWarning
-              data-placeholder="補充說明…"
-              onInput={e => setNote((e.target as HTMLElement).textContent || '')}
-              style={{ ...capsuleDiv, borderRadius: 20, minHeight: 80 }}
-            />
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>NOTE (OPTIONAL)</p>
+            <div ref={noteRef} contentEditable suppressContentEditableWarning data-placeholder="Details..." onInput={e => setNote((e.target as HTMLElement).textContent || '')} style={{ ...capsuleDiv, borderRadius: 12, minHeight: 80 }} />
 
             <div style={{ height: 24 }} />
 
-            {/* Section: 收款人 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash }}>收款人</p>
+              <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash }}>RECIPIENT</p>
               {isMultiRecipient && (
                 <div style={{ display: 'flex', gap: 12 }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ash, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={groupRequest} onChange={e => setGroupRequest(e.target.checked)} />
-                    整合為一個連結
+                    <input type="checkbox" checked={groupRequest} onChange={e => setGroupRequest(e.target.checked)} /> Group link
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: ash, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={splitEqually} onChange={e => setSplitEqually(e.target.checked)} />
-                    平均分配
+                    <input type="checkbox" checked={splitEqually} onChange={e => setSplitEqually(e.target.checked)} /> Split equally
                   </label>
                 </div>
               )}
             </div>
 
             {payees.length === 0 ? (
-              <div style={{ padding: '20px', border: `1.5px dashed ${fog}`, borderRadius: 20, textAlign: 'center' }}>
-                <p style={{ fontSize: 13, color: ash, marginBottom: 12 }}>尚無聯絡人可選擇</p>
-                <button type="button" onClick={() => setView('contacts')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 20px' }}>
-                  → 前往新增聯絡人
-                </button>
+              <div style={{ padding: '20px', border: `1.5px dashed ${fog}`, borderRadius: 12, textAlign: 'center' }}>
+                <p style={{ fontSize: 13, color: ash, marginBottom: 12 }}>No contacts yet.</p>
+                <button type="button" onClick={() => setView('contacts')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 20px' }}>→ Add Contacts</button>
               </div>
             ) : (
               <>
                 {isMultiRecipient && splitEqually && (
                   <div style={{ marginBottom: 12 }}>
-                    <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>總金額（CAD）</p>
-                    <input
-                      type="number" step="0.01" min="0.01"
-                      value={totalAmount}
-                      onChange={e => setTotalAmount(e.target.value)}
-                      placeholder="0.00"
-                      style={{ ...capsule, fontFamily: 'DM Mono, monospace', fontSize: 22 }}
-                      required
-                    />
+                    <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8 }}>TOTAL AMOUNT (CAD)</p>
+                    <input type="number" step="0.01" min="0.01" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="0.00" style={{ ...capsule, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
                   </div>
                 )}
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {recipients.map((r, i) => (
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <select
-                        value={r.payeeId}
-                        onChange={e => {
-                          const next = [...recipients]
-                          next[i] = { ...next[i], payeeId: e.target.value }
-                          setRecipients(next)
-                        }}
-                        style={{ ...capsule, flex: 1, color: r.payeeId ? sumi : ash }}
-                        required
-                      >
-                        <option value="">選擇聯絡人</option>
+                      <select value={r.payeeId} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], payeeId: e.target.value }; setRecipients(next) }} style={{ ...capsule, flex: 1, color: r.payeeId ? sumi : ash }} required>
+                        <option value="">Select Contact</option>
                         {payees.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
-
                       {!(isMultiRecipient && splitEqually) && (
-                        <input
-                          type="number" step="0.01" min="0.01"
-                          value={r.amount}
-                          onChange={e => {
-                            const next = [...recipients]
-                            next[i] = { ...next[i], amount: e.target.value }
-                            setRecipients(next)
-                          }}
-                          placeholder="金額"
-                          style={{ ...capsule, width: 100, fontFamily: 'DM Mono, monospace', fontSize: 14 }}
-                          required
-                        />
+                        <input type="number" step="0.01" min="0.01" value={r.amount} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], amount: e.target.value }; setRecipients(next) }} placeholder="Amt" style={{ ...capsule, width: 80, fontFamily: 'DM Mono, monospace', fontSize: 14 }} required />
                       )}
-
-                      {recipients.length > 1 && (
-                        <button type="button" onClick={() => setRecipients(recipients.filter((_, idx) => idx !== i))} style={{ ...btnGhost, color: rust, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>✕</button>
-                      )}
+                      {recipients.length > 1 && <button type="button" onClick={() => setRecipients(recipients.filter((_, idx) => idx !== i))} style={{ ...btnGhost, color: rust, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>✕</button>}
                     </div>
                   ))}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setRecipients([...recipients, { payeeId: '', amount: '' }])}
-                  style={{ ...btnGhost, color: moss, marginTop: 12, display: 'flex', alignItems: 'center', gap: 4 }}
-                >
-                  + 新增人數
-                </button>
+                <button type="button" onClick={() => setRecipients([...recipients, { payeeId: '', amount: '' }])} style={{ ...btnGhost, color: moss, marginTop: 12, display: 'flex', alignItems: 'center', gap: 4 }}>+ ADD RECIPIENT</button>
               </>
             )}
 
             {error && <p style={{ fontSize: 12, color: rust, marginTop: 16 }}>{error}</p>}
-
             <button type="submit" disabled={creating || payees.length === 0} style={{ ...btnPrimary, marginTop: 32, opacity: payees.length === 0 ? 0.4 : 1 }}>
-              {creating ? '建立中…' : '建立請款連結'}
+              {creating ? 'CREATING…' : (editingRequest ? 'UPDATE REQUEST' : 'CREATE LINK')}
             </button>
           </form>
         )}
-
         <div style={{ height: 60 }} />
       </div>
     </main>
@@ -642,77 +627,56 @@ export default function Dashboard() {
   return (
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ paddingTop: 56, paddingBottom: 8 }}>
-          <div className="brush-line" />
-        </div>
+        <div style={{ paddingTop: 56, paddingBottom: 8 }}><div className="brush-line" /></div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingTop: 28, paddingBottom: 24 }}>
           <div>
-            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.25em', color: ash, marginBottom: 4 }}>管理後台</p>
-            <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 26, fontWeight: 700, color: sumi }}>請款紀錄</h1>
+            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.25em', color: ash, marginBottom: 4 }}>ADMIN PORTAL</p>
+            <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 26, fontWeight: 700, color: sumi }}>HISTORY</h1>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 12 }}>👥 聯絡人</button>
+            <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 12 }}>👥 Contacts</button>
             <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 12 }}>🔒 FaceID</button>
-            <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 16px' }}>+ 新增</button>
+            <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 16px' }}>+ NEW</button>
           </div>
         </div>
 
-        {/* Filters */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-          <input
-            value={searchTitle}
-            onChange={e => setSearchTitle(e.target.value)}
-            placeholder="搜尋事由…"
-            style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13 }}
-          />
-          <select
-            value={searchName}
-            onChange={e => setSearchName(e.target.value)}
-            style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13, color: searchName ? sumi : ash }}
-          >
-            <option value="">全部朋友</option>
+          <input value={searchTitle} onChange={e => setSearchTitle(e.target.value)} placeholder="Search Purpose..." style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13 }} />
+          <select value={searchName} onChange={e => setSearchName(e.target.value)} style={{ ...capsule, flex: 1, padding: '10px 16px', fontSize: 13, color: searchName ? sumi : ash }}>
+            <option value="">All Contacts</option>
             {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
           </select>
         </div>
 
-        {/* Summary */}
-        {pending.length > 0 && (
+        {pendingRequests.length > 0 && (
           <div style={{ padding: '20px 24px', border: `1px solid ${fog}`, borderRadius: 12, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)' }}>
             <div>
-              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: ash, marginBottom: 4 }}>待收款</p>
+              <p style={{ fontSize: 11, letterSpacing: '0.15em', color: ash, marginBottom: 4 }}>PENDING TOTAL</p>
               <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 22, color: rust, fontWeight: 300 }}>{formatCAD(totalPending)}</p>
             </div>
-            <p style={{ fontSize: 12, color: ash }}>{pending.length} 筆</p>
+            <p style={{ fontSize: 12, color: ash }}>{pendingRequests.length} items</p>
           </div>
         )}
 
-        {/* Pending */}
         {filteredPending.length > 0 && (
           <section style={{ marginBottom: 36 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>待收 · PENDING ({filteredPending.length})</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>PENDING ({filteredPending.length})</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} onEdit={handleEdit} copied={copied} />)}
+              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} />)}
             </div>
           </section>
         )}
 
-        {/* Paid */}
-        {paid.length > 0 && (
+        {paidRequests.length > 0 && (
           <section style={{ marginBottom: 48 }}>
-            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>已收 · RECEIVED</p>
+            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>RECEIVED</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {paid.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} onEdit={handleEdit} copied={copied} paid />)}
+              {paidRequests.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} paid />)}
             </div>
           </section>
         )}
 
-        {!loading && requests.length === 0 && (
-          <div style={{ textAlign: 'center', paddingTop: 64 }}>
-            <p style={{ fontSize: 13, color: fog, letterSpacing: '0.1em' }}>尚無請款紀錄</p>
-          </div>
-        )}
-
+        {!loading && requests.length === 0 && <div style={{ textAlign: 'center', paddingTop: 64 }}><p style={{ fontSize: 13, color: fog, letterSpacing: '0.1em' }}>No records found.</p></div>}
         <div style={{ height: 60 }} />
       </div>
     </main>
