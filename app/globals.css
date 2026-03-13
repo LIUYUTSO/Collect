@@ -195,10 +195,59 @@ input, textarea, select, button {
   border-bottom: 1px solid var(--sumi);
 }
 
-/* contentEditable placeholder support */
-[contenteditable][data-placeholder]:empty::before {
-  content: attr(data-placeholder);
-  color: var(--fog);
-  pointer-events: none;
-  display: block;
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(100%); opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateX(-100%); opacity: 0; }
+}
+
+.marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  padding-left: 20px;
+}
+
+.receipt-edge {
+  position: relative;
+  background: white;
+}
+
+.receipt-edge::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 10px, transparent 5px, white 5px);
+  background-size: 10px 10px;
+}
+
+.receipt-dashed {
+  border-top: 1.5px dashed var(--fog);
+  margin: 16px 0;
+}
+
+/* Payment Slider Snap */
+.payment-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 16px;
+  padding: 10px 0 30px 0;
+}
+
+.payment-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.payment-card {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

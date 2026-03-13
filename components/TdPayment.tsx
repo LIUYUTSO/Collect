@@ -23,11 +23,17 @@ export function TdIcon() {
   )
 }
 
-export default function TdPayment({ email }: { email: string }) {
+export default function TdPayment({ email, lightMode }: { email: string, lightMode?: boolean }) {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const textColor = lightMode ? 'black' : 'var(--ash)'
+  const primaryBg = lightMode ? 'black' : 'var(--sumi)'
+  const primaryText = lightMode ? 'white' : 'var(--washi)'
+  const secondaryBorder = lightMode ? 'rgba(0,0,0,0.2)' : 'var(--fog)'
+
   const handleOpenApp = () => {
+    // ... logic remains same
     setLoading(true)
     const tdUri = 'tdct://'
     const start = Date.now()
@@ -38,37 +44,29 @@ export default function TdPayment({ email }: { email: string }) {
       setLoading(false)
     }
 
-    // Capture app launch events to kill the fallback timer immediately
     window.addEventListener('pagehide', preventFallback, { once: true })
     window.addEventListener('blur', preventFallback, { once: true })
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) preventFallback()
     }, { once: true })
 
-    // Attempt to open the app using a more robust method
     const link = document.createElement('a')
     link.href = tdUri
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
-    // Fallback timer
     timeoutId = setTimeout(() => {
       const delta = Date.now() - start
-      
-      // If the timeout took much longer than 3s, the browser was likely suspended
-      // by the app opening. Don't trigger the fallback.
       if (delta > 3500) {
         setLoading(false)
         return
       }
-
       setLoading(false)
       const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const storeUrl = isiOS 
         ? 'https://apps.apple.com/ca/app/td/id358817284'
         : 'https://play.google.com/store/apps/details?id=com.td'
-      
       window.location.href = storeUrl
     }, 3000)
   }
@@ -82,20 +80,20 @@ export default function TdPayment({ email }: { email: string }) {
   }
 
   return (
-    <div style={{ marginTop: 28 }} className={loading ? 'fade-out' : ''}>
+    <div style={{ marginTop: 8 }} className={loading ? 'fade-out' : ''}>
       <button
         onClick={handleOpenApp}
         disabled={loading}
         style={{
           width: '100%',
-          padding: '16px 20px',
-          background: 'var(--sumi)',
-          color: 'var(--washi)',
+          padding: '18px 20px',
+          background: primaryBg,
+          color: primaryText,
           border: 'none',
-          borderRadius: 4,
-          fontSize: 14,
-          fontWeight: 400,
-          letterSpacing: '0.1em',
+          borderRadius: 8,
+          fontSize: 15,
+          fontWeight: 600,
+          letterSpacing: '0.05em',
           cursor: loading ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -105,8 +103,6 @@ export default function TdPayment({ email }: { email: string }) {
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
           opacity: loading ? 0.9 : 1
         }}
-        onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '0.8')}
-        onMouseUp={(e: React.MouseEvent<HTMLButtonElement>) => !loading && (e.currentTarget.style.opacity = '1')}
       >
         {loading ? (
           <svg className="premium-loader" viewBox="0 0 50 50">
@@ -121,13 +117,14 @@ export default function TdPayment({ email }: { email: string }) {
         onClick={handleCopy}
         style={{
           width: '100%',
-          marginTop: 12,
+          marginTop: 16,
           padding: '12px 16px',
           background: 'transparent',
-          color: 'var(--ash)',
-          border: '1px solid var(--fog)',
-          borderRadius: 4,
-          fontSize: 12,
+          color: textColor,
+          border: `1px solid ${secondaryBorder}`,
+          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: 500,
           letterSpacing: '0.05em',
           cursor: 'pointer',
           display: 'flex',
@@ -137,7 +134,7 @@ export default function TdPayment({ email }: { email: string }) {
           transition: 'all 0.2s'
         }}
       >
-        {copied ? '✓ 已複製' : '複製 Interac 地址'}
+        {copied ? '✓ 已複製' : '按此複製 e-Transfer 地址'}
       </button>
     </div>
   )

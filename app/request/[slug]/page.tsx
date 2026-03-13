@@ -64,172 +64,175 @@ export default async function RequestPage({
               fontSize: 12, 
               color: 'var(--clay)', 
               letterSpacing: '0.15em', 
-              marginBottom: 8,
-              fontFamily: 'var(--font-mono)'
+              marginBottom: 10,
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600
             }}>
               {formatDate(request.eventDate)}
             </p>
           )}
           <h1
+            className="no-wrap"
             style={{
               fontFamily: 'var(--font-zen, serif)',
-              fontSize: 28,
+              fontSize: 32,
               fontWeight: 700,
               color: 'var(--sumi)',
-              lineHeight: 1.3,
-              marginBottom: 4,
+              lineHeight: 1.2,
+              marginBottom: 6,
             }}
           >
             {request.title}
           </h1>
           {request.location && (
-            <p style={{ 
-              fontSize: 11, 
+            <p className="no-wrap" style={{ 
+              fontSize: 12, 
               color: 'var(--ash)', 
-              marginTop: 6,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              opacity: 0.8
+              marginTop: 4,
+              fontWeight: 500,
+              opacity: 1 /* Darkened as requested */
             }}>
               {request.location}
             </p>
           )}
-          {request.payerName ? (
-            <p style={{ fontSize: 13, color: 'var(--rust)', marginTop: 8, fontWeight: 700 }}>
-              給 {request.payerName} (已代付)
-            </p>
-          ) : (
-            request.fromName && (
-              <p style={{ fontSize: 13, color: 'var(--ash)', marginTop: 8 }}>
-                給 {request.fromName}
-              </p>
-            )
-          )}
+          
+          <div style={{ marginTop: 14, display: 'flex' }}>
+            {request.payerName ? (
+              <div style={{ 
+                background: 'var(--sumi)', 
+                color: 'var(--washi)', 
+                padding: '6px 14px', 
+                borderRadius: 20, 
+                fontSize: 12, 
+                fontWeight: 600,
+                letterSpacing: '0.05em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <span style={{ opacity: 0.7, fontSize: 10 }}>給</span> {request.payerName} <span style={{ opacity: 0.7, fontSize: 10 }}>已代付</span>
+              </div>
+            ) : (
+              request.fromName && (
+                <p style={{ fontSize: 13, color: 'var(--ash)', fontWeight: 500 }}>
+                  給 {request.fromName}
+                </p>
+              )
+            )}
+          </div>
         </div>
 
-        {/* Amount Card */}
+        {/* Marquee Note */}
+        {request.note && (
+          <div style={{ 
+            width: '100%', 
+            maxWidth: 390, 
+            marginTop: 20, 
+            overflow: 'hidden', 
+            position: 'relative',
+            height: 24,
+            maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'
+          }}>
+            <div className="marquee-text" style={{ fontSize: 13, color: 'var(--ash)', fontWeight: 500 }}>
+              {request.note}
+            </div>
+          </div>
+        )}
+
+        {/* Amount Card - Receipt Style */}
         <div
-          className="animate-in delay-100"
+          className="animate-in delay-100 receipt-edge"
           style={{
             width: '100%',
             maxWidth: 390,
-            marginTop: 36,
-            padding: '32px 28px',
-            border: '1px solid var(--fog)',
-            borderRadius: 8,
-            background: isPaid ? 'rgba(74, 82, 64, 0.05)' : 'rgba(255,255,255,0.4)',
-            position: 'relative',
-            overflow: 'hidden',
+            marginTop: 28,
+            padding: '40px 32px 48px 32px',
+            background: 'white',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+            borderRadius: '2px', /* Sharp receipt look */
           }}
         >
-          {/* Subtle decoration */}
-          <div
-            style={{
-              position: 'absolute',
-              top: -20,
-              right: -20,
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              border: '1px solid var(--clay)',
-              opacity: 0.1,
-              transform: 'rotate(-8deg)',
-            }}
-          />
-
+          <div className="receipt-dashed" style={{ marginTop: 0 }} />
+          
           <p
             style={{
-              fontSize: 11,
-              letterSpacing: '0.2em',
-              color: 'var(--ash)',
-              marginBottom: 12,
+              fontSize: 10,
+              letterSpacing: '0.25em',
+              color: 'var(--fog)',
+              marginBottom: 20,
+              textAlign: 'center',
+              fontWeight: 600
             }}
           >
-            {request.payerName ? '應付金額 · OWED TO PAYER' : '金額 · AMOUNT'}
+            {request.payerName ? 'BILLING INVOICE' : 'COLLECT RECEIPT'}
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {!request.payees ? (
-              <p
-                style={{
-                  fontFamily: 'DM Mono, monospace',
-                  fontSize: 42,
-                  fontWeight: 300,
-                  color: isPaid ? 'var(--moss)' : 'var(--sumi)',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1,
-                }}
-              >
-                {formatCAD(request.amount)}
-              </p>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: 11, color: 'var(--ash)', marginBottom: 8, letterSpacing: '0.1em' }}>TOTAL OWED</p>
+                <p
+                  style={{
+                    fontFamily: 'DM Mono, monospace',
+                    fontSize: 48,
+                    fontWeight: 400,
+                    color: isPaid ? 'var(--moss)' : 'var(--sumi)',
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatCAD(request.amount)}
+                </p>
+              </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(request.payees as any[]).map((p, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 15, color: 'var(--sumi)' }}>{p.name}</span>
-                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 18, color: 'var(--sumi)', fontWeight: 300 }}>{formatCAD(p.amount)}</span>
+                    <span style={{ fontSize: 14, color: 'var(--ash)' }}>{p.name}</span>
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: 'var(--ash)' }}>{formatCAD(p.amount)}</span>
                   </div>
                 ))}
-                <div style={{ height: 1, background: 'var(--fog)', margin: '8px 0' }} />
+                <div className="receipt-dashed" />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, letterSpacing: '0.1em', color: 'var(--ash)' }}>TOTAL</span>
-                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 400 }}>{formatCAD(request.amount)}</span>
+                  <span style={{ fontSize: 11, letterSpacing: '0.15em', color: 'var(--sumi)', fontWeight: 700 }}>TOTAL</span>
+                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 26, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>{formatCAD(request.amount)}</span>
                 </div>
               </div>
             )}
           </div>
 
+          <div className="receipt-dashed" style={{ marginBottom: 0, marginTop: 24 }} />
+          
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+             <p style={{ fontSize: 10, color: 'var(--fog)', letterSpacing: '0.1em' }}>
+               {formatDate(request.createdAt)}
+             </p>
+          </div>
+
           {isPaid && (
             <div
               style={{
-                marginTop: 16,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 12px',
-                background: 'rgba(74, 82, 64, 0.1)',
-                borderRadius: 4,
-                border: '1px solid rgba(74, 82, 64, 0.2)',
+                marginTop: 24,
+                display: 'flex',
+                justifyContent: 'center'
               }}
             >
-              <span style={{ fontSize: 10 }}>✓</span>
-              <span style={{ fontSize: 11, letterSpacing: '0.15em', color: 'var(--moss)' }}>
-                已收到 · RECEIVED
-              </span>
+              <div style={{
+                padding: '6px 16px',
+                background: 'var(--moss)',
+                borderRadius: 4,
+                color: 'white',
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: '0.1em'
+              }}>
+                PAID 💰
+              </div>
             </div>
           )}
         </div>
 
-        {/* Note */}
-        {request.note && (
-          <div
-            className="animate-in delay-200"
-            style={{
-              width: '100%',
-              maxWidth: 390,
-              marginTop: 20,
-              padding: '20px 28px',
-              borderLeft: '2px solid var(--clay)',
-              background: 'rgba(196, 168, 130, 0.06)',
-            }}
-          >
-            <p
-              style={{
-                fontSize: 11,
-                letterSpacing: '0.2em',
-                color: 'var(--ash)',
-                marginBottom: 8,
-              }}
-            >
-              備註 · NOTE
-            </p>
-            <p style={{ fontSize: 15, color: 'var(--sumi)', lineHeight: 1.7 }}>
-              {request.note}
-            </p>
-          </div>
-        )}
-
-        {/* Interactive Payment Switcher (Folding Card) */}
+        {/* Interactive Payment Switcher */}
         {!isPaid && (
           <PaymentAccordion 
             tdEmail={process.env.TD_EMAIL || ''} 
@@ -245,18 +248,21 @@ export default async function RequestPage({
             width: '100%',
             maxWidth: 390,
             marginTop: 'auto',
-            paddingTop: 48,
-            paddingBottom: 40,
+            paddingTop: 64,
+            paddingBottom: 48,
             textAlign: 'center',
           }}
         >
-          <div className="brush-line" style={{ marginBottom: 24 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--clay)', opacity: 0.6 }} />
-            <p style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--fog)', textTransform: 'uppercase' }}>
-              Collect
-            </p>
-          </div>
+          <p style={{ 
+            fontSize: 12, 
+            letterSpacing: '0.4em', 
+            color: 'var(--sumi)', 
+            textTransform: 'uppercase', 
+            fontWeight: 800,
+            opacity: 0.9
+          }}>
+            Collect
+          </p>
         </div>
       </main>
     </ClientTransition>

@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
-import TdPayment, { TdIcon } from './TdPayment'
-import WsPayment, { WsIcon } from './WsPayment'
+import { useState, useRef, useEffect } from 'react'
+import TdPayment from './TdPayment'
+import WsPayment from './WsPayment'
 
 interface PaymentAccordionProps {
   tdEmail: string
@@ -11,71 +11,121 @@ interface PaymentAccordionProps {
 }
 
 export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAccordionProps) {
-  const [activeMethod, setActiveMethod] = useState<'td' | 'ws'>('td')
+  const [activeTab, setActiveTab] = useState<'td' | 'ws'>('td')
+  const sliderRef = useRef<HTMLDivElement>(null)
+
+  const scrollTo = (bank: 'td' | 'ws') => {
+    if (!sliderRef.current) return
+    const index = bank === 'td' ? 0 : 1
+    const width = sliderRef.current.offsetWidth
+    sliderRef.current.scrollTo({ left: index * width, behavior: 'smooth' })
+    setActiveTab(bank)
+  }
+
+  const handleScroll = () => {
+    if (!sliderRef.current) return
+    const { scrollLeft, offsetWidth } = sliderRef.current
+    const index = Math.round(scrollLeft / offsetWidth)
+    setActiveTab(index === 0 ? 'td' : 'ws')
+  }
 
   return (
-    <div className="fold-container" style={{ marginTop: 32 }}>
-      <p
-        style={{
-          fontSize: 11,
-          letterSpacing: '0.2em',
-          color: 'var(--ash)',
-          marginBottom: 16,
-        }}
-      >
-        選擇付款方式 · CHOOSE METHOD
-      </p>
-
-      {/* Tabs - Equal Width */}
-      <div style={{ display: 'flex', width: '100%', marginBottom: 20, padding: '0 8px' }}>
-        <div 
-          className={`method-tab ${activeMethod === 'td' ? 'active' : ''}`}
-          style={{ flex: 1, textAlign: 'center' }}
-          onClick={() => setActiveMethod('td')}
-        >
-          TD Bank
-        </div>
-        <div 
-          className={`method-tab ${activeMethod === 'ws' ? 'active' : ''}`}
-          style={{ flex: 1, textAlign: 'center' }}
-          onClick={() => setActiveMethod('ws')}
-        >
-          WealthSimple
+    <div className="animate-in delay-300" style={{ width: '100%', maxWidth: 390, marginTop: 40 }}>
+      <div style={{ padding: '0 8px', marginBottom: 24 }}>
+        <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--ash)', marginBottom: 16, fontWeight: 700 }}>
+          PAY BY 付款
+        </p>
+        <div style={{ display: 'flex', gap: 24, borderBottom: '1px solid var(--fog)' }}>
+          <button 
+            onClick={() => scrollTo('td')}
+            style={{ 
+              padding: '12px 0', 
+              fontSize: 13, 
+              fontWeight: 700,
+              color: activeTab === 'td' ? '#00A100' : 'var(--ash)',
+              borderBottom: `2px solid ${activeTab === 'td' ? '#00A100' : 'transparent'}`,
+              transition: 'all 0.3s',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            TD Bank
+          </button>
+          <button 
+            onClick={() => scrollTo('ws')}
+            style={{ 
+              padding: '12px 0', 
+              fontSize: 13, 
+              fontWeight: 700,
+              color: activeTab === 'ws' ? 'black' : 'var(--ash)',
+              borderBottom: `2px solid ${activeTab === 'ws' ? 'black' : 'transparent'}`,
+              transition: 'all 0.3s',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Wealthsimple
+          </button>
         </div>
       </div>
 
       <div 
-        className={`fold-content ${activeMethod ? 'active' : ''}`}
-        style={{
-          padding: '28px 24px',
-          border: '1px solid var(--fog)',
-          borderRadius: 3,
-          background: 'rgba(255,255,255,0.3)',
-          textAlign: 'center'
-        }}
+        ref={sliderRef}
+        onScroll={handleScroll}
+        className="payment-slider"
+        style={{ padding: '0 4px' }}
       >
-        {activeMethod === 'td' ? (
-          <div key="td-content" className="animate-in" style={{ animationDuration: '0.4s' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <TdIcon />
+        {/* TD Card */}
+        <div className="payment-card" style={{ padding: '0 4px' }}>
+          <div style={{ 
+            background: '#00D100', /* Brighter saturated TD green */
+            color: 'black', 
+            borderRadius: 16, 
+            padding: '40px 32px',
+            minHeight: 340,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 12px 32px rgba(0, 209, 0, 0.15)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em' }}>TD</span>
+              <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, letterSpacing: '0.05em' }}>INTERAC®</span>
             </div>
-            <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>TD Interac</p>
-            <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>{tdEmail}</p>
-            <TdPayment email={tdEmail} />
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Pay to:</p>
+            <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, fontWeight: 500, marginBottom: 20 }}>{tdEmail}</p>
+            <div style={{ marginTop: 'auto' }}>
+              <TdPayment email={tdEmail} lightMode={true} />
+            </div>
           </div>
-        ) : (
-          <div key="ws-content" className="animate-in" style={{ animationDuration: '0.4s' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <WsIcon />
+        </div>
+
+        {/* Wealthsimple Card */}
+        <div className="payment-card" style={{ padding: '0 4px' }}>
+          <div style={{ 
+            background: 'black', 
+            color: 'white', 
+            borderRadius: 16, 
+            padding: '40px 32px',
+            minHeight: 340,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)'
+          }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em' }}>W</span>
+              <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, letterSpacing: '0.05em' }}>WEALTHSIMPLE</span>
             </div>
-            <p style={{ fontSize: 13, color: 'var(--sumi)', marginBottom: 4 }}>WealthSimple Interac</p>
-            <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 15, color: 'var(--ash)', marginBottom: 8 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Pay to:</p>
+            <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, fontWeight: 400, marginBottom: 20 }}>
               {wsHandle.includes('@') ? wsHandle : `${wsHandle}@wealthsimple.me`}
             </p>
-            <WsPayment email={wsHandle.includes('@') ? wsHandle : `${wsHandle}@wealthsimple.me`} />
+            <div style={{ marginTop: 'auto' }}>
+              <WsPayment email={wsHandle.includes('@') ? wsHandle : `${wsHandle}@wealthsimple.me`} darkMode={true} />
+            </div>
           </div>
-        )}
-
+        </div>
       </div>
     </div>
   )
