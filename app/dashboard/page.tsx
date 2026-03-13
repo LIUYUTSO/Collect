@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { formatCAD, formatDate } from '@/lib/utils'
 
+type RequestPayee = { name: string; amount: number; paid: boolean }
 type Request = {
   id: string; slug: string; title: string; amount: number
   note?: string; method: string; status: string; fromName?: string
-  paidAt?: string; createdAt: string; payees?: any[]
+  paidAt?: string; createdAt: string; payees?: RequestPayee[]
+  payerName?: string; eventDate?: string; location?: string
 }
 type Payee = { id: string; name: string }
 type View = 'login' | 'list' | 'create' | 'contacts'
@@ -133,8 +135,17 @@ function ContactIcon({ size = 14 }: { size?: number }) {
   )
 }
 
-function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
-  const payeeList = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
+interface RequestCardProps {
+  r: Request
+  onShare: (slug: string, title: string, amount: number) => void
+  onPayeePaid: (r: Request, index: number) => void
+  onDelete: (id: string) => void
+  onEdit: (r: Request) => void
+  paid?: boolean
+}
+
+function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
+  const payeeList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
   
   return (
     <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
@@ -165,7 +176,7 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
       </div>
 
       <div style={{ borderTop: `1px solid ${fog}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {payeeList.map((p: any, idx: number) => (
+        {payeeList.map((p: RequestPayee, idx: number) => (
           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: sumi }} className="no-wrap">{p.name}</p>
@@ -268,7 +279,7 @@ export default function Dashboard() {
     setSearchingLocation(false)
   }
 
-  const handleEdit = (r: any) => {
+  const handleEdit = (r: Request) => {
     setEditingRequest(r)
     setView('create')
     setNewRequests([])
@@ -278,14 +289,14 @@ export default function Dashboard() {
     if (editingRequest && view === 'create') {
       if (titleRef.current) titleRef.current.textContent = editingRequest.title
       if (noteRef.current) noteRef.current.textContent = editingRequest.note || ''
-      setEventDate((editingRequest as any).eventDate?.split('T')[0] || '')
-      setLocation((editingRequest as any).location || '')
-      setPayerName((editingRequest as any).payerName || '')
+      setEventDate(editingRequest.eventDate?.split('T')[0] || '')
+      setLocation(editingRequest.location || '')
+      setPayerName(editingRequest.payerName || '')
       
       const isGroup = !!editingRequest.payees
       setGroupRequest(isGroup)
       if (isGroup) {
-        setRecipients(editingRequest.payees!.map((p: any) => {
+        setRecipients(editingRequest.payees!.map((p: RequestPayee) => {
             const payee = payees.find(contact => contact.name === p.name)
             return { payeeId: payee?.id || '', amount: p.amount.toString() }
         }))
@@ -393,13 +404,13 @@ export default function Dashboard() {
     fetchData(adminKey)
   }
 
-  const onPayeePaid = async (r: any, index: number) => {
-    const payeesList = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
+  const onPayeePaid = async (r: Request, index: number) => {
+    const payeesList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
     const updatedPayees = [...payeesList]
     updatedPayees[index].paid = !updatedPayees[index].paid
     
     // Determine overall status
-    const allPaid = updatedPayees.every((p: any) => p.paid)
+    const allPaid = updatedPayees.every((p: RequestPayee) => p.paid)
     const newStatus = allPaid ? 'paid' : 'pending'
 
     await fetch(`/api/requests/${r.id}`, { 
