@@ -11,12 +11,21 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { status } = await req.json()
+  const body = await req.json()
+  const { title, amount, note, status, method, fromName, payees, eventDate, location } = body
 
   const { rows } = await db.sql`
     UPDATE requests 
-    SET status = ${status}, 
-        paid_at = ${status === 'paid' ? new Date().toISOString() : null},
+    SET title = COALESCE(${title}, title),
+        amount = COALESCE(${amount ? parseFloat(amount) : null}, amount),
+        note = COALESCE(${note}, note),
+        status = COALESCE(${status}, status),
+        method = COALESCE(${method}, method),
+        from_name = COALESCE(${fromName}, from_name),
+        payees = COALESCE(${payees ? JSON.stringify(payees) : null}, payees),
+        event_date = COALESCE(${eventDate}, event_date),
+        location = COALESCE(${location}, location),
+        paid_at = ${status === 'paid' ? new Date().toISOString() : (status === 'pending' ? null : undefined)},
         updated_at = CURRENT_TIMESTAMP
     WHERE id = ${id}
     RETURNING *

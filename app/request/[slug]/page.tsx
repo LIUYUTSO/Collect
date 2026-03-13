@@ -110,7 +110,7 @@ export default async function RequestPage({
             marginTop: 36,
             padding: '32px 28px',
             border: '1px solid var(--fog)',
-            borderRadius: 3,
+            borderRadius: 8,
             background: isPaid ? 'rgba(74, 82, 64, 0.05)' : 'rgba(255,255,255,0.4)',
             position: 'relative',
             overflow: 'hidden',
@@ -181,7 +181,7 @@ export default async function RequestPage({
                 gap: 6,
                 padding: '4px 12px',
                 background: 'rgba(74, 82, 64, 0.1)',
-                borderRadius: 2,
+                borderRadius: 4,
                 border: '1px solid rgba(74, 82, 64, 0.2)',
               }}
             >

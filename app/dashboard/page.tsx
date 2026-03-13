@@ -23,7 +23,7 @@ const moss = '#4A5240'
 const capsule: React.CSSProperties = {
   width: '100%',
   padding: '14px 20px',
-  borderRadius: 999,
+  borderRadius: 12,
   border: `1.5px solid ${fog}`,
   background: 'rgba(255,255,255,0.55)',
   fontSize: 15,
@@ -34,6 +34,9 @@ const capsule: React.CSSProperties = {
   backdropFilter: 'blur(4px)',
   transition: 'border-color 0.2s',
   appearance: 'none',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 }
 
 const capsuleDiv: React.CSSProperties = {
@@ -48,7 +51,7 @@ const capsuleDiv: React.CSSProperties = {
 const btnPrimary: React.CSSProperties = {
   width: '100%',
   padding: '16px',
-  borderRadius: 999,
+  borderRadius: 12,
   background: sumi,
   color: washi,
   fontFamily: 'inherit',
@@ -56,6 +59,7 @@ const btnPrimary: React.CSSProperties = {
   letterSpacing: '0.1em',
   border: 'none',
   cursor: 'pointer',
+  whiteSpace: 'nowrap',
 }
 
 const btnGhost: React.CSSProperties = {
@@ -70,13 +74,14 @@ const btnGhost: React.CSSProperties = {
 
 const pill: React.CSSProperties = {
   padding: '6px 14px',
-  borderRadius: 999,
+  borderRadius: 8,
   border: `1px solid ${fog}`,
   background: 'rgba(255,255,255,0.4)',
   fontFamily: 'inherit',
   fontSize: 12,
   color: sumi,
   cursor: 'pointer',
+  whiteSpace: 'nowrap',
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -88,19 +93,20 @@ function ShareIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function RequestCard({ r, onShare, onCopy, onPaid, onDelete, copied, paid }: any) {
+function RequestCard({ r, onShare, onCopy, onPaid, onDelete, onEdit, copied, paid }: any) {
   return (
-    <div style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 16, background: paid ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)', opacity: paid ? 0.7 : 1 }}>
+    <div style={{ padding: '16px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)', opacity: paid ? 0.7 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-        <div>
-          {r.fromName && <p style={{ fontSize: 15, fontWeight: 600, color: sumi, marginBottom: 2 }}>{r.fromName}</p>}
-          <p style={{ fontSize: 13, color: ash }}>{r.title}</p>
+        <div style={{ overflow: 'hidden', flex: 1 }}>
+          {r.fromName && <p style={{ fontSize: 15, fontWeight: 600, color: sumi, marginBottom: 2 }} className="no-wrap">{r.fromName}</p>}
+          <p style={{ fontSize: 13, color: ash }} className="no-wrap">{r.title}</p>
           <p style={{ fontSize: 11, color: fog, marginTop: 4 }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
         </div>
         <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: paid ? ash : rust, fontWeight: 300, flexShrink: 0, marginLeft: 12 }}>{formatCAD(r.amount)}</p>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}>
         <button onClick={() => onCopy(r.slug)} style={{ ...pill, fontSize: 11 }}>{copied === r.slug ? '✓ 已複製' : '複製'}</button>
+        <button onClick={() => onEdit(r)} style={{ ...pill, fontSize: 11 }}>修改</button>
         <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, fontSize: 11, textDecoration: 'none' }}>預覽</a>
         <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, fontSize: 11, background: sumi, color: washi, border: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
           <ShareIcon size={11} /> 分享
@@ -108,7 +114,7 @@ function RequestCard({ r, onShare, onCopy, onPaid, onDelete, copied, paid }: any
         <button onClick={() => onPaid(r.id, r.status)} style={{ ...pill, fontSize: 11, marginLeft: 'auto' }}>
           {r.status === 'paid' ? '取消收款' : '標記已收'}
         </button>
-        <button onClick={() => onDelete(r.id)} style={{ ...btnGhost, fontSize: 11, color: rust }}>刪除</button>
+        <button onClick={() => onDelete(r.id)} style={{ ...btnGhost, fontSize: 11, color: rust, whiteSpace: 'nowrap' }}>刪除</button>
       </div>
     </div>
   )
@@ -138,6 +144,7 @@ export default function Dashboard() {
   const [totalAmount, setTotalAmount] = useState('')
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
+  const [editingRequest, setEditingRequest] = useState<Request | null>(null)
 
   // New fields
   const [eventDate, setEventDate] = useState('')
@@ -188,6 +195,36 @@ export default function Dashboard() {
     setSearchingLocation(false)
   }
 
+  const handleEdit = (r: any) => {
+    setEditingRequest(r)
+    setView('create')
+    setNewRequests([])
+    // We'll populate refs in a useEffect or wait for next render
+  }
+
+  // Populate form when editingRequest changes
+  useEffect(() => {
+    if (editingRequest && view === 'create') {
+      if (titleRef.current) titleRef.current.textContent = editingRequest.title
+      if (noteRef.current) noteRef.current.textContent = editingRequest.note || ''
+      setEventDate((editingRequest as any).eventDate?.split('T')[0] || '')
+      setLocation((editingRequest as any).location || '')
+      
+      const isGroup = !!(editingRequest as any).payees
+      setGroupRequest(isGroup)
+      if (isGroup) {
+        setRecipients((editingRequest as any).payees.map((p: any) => {
+            const payee = payees.find(contact => contact.name === p.name)
+            return { payeeId: payee?.id || '', amount: p.amount.toString() }
+        }))
+        setTotalAmount(editingRequest.amount.toString())
+      } else {
+        const payee = payees.find(p => p.name === editingRequest.fromName)
+        setRecipients([{ payeeId: payee?.id || '', amount: editingRequest.amount.toString() }])
+      }
+    }
+  }, [editingRequest, view, payees])
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     const currentTitle = titleRef.current?.textContent?.trim() || ''
@@ -225,12 +262,16 @@ export default function Dashboard() {
           : r.amount
         return { ...commonFields, amount: amt, fromName: payee?.name || '' }
       })
+      if (!Array.isArray(payload)) payload = [payload]
     }
 
-    const res = await fetch('/api/requests', {
-      method: 'POST',
+    const url = editingRequest ? `/api/requests/${editingRequest.id}` : '/api/requests'
+    const method = editingRequest ? 'PATCH' : 'POST'
+
+    const res = await fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(editingRequest ? (Array.isArray(payload) ? payload[0] : payload) : payload),
     })
 
     if (res.ok) {
@@ -244,7 +285,8 @@ export default function Dashboard() {
       setRecipients([{ payeeId: '', amount: '' }])
       setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
       setEventDate(''); setLocation(''); setLocationResults([])
-    } else setError('建立失敗')
+      setEditingRequest(null)
+    } else setError(editingRequest ? '更新失敗' : '建立失敗')
     setCreating(false)
   }
 
@@ -636,7 +678,7 @@ export default function Dashboard() {
 
         {/* Summary */}
         {pending.length > 0 && (
-          <div style={{ padding: '20px 24px', border: `1px solid ${fog}`, borderRadius: 20, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)' }}>
+          <div style={{ padding: '20px 24px', border: `1px solid ${fog}`, borderRadius: 12, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)' }}>
             <div>
               <p style={{ fontSize: 11, letterSpacing: '0.15em', color: ash, marginBottom: 4 }}>待收款</p>
               <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 22, color: rust, fontWeight: 300 }}>{formatCAD(totalPending)}</p>
@@ -650,7 +692,7 @@ export default function Dashboard() {
           <section style={{ marginBottom: 36 }}>
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>待收 · PENDING ({filteredPending.length})</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} />)}
+              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} onEdit={handleEdit} copied={copied} />)}
             </div>
           </section>
         )}
@@ -660,7 +702,7 @@ export default function Dashboard() {
           <section style={{ marginBottom: 48 }}>
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>已收 · RECEIVED</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {paid.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} copied={copied} paid />)}
+              {paid.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onCopy={copyLink} onPaid={markPaid} onDelete={deleteRequest} onEdit={handleEdit} copied={copied} paid />)}
             </div>
           </section>
         )}

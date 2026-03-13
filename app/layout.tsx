@@ -24,6 +24,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Pinyon+Script&display=swap" rel="stylesheet" />
       </head>
       <body>{children}</body>
     </html>
