@@ -223,6 +223,7 @@ export default function Dashboard() {
 
   // New fields
   const [searchingLocation, setSearchingLocation] = useState(false)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Contacts management
   const [newContactName, setNewContactName] = useState('')
@@ -258,14 +259,26 @@ export default function Dashboard() {
 
   const handleLocationSearch = async (query: string) => {
     setLocation(query)
-    if (query.length < 2) { setLocationResults([]); return }
-    setSearchingLocation(true)
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
-      const data = await res.json()
-      setLocationResults(data)
-    } catch (e) { console.error('OSM error', e) }
-    setSearchingLocation(false)
+
+    // ⚡ Bolt: Debounce OSM search to respect rate limits (1 req/sec) and reduce API calls/re-renders
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (query.length < 2) {
+      setLocationResults([])
+      return
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearchingLocation(true)
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
+        const data = await res.json()
+        setLocationResults(data)
+      } catch (e) { console.error('OSM error', e) }
+      setSearchingLocation(false)
+    }, 500)
   }
 
   const handleEdit = (r: any) => {
