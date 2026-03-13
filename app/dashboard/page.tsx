@@ -138,22 +138,21 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
   
   return (
     <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div style={{ overflow: 'hidden', flex: 1, paddingRight: 12 }}>
-          <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 500 }} className="no-wrap">{r.title}</p>
-          <p style={{ fontSize: 11, color: ash, opacity: 0.9 }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px', background: sumi, color: washi, border: 'none' }}>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 600 }} className="no-wrap">{r.title}</p>
+        <p style={{ fontSize: 11, color: ash, opacity: 0.9, marginBottom: 12 }} className="no-wrap">{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
+        
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} className="no-wrap">
+          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px 10px', background: sumi, color: washi, border: 'none' }}>
             <ShareIcon size={13} />
           </button>
-          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <PreviewIcon size={13} />
           </a>
-          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '7px' }}>
+          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '7px 10px' }}>
             <EditIcon size={13} />
           </button>
-          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px', background: rust, color: washi, border: 'none' }}>
+          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px 10px', background: rust, color: washi, border: 'none' }}>
             <TrashIcon size={13} />
           </button>
         </div>
