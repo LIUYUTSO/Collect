@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, ensureTables } from '@/lib/db'
 import { nanoid } from 'nanoid'
+import { verifyAdmin } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('x-admin-key')
-  if (auth !== process.env.ADMIN_PASSWORD) {
+  if (!verifyAdmin(auth)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('x-admin-key')
-  if (auth !== process.env.ADMIN_PASSWORD) {
+  if (!verifyAdmin(auth)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
