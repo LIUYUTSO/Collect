@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         INSERT INTO requests (id, slug, title, amount, note, method, from_name)
         VALUES (${id}, ${slug}, ${title}, ${parseFloat(amount)}, ${note || null}, ${method}, ${fromName || null})
       `;
-      results.push({ id, slug, title })
+      results.push({ id, slug, title, amount: parseFloat(amount), fromName: fromName || null })
     }
 
     if (results.length === 0) {

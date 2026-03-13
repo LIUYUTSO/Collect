@@ -462,6 +462,9 @@ export default function Dashboard() {
                         }} 
                         placeholder={payees.length > 0 ? "新朋友名字…" : "朋友名字"} 
                         style={{ ...inputStyle, flex: 1 }} 
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                       />
                       {form.fromName && !payees.find(p => p.name === form.fromName) && (
                         <button type="button" onClick={() => handleSavePayee(form.fromName)} style={{ ...smallBtn, padding: '0 16px', whiteSpace: 'nowrap' }}>
@@ -486,7 +489,7 @@ export default function Dashboard() {
                   <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {recipients.map((r, i) => (
                       <div key={i} style={{ display: 'flex', gap: 8 }}>
-                        <input value={r.name} onChange={e => updateRecipient(i, 'name', e.target.value)} placeholder="名字" style={{ ...inputStyle, padding: '10px 12px' }} required />
+                        <input value={r.name} onChange={e => updateRecipient(i, 'name', e.target.value)} placeholder="名字" style={{ ...inputStyle, padding: '10px 12px' }} required autoComplete="off" autoCorrect="off" spellCheck={false} />
                         {!splitEqually && (
                           <input type="number" step="0.01" value={r.amount} onChange={e => updateRecipient(i, 'amount', e.target.value)} placeholder="金額" style={{ ...inputStyle, width: 80, padding: '10px 8px', fontFamily: 'DM Mono, monospace' }} required />
                         )}
