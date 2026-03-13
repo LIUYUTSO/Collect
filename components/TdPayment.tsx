@@ -79,8 +79,7 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
     }
   }
 
-  const primaryHeight = 56
-  const secondaryHeight = 42
+  const btnHeight = 42
 
   return (
     <div style={{ marginTop: 8 }}>
@@ -89,14 +88,14 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
         disabled={loading}
         style={{
           width: '100%',
-          height: primaryHeight,
+          height: btnHeight,
           background: primaryBg,
           color: primaryText,
           border: 'none',
-          borderRadius: primaryHeight / 2,
-          fontSize: 15,
+          borderRadius: btnHeight / 2,
+          fontSize: 14,
           fontWeight: 700,
-          letterSpacing: '0.02em',
+          letterSpacing: '0.01em',
           cursor: loading ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -104,7 +103,7 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
           gap: 10,
           transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          padding: '0 24px',
+          padding: '0 20px',
           whiteSpace: 'nowrap'
         }}
       >
@@ -122,22 +121,22 @@ export default function TdPayment({ email, lightMode }: { email: string, lightMo
         onClick={handleCopy}
         style={{
           width: '100%',
-          height: secondaryHeight,
+          height: btnHeight,
           marginTop: 12,
           background: 'transparent',
           color: textColor,
           border: `1.5px solid ${secondaryBorder}`,
-          borderRadius: secondaryHeight / 2,
+          borderRadius: btnHeight / 2,
           fontSize: 13,
           fontWeight: 600,
-          letterSpacing: '0.02em',
+          letterSpacing: '0.01em',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
           transition: 'all 0.2s',
-          padding: '0 24px',
+          padding: '0 20px',
           whiteSpace: 'nowrap'
         }}
       >

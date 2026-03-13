@@ -83,11 +83,11 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
               background: '#00D100', 
               color: 'black', 
               borderRadius: 24, 
-              padding: '40px 32px',
-              minHeight: 400,
+              padding: '36px 32px',
+              minHeight: 340,
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 12px 32px rgba(0, 209, 0, 0.15)'
+              boxShadow: '0 3px 16px rgba(0, 150, 0, 0.4)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.05em' }}>TD</span>
@@ -107,11 +107,11 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
               background: 'black', 
               color: 'white', 
               borderRadius: 24, 
-              padding: '40px 32px',
-              minHeight: 400,
+              padding: '36px 32px',
+              minHeight: 340,
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)'
+              boxShadow: '0 3px 20px rgba(0, 0, 0, 0.5)'
             }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.05em' }}>Wealthsimple</span>
