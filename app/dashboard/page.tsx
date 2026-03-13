@@ -149,16 +149,16 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: any) {
         )}
 
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} className="no-wrap">
-          <button onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px 10px', background: sumi, color: washi, border: 'none' }}>
+          <button aria-label="Share request" onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px 10px', background: sumi, color: washi, border: 'none' }}>
             <ShareIcon size={13} />
           </button>
-          <a href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <a aria-label="Preview request" href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <PreviewIcon size={13} />
           </a>
-          <button onClick={() => onEdit(r)} style={{ ...pill, padding: '7px 10px' }}>
+          <button aria-label="Edit request" onClick={() => onEdit(r)} style={{ ...pill, padding: '7px 10px' }}>
             <EditIcon size={13} />
           </button>
-          <button onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px 10px', background: rust, color: washi, border: 'none' }}>
+          <button aria-label="Delete request" onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px 10px', background: rust, color: washi, border: 'none' }}>
             <TrashIcon size={13} />
           </button>
         </div>
