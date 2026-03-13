@@ -12,7 +12,7 @@ export async function PATCH(
   }
 
   const body = await req.json()
-  const { title, amount, note, status, method, fromName, payees, eventDate, location } = body
+  const { title, amount, note, status, method, fromName, payerName, payees, eventDate, location } = body
 
   const { rows } = await db.sql`
     UPDATE requests 
@@ -22,6 +22,7 @@ export async function PATCH(
         status = COALESCE(${status}, status),
         method = COALESCE(${method}, method),
         from_name = COALESCE(${fromName}, from_name),
+        payer_name = COALESCE(${payerName}, payer_name),
         payees = COALESCE(${payees ? (typeof payees === 'string' ? payees : JSON.stringify(payees)) : null}, payees),
         event_date = COALESCE(${eventDate}, event_date),
         location = COALESCE(${location}, location),

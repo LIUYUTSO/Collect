@@ -11,31 +11,33 @@ export async function ensureTables() {
 
   try {
     await sql`
-      CREATE TABLE IF NOT EXISTS requests (
-        id TEXT PRIMARY KEY,
-        slug TEXT UNIQUE NOT NULL,
-        title TEXT NOT NULL,
-        amount DECIMAL(10, 2) NOT NULL,
-        currency TEXT DEFAULT 'CAD',
-        note TEXT,
-        method TEXT NOT NULL,
-        status TEXT DEFAULT 'pending',
-        from_name TEXT,
-        payees JSONB,
-        event_date DATE,
-        location TEXT,
-        paid_at TIMESTAMP WITH TIME ZONE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-    
-    // Migration: Add columns if they don't exist
-    try {
-      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS payees JSONB;`;
-      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS event_date DATE;`;
-      await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS location TEXT;`;
-    } catch (e) {
+        CREATE TABLE IF NOT EXISTS requests (
+          id TEXT PRIMARY KEY,
+          slug TEXT UNIQUE NOT NULL,
+          title TEXT NOT NULL,
+          amount DECIMAL(10, 2) NOT NULL,
+          currency TEXT DEFAULT 'CAD',
+          note TEXT,
+          method TEXT NOT NULL,
+          status TEXT DEFAULT 'pending',
+          from_name TEXT,
+          payer_name TEXT,
+          payees JSONB,
+          event_date DATE,
+          location TEXT,
+          paid_at TIMESTAMP WITH TIME ZONE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      
+      // Migration: Add columns if they don't exist
+      try {
+        await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS payees JSONB;`;
+        await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS event_date DATE;`;
+        await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS location TEXT;`;
+        await sql`ALTER TABLE requests ADD COLUMN IF NOT EXISTS payer_name TEXT;`;
+      } catch (e) {
       // Ignore if columns exist or other issues
     }
     await sql`
