@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     const results = []
 
     for (const item of items) {
-      const { title, amount, note, method, fromName } = item
-      if (!title || !amount || !method) continue
+      const { title, amount, note, method = 'all', fromName } = item
+      if (!title || !amount) continue
 
       const slug = generateSlug()
       const id = nanoid()

@@ -370,7 +370,7 @@ export default function Dashboard() {
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => copyLink(req.slug)} style={smallBtn}>
-                        {copied === req.slug ? '✓ 已複製' : '傳統複製'}
+                        {copied === req.slug ? '✓ 已複製' : '複製'}
                       </button>
                       <a href={`/request/${req.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...smallBtn, textDecoration: 'none' }}>
                         預覽
@@ -462,30 +462,6 @@ export default function Dashboard() {
               <FieldLabel style={{ marginTop: 24 }}>備註（選填）</FieldLabel>
               <textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="補充說明…" rows={3} style={{ ...inputStyle, resize: 'none' }} />
 
-              <FieldLabel style={{ marginTop: 20 }}>收款方式</FieldLabel>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {['td', 'wealthsimple'].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setForm({ ...form, method: m })}
-                    style={{
-                      flex: 1,
-                      padding: '12px 8px',
-                      border: `1px solid ${form.method === m ? 'var(--sumi)' : 'var(--fog)'}`,
-                      borderRadius: 3,
-                      background: form.method === m ? 'var(--sumi)' : 'transparent',
-                      color: form.method === m ? 'var(--washi)' : 'var(--ash)',
-                      fontSize: 12,
-                      letterSpacing: '0.05em',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {m === 'td' ? 'TD' : 'WealthSimple'}
-                  </button>
-                ))}
-              </div>
 
               {error && <p style={{ fontSize: 12, color: 'var(--rust)', marginTop: 12 }}>{error}</p>}
 
@@ -618,7 +594,7 @@ function RequestCard({
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
         <button onClick={() => onCopy(r.slug)} style={smallBtn}>
-          {copied === r.slug ? '✓ 已複製' : '傳統複製'}
+          {copied === r.slug ? '✓ 已複製' : '複製'}
         </button>
         <a 
           href={`/request/${r.slug}`} 
