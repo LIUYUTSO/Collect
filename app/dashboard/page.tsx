@@ -578,10 +578,11 @@ function FieldLabel({ children, style }: { children: React.ReactNode; style?: Re
 }
 
 function RequestCard({
-  r, onShare, onPaid, onDelete, copied, paid = false,
+  r, onShare, onCopy, onPaid, onDelete, copied, paid = false,
 }: {
   r: Request
   onShare: (slug: string, title?: string, amount?: number) => void
+  onCopy: (slug: string) => void
   onPaid: (id: string, status: string) => void
   onDelete: (id: string) => void
   copied: string
