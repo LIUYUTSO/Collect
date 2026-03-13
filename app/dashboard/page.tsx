@@ -54,6 +54,9 @@ export default function Dashboard() {
   // Manage explicit selected payee vs typed payee
   const [selectedPayeeId, setSelectedPayeeId] = useState<string>('')
   
+  // Track focused recipient in split mode for custom hints
+  const [focusedRecipient, setFocusedRecipient] = useState<number | null>(null)
+  
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
 
@@ -142,6 +145,7 @@ export default function Dashboard() {
       fetchRequests(adminKey)
       setForm({ title: '', amount: '', note: '', method: 'td', fromName: '' })
       setSelectedPayeeId('')
+      setFocusedRecipient(null)
       setRecipients([{ name: '', amount: '' }])
       setTotalAmount('')
     } else {
@@ -462,7 +466,7 @@ export default function Dashboard() {
                         }} 
                         placeholder={payees.length > 0 ? "新朋友名字…" : "朋友名字"} 
                         style={{ ...inputStyle, flex: 1 }} 
-                        autoComplete="off"
+                        autoComplete="one-time-code"
                         autoCorrect="off"
                         spellCheck={false}
                       />
@@ -488,23 +492,51 @@ export default function Dashboard() {
 
                   <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {recipients.map((r, i) => (
-                      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 10, borderBottom: i === recipients.length - 1 ? 'none' : '1px solid var(--fog)' }}>
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 10, borderBottom: i === recipients.length - 1 ? 'none' : '1px solid var(--fog)', position: 'relative' }}>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <div style={{ flex: 1, position: 'relative' }}>
                             <input 
-                              list={`payee-list-split-${i}`}
                               value={r.name} 
+                              onFocus={() => setFocusedRecipient(i)}
+                              onBlur={() => setTimeout(() => setFocusedRecipient(null), 200)}
                               onChange={e => updateRecipient(i, 'name', e.target.value)} 
                               placeholder="名字" 
                               style={{ ...inputStyle, padding: '10px 12px' }} 
                               required 
-                              autoComplete="off" 
+                              autoComplete="one-time-code" 
                               autoCorrect="off" 
                               spellCheck={false} 
                             />
-                            <datalist id={`payee-list-split-${i}`}>
-                              {payees.map(p => <option key={p.id} value={p.name} />)}
-                            </datalist>
+                            
+                            {/* Custom Intelligent Hints Dropdown */}
+                            {focusedRecipient === i && payees.length > 0 && (
+                              <div style={{ 
+                                position: 'absolute', 
+                                top: '100%', 
+                                left: 0, 
+                                right: 0, 
+                                background: '#F8F7F3', 
+                                border: '1px solid var(--fog)', 
+                                borderRadius: '0 0 4px 4px', 
+                                zIndex: 100, 
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                maxHeight: 180,
+                                overflowY: 'auto'
+                              }}>
+                                {payees
+                                  .filter(p => p.name.toLowerCase().includes(r.name.toLowerCase()))
+                                  .map(p => (
+                                    <div 
+                                      key={p.id} 
+                                      onClick={() => updateRecipient(i, 'name', p.name)}
+                                      style={{ padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #EEE', cursor: 'pointer', color: 'var(--sumi)' }}
+                                    >
+                                      {p.name}
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                            )}
                           </div>
                           {!splitEqually && (
                             <input type="number" step="0.01" value={r.amount} onChange={e => updateRecipient(i, 'amount', e.target.value)} placeholder="金額" style={{ ...inputStyle, width: 80, padding: '10px 8px', fontFamily: 'DM Mono, monospace' }} required />
