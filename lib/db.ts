@@ -2,15 +2,22 @@ import { sql } from '@vercel/postgres';
 
 export const db = sql;
 
-export async function ensureTables() {
-  console.log('Postgres Env Check:', {
-    hasURL: !!process.env.POSTGRES_URL,
-    hasDirectURL: !!process.env.POSTGRES_URL_NON_POOLING,
-    hasDatabaseURL: !!process.env.DATABASE_URL,
-  });
+let ensureTablesPromise: Promise<void> | null = null;
+let tablesEnsured = false;
 
-  try {
-    await sql`
+export async function ensureTables() {
+  if (tablesEnsured) return;
+  if (ensureTablesPromise) return ensureTablesPromise;
+
+  ensureTablesPromise = (async () => {
+    console.log('Postgres Env Check:', {
+      hasURL: !!process.env.POSTGRES_URL,
+      hasDirectURL: !!process.env.POSTGRES_URL_NON_POOLING,
+      hasDatabaseURL: !!process.env.DATABASE_URL,
+    });
+
+    try {
+      await sql`
         CREATE TABLE IF NOT EXISTS requests (
           id TEXT PRIMARY KEY,
           slug TEXT UNIQUE NOT NULL,
@@ -58,8 +65,14 @@ export async function ensureTables() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-    console.log('Database tables ensured');
-  } catch (error) {
-    console.error('Error ensuring tables:', error);
-  }
+      console.log('Database tables ensured');
+      tablesEnsured = true;
+    } catch (error) {
+      console.error('Error ensuring tables:', error);
+      ensureTablesPromise = null; // Reset promise so we can retry on next call
+      throw error;
+    }
+  })();
+
+  return ensureTablesPromise;
 }
