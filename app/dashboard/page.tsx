@@ -50,6 +50,10 @@ export default function Dashboard() {
     method: 'td',
     fromName: '',
   })
+  
+  // Manage explicit selected payee vs typed payee
+  const [selectedPayeeId, setSelectedPayeeId] = useState<string>('')
+  
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
 
@@ -103,8 +107,16 @@ export default function Dashboard() {
     setError('')
 
     let payload: any = []
+    
+    // Determine the actual fromName
+    let finalFromName = form.fromName
+    if (selectedPayeeId) {
+      const p = payees.find(p => p.id === selectedPayeeId)
+      if (p) finalFromName = p.name
+    }
+
     if (mode === 'single') {
-      payload = [form]
+      payload = [{ ...form, fromName: finalFromName }]
     } else {
       payload = recipients.map(r => ({
         title: form.title,
@@ -129,6 +141,7 @@ export default function Dashboard() {
       setNewRequests(Array.isArray(data) ? data : [data])
       fetchRequests(adminKey)
       setForm({ title: '', amount: '', note: '', method: 'td', fromName: '' })
+      setSelectedPayeeId('')
       setRecipients([{ name: '', amount: '' }])
       setTotalAmount('')
     } else {
@@ -375,7 +388,7 @@ export default function Dashboard() {
                         {req.fromName || '朋友'} · {req.title}
                       </p>
                       <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 13, color: 'var(--moss)' }}>
-                        {formatCAD(req.amount)}
+                        {formatCAD(Number(req.amount))}
                       </p>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -418,10 +431,10 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {payees.length > 0 && (
                       <select
-                        value={payees.find(p => p.name === form.fromName) ? form.fromName : ''}
+                        value={selectedPayeeId}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          setForm({ ...form, fromName: val });
+                          setSelectedPayeeId(e.target.value);
+                          setForm({ ...form, fromName: '' }); // Clear manual input
                         }}
                         style={{ 
                           ...inputStyle, 
@@ -430,20 +443,23 @@ export default function Dashboard() {
                           background: 'rgba(255,255,255,0.4) url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3Axmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232C3A2E%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") no-repeat right 12px top 50%', 
                           backgroundSize: '10px auto',
                           cursor: 'pointer',
-                          color: payees.find(p => p.name === form.fromName) ? 'var(--sumi)' : 'var(--ash)'
+                          color: selectedPayeeId ? 'var(--sumi)' : 'var(--ash)'
                         }}
                       >
-                        <option value="" disabled>-- 點擊展開：從好友名單中選擇 --</option>
+                        <option value="">-- 由紀錄帶入朋友姓名 --</option>
                         {payees.map(p => (
-                          <option key={p.id} value={p.name}>{p.name}</option>
+                          <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
                     )}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       {payees.length > 0 && <span style={{ fontSize: 13, color: 'var(--ash)', whiteSpace: 'nowrap' }}>或手動輸入：</span>}
                       <input 
-                        value={payees.find(p => p.name === form.fromName) ? '' : form.fromName} 
-                        onChange={(e) => setForm({ ...form, fromName: e.target.value })} 
+                        value={form.fromName} 
+                        onChange={(e) => {
+                          setForm({ ...form, fromName: e.target.value });
+                          setSelectedPayeeId(''); // Clear dropdown selection
+                        }} 
                         placeholder={payees.length > 0 ? "新朋友名字…" : "朋友名字"} 
                         style={{ ...inputStyle, flex: 1 }} 
                       />
