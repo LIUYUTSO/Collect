@@ -174,3 +174,11 @@ input, textarea, select, button {
   color: var(--sumi);
   border-bottom: 1px solid var(--sumi);
 }
+
+/* contentEditable placeholder support */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--fog);
+  pointer-events: none;
+  display: block;
+}

@@ -458,18 +458,29 @@ export default function Dashboard() {
                     )}
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       {payees.length > 0 && <span style={{ fontSize: 13, color: 'var(--ash)', whiteSpace: 'nowrap' }}>或手動輸入：</span>}
-                      <input 
-                        value={form.fromName} 
-                        onChange={(e) => {
-                          setForm({ ...form, fromName: e.target.value });
-                          setSelectedPayeeId(''); // Clear dropdown selection
-                        }} 
-                        placeholder={payees.length > 0 ? "新朋友名字…" : "朋友名字"} 
-                        style={{ ...inputStyle, flex: 1 }} 
-                        autoComplete="one-time-code"
-                        autoCorrect="off"
-                        spellCheck={false}
-                      />
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={() => setFocusedRecipient(-1)}
+                        onBlur={(e) => {
+                          const text = e.currentTarget.textContent || '';
+                          setForm({ ...form, fromName: text });
+                          setSelectedPayeeId('');
+                          setTimeout(() => setFocusedRecipient(null), 200);
+                        }}
+                        onInput={(e) => {
+                          const text = (e.target as HTMLElement).textContent || '';
+                          setForm({ ...form, fromName: text });
+                          setSelectedPayeeId('');
+                        }}
+                        data-placeholder={payees.length > 0 ? "新朋友名字…" : "朋友名字"}
+                        style={{ 
+                          ...inputStyle, flex: 1, minHeight: 48,
+                          cursor: 'text',
+                        } as React.CSSProperties}
+                      >
+                        {form.fromName && !selectedPayeeId ? form.fromName : undefined}
+                      </div>
                       {form.fromName && !payees.find(p => p.name === form.fromName) && (
                         <button type="button" onClick={() => handleSavePayee(form.fromName)} style={{ ...smallBtn, padding: '0 16px', whiteSpace: 'nowrap' }}>
                           保存姓名
@@ -495,20 +506,29 @@ export default function Dashboard() {
                       <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 10, borderBottom: i === recipients.length - 1 ? 'none' : '1px solid var(--fog)', position: 'relative' }}>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <div style={{ flex: 1, position: 'relative' }}>
-                            <input 
-                              value={r.name} 
+                            <div
+                              contentEditable
+                              suppressContentEditableWarning
                               onFocus={() => setFocusedRecipient(i)}
-                              onBlur={() => setTimeout(() => setFocusedRecipient(null), 200)}
-                              onChange={e => updateRecipient(i, 'name', e.target.value)} 
-                              placeholder="名字" 
-                              style={{ ...inputStyle, padding: '10px 12px' }} 
-                              required 
-                              autoComplete="one-time-code" 
-                              autoCorrect="off" 
-                              spellCheck={false} 
+                              onBlur={(e) => {
+                                const text = e.currentTarget.textContent || '';
+                                updateRecipient(i, 'name', text);
+                                setTimeout(() => setFocusedRecipient(null), 200);
+                              }}
+                              onInput={(e) => {
+                                const text = (e.target as HTMLElement).textContent || '';
+                                updateRecipient(i, 'name', text);
+                              }}
+                              data-placeholder="名字"
+                              style={{
+                                ...inputStyle,
+                                padding: '10px 12px',
+                                minHeight: 44,
+                                cursor: 'text',
+                              } as React.CSSProperties}
                             />
                             
-                            {/* Custom Intelligent Hints Dropdown */}
+                            {/* Custom dropdown - onPointerDown prevents onBlur race on iOS */}
                             {focusedRecipient === i && payees.length > 0 && (
                               <div style={{ 
                                 position: 'absolute', 
@@ -524,12 +544,16 @@ export default function Dashboard() {
                                 overflowY: 'auto'
                               }}>
                                 {payees
-                                  .filter(p => p.name.toLowerCase().includes(r.name.toLowerCase()))
+                                  .filter(p => !r.name || p.name.toLowerCase().includes(r.name.toLowerCase()))
                                   .map(p => (
                                     <div 
                                       key={p.id} 
-                                      onClick={() => updateRecipient(i, 'name', p.name)}
-                                      style={{ padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #EEE', cursor: 'pointer', color: 'var(--sumi)' }}
+                                      onPointerDown={(e) => {
+                                        e.preventDefault(); // prevent blur before tap registers
+                                        updateRecipient(i, 'name', p.name);
+                                        setFocusedRecipient(null);
+                                      }}
+                                      style={{ padding: '12px 14px', fontSize: 13, borderBottom: '1px solid #EEE', cursor: 'pointer', color: 'var(--sumi)', fontFamily: 'inherit' }}
                                     >
                                       {p.name}
                                     </div>
