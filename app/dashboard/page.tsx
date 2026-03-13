@@ -415,38 +415,39 @@ export default function Dashboard() {
                   <input type="number" step="0.01" min="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" style={{ ...inputStyle, fontFamily: 'DM Mono, monospace', fontSize: 22 }} required />
 
                   <FieldLabel style={{ marginTop: 20 }}>給誰（選填）</FieldLabel>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {payees.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setForm({ ...form, fromName: p.name })}
-                        style={{
-                          ...smallTag,
-                          background: form.fromName === p.name ? 'var(--sumi)' : 'rgba(255,255,255,0.4)',
-                          color: form.fromName === p.name ? 'var(--washi)' : 'var(--sumi)',
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {payees.length > 0 && (
+                      <select
+                        value={payees.find(p => p.name === form.fromName) ? form.fromName : ''}
+                        onChange={(e) => setForm({ ...form, fromName: e.target.value })}
+                        style={{ 
+                          ...inputStyle, 
+                          padding: '12px 16px',
+                          appearance: 'none', 
+                          background: 'rgba(255,255,255,0.4) url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3Axmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232C3A2E%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") no-repeat right 12px top 50%', 
+                          backgroundSize: '10px auto',
+                          cursor: 'pointer'
                         }}
                       >
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input 
-                      list="payee-list"
-                      value={form.fromName} 
-                      onChange={(e) => setForm({ ...form, fromName: e.target.value })} 
-                      placeholder="朋友名字" 
-                      style={inputStyle} 
-                    />
-                    <datalist id="payee-list">
-                      {payees.map(p => <option key={p.id} value={p.name} />)}
-                    </datalist>
-                    {form.fromName && !payees.find(p => p.name === form.fromName) && (
-                      <button type="button" onClick={() => handleSavePayee(form.fromName)} style={smallBtn}>
-                        保存姓名
-                      </button>
+                        <option value="">-- 由紀錄帶入朋友姓名 --</option>
+                        {payees.map(p => (
+                          <option key={p.id} value={p.name}>{p.name}</option>
+                        ))}
+                      </select>
                     )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input 
+                        value={form.fromName} 
+                        onChange={(e) => setForm({ ...form, fromName: e.target.value })} 
+                        placeholder={payees.length > 0 ? "或輸入新朋友姓名…" : "朋友名字"} 
+                        style={inputStyle} 
+                      />
+                      {form.fromName && !payees.find(p => p.name === form.fromName) && (
+                        <button type="button" onClick={() => handleSavePayee(form.fromName)} style={{ ...smallBtn, padding: '0 16px', whiteSpace: 'nowrap' }}>
+                          保存姓名
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
@@ -528,12 +529,24 @@ export default function Dashboard() {
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 10, color: 'var(--ash)', marginBottom: 4 }}>篩選收款人</p>
-            <input 
-              value={searchName} 
-              onChange={e => setSearchName(e.target.value)} 
-              placeholder="搜尋姓名…" 
-              style={{ ...inputStyle, padding: '8px 12px', fontSize: 13 }} 
-            />
+            <select
+              value={searchName}
+              onChange={e => setSearchName(e.target.value)}
+              style={{ 
+                ...inputStyle, 
+                padding: '8px 12px', 
+                fontSize: 13, 
+                appearance: 'none', 
+                background: 'rgba(255,255,255,0.4) url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3Axmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232C3A2E%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") no-repeat right 12px top 50%', 
+                backgroundSize: '10px auto',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">全部朋友</option>
+              {payees.map(p => (
+                <option key={p.id} value={p.name}>{p.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
