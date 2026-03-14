@@ -1,10 +1,47 @@
 import { db } from '@/lib/db'
 import { formatCAD, formatDate, getPaymentInstructions } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 import TdPayment, { TdIcon } from '@/components/TdPayment'
 import WsPayment, { WsIcon } from '@/components/WsPayment'
 import PaymentAccordion from '@/components/PaymentAccordion'
 import ClientTransition from '@/components/ClientTransition'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { rows } = await db.sql`
+    SELECT title, amount FROM requests WHERE slug = ${slug} LIMIT 1
+  `
+  const request = rows[0]
+
+  if (!request) return { title: 'Not Found' }
+
+  const formattedAmount = formatCAD(request.amount)
+  const title = `Collect | ${request.title} | ${formattedAmount}`
+
+  // Ensure Base URL is defined
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL) : new URL('https://collect.adamliu.uk');
+  
+  return {
+    title,
+    openGraph: {
+      title,
+      images: [
+        {
+          url: `/api/og?slug=${slug}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      images: [`/api/og?slug=${slug}`],
+    },
+    metadataBase: baseUrl,
+  }
+}
 
 export default async function RequestPage({
   params,
@@ -91,13 +128,15 @@ export default async function RequestPage({
               color: 'var(--ash)', 
               marginTop: 4,
               fontWeight: 500,
-              opacity: 1
+              opacity: 1,
+              width: '100%',
+              textAlign: 'center'
             }}>
               {request.location}
             </p>
           )}
           
-          <div style={{ marginTop: 14, display: 'flex' }}>
+          <div style={{ marginTop: 14, display: 'flex', justifyContent: 'center', width: '100%' }}>
             {request.payerName ? (
               <div style={{ 
                 background: 'var(--sumi)', 
