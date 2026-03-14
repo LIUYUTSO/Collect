@@ -310,9 +310,6 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [displayedProgress, setDisplayedProgress] = useState(0)
-  const velocity = useRef(0)
-  const lastTime = useRef(Date.now())
 
   useEffect(() => {
     const handleScroll = () => {
@@ -322,40 +319,6 @@ export default function Dashboard() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Physics Engine: Micro-spring "Chase" logic
-  // This makes the UI elements feel like they are connected by springs to your finger.
-  // They will naturally overshoot and bounce back when you stop scrolling.
-  useEffect(() => {
-    let raf: number;
-    const step = () => {
-      const now = Date.now();
-      const dt = Math.min(now - lastTime.current, 32) / 1000; // Cap dt to prevent huge jumps
-      lastTime.current = now;
-
-      // Spring constants for a "Critically Damped" settle (smooth buffer/glide, no bounce)
-      const stiffness = 180; 
-      const damping = 26;
-
-      const error = scrollProgress - displayedProgress;
-      const springForce = error * stiffness;
-      const dampingForce = velocity.current * damping;
-      const acceleration = springForce - dampingForce;
-
-      velocity.current += acceleration * dt;
-      const nextProgress = displayedProgress + velocity.current * dt;
-
-      // Settle if close enough to save battery
-      if (Math.abs(scrollProgress - nextProgress) < 0.0001 && Math.abs(velocity.current) < 0.0001) {
-        setDisplayedProgress(scrollProgress);
-      } else {
-        setDisplayedProgress(nextProgress);
-        raf = requestAnimationFrame(step);
-      }
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [scrollProgress, displayedProgress]);
 
   // List filters
   const [searchTitle, setSearchTitle] = useState('')
@@ -857,26 +820,24 @@ export default function Dashboard() {
   // ─── LIST ────────────────────────────────────────────────────────────────
   // Mathematical interpolations for fluid shape-shifting
   const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  // We use the physics-driven displayedProgress instead of raw scroll progress
-  const progress = easeInOutQuad(Math.min(1.2, Math.max(-0.2, displayedProgress)));
+  const progress = easeInOutQuad(scrollProgress);
 
   // Re-tuned translation curves: 
-  // Using Quad easing for the "path", but the spring now provides the "bounce".
-  const xProgress = 1 - Math.pow(1 - Math.max(0, Math.min(1, progress)), 2); 
-  const yProgress = Math.pow(Math.max(0, Math.min(1, progress)), 2);
+  const xProgress = 1 - Math.pow(1 - progress, 2); 
+  const yProgress = Math.pow(progress, 2);
 
   // Container metrics
-  const headerHeight = 170 - (Math.max(0, Math.min(1, progress)) * 90); 
+  const headerHeight = 170 - (progress * 90); 
   
   // Font sizes: Logo starts much larger, shrinks to 16px.
-  const collectFontSize = 28 - (Math.max(0, Math.min(1, progress)) * 12);
-  const adminFontSize = 11 - (Math.max(0, Math.min(1, progress)) * 4);
+  const collectFontSize = 28 - (progress * 12);
+  const adminFontSize = 11 - (progress * 4);
   
   // Shared metric calculations for buttons
-  const buttonGap = 8 + (Math.max(0, Math.min(1, progress)) * 5.6);
+  const buttonGap = 8 + (progress * 5.6);
   
   // Base height starts at original 34, shrinks by 15% to ~29
-  const currentButtonHeight = 34 - (Math.max(0, Math.min(1, progress)) * 5); 
+  const currentButtonHeight = 34 - (progress * 5); 
 
   const renderButtons = () => {
     return (
@@ -990,7 +951,7 @@ export default function Dashboard() {
                 letterSpacing: '0.42em',
                 marginRight: '-0.42em',
                 // Fade optical centering padding linearly to avoid glitch at 0.5
-                paddingLeft: `${0.42 * (1 - Math.max(0, Math.min(1, progress)))}em`, 
+                paddingLeft: `${0.42 * (1 - progress)}em`, 
                 color: sumi, 
                 fontWeight: 700, 
                 marginTop: 0,
@@ -1006,7 +967,7 @@ export default function Dashboard() {
                 letterSpacing: '0.89em',
                 marginRight: '-0.89em',
                 // Fade optical centering padding linearly to avoid glitch at 0.5
-                paddingLeft: `${1.3 * (1 - Math.max(0, Math.min(1, progress)))}em`,
+                paddingLeft: `${1.3 * (1 - progress)}em`,
                 color: ash, 
                 fontWeight: 500,
                 opacity: 0.9,
