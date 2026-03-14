@@ -64,7 +64,7 @@ export async function GET(request: Request) {
           >
             <span
               style={{
-                fontFamily: '"Zen Old Mincho"',
+                fontFamily: 'Zen Old Mincho',
                 fontSize: '120px',
                 fontWeight: 400,
                 color: '#1A1714',
