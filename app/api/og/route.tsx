@@ -100,12 +100,14 @@ export async function GET(request: Request) {
           >
             {/* BILLING INVOICE */}
             <div style={{
+              display: 'flex',
               fontSize: '8px',
               letterSpacing: '4px',
               color: '#A09D98',
-              textAlign: 'center',
+              justifyContent: 'center',
               marginBottom: '16px',
               fontFamily: 'monospace',
+              width: '100%'
             }}>
               BILLING INVOICE
             </div>
@@ -131,14 +133,14 @@ export async function GET(request: Request) {
             {payees.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {payees.map((p, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{p.name}</span>
-                    <span style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{formatCAD(p.amount)}</span>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                    <div style={{ display: 'flex', fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{p.name}</div>
+                    <div style={{ display: 'flex', fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{formatCAD(p.amount)}</div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace', textAlign: 'center' }}>
+              <div style={{ display: 'flex', fontSize: '9px', color: '#A09D98', fontFamily: 'monospace', justifyContent: 'center', width: '100%' }}>
                 {payerName || '—'}
               </div>
             )}
@@ -147,16 +149,16 @@ export async function GET(request: Request) {
             <div style={{ borderTop: '1px dashed #D4CFC8', marginTop: '16px', marginBottom: '16px', width: '100%', height: '1px' }} />
 
             {/* Total */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '9px', color: '#3D3933', letterSpacing: '2px', fontFamily: 'monospace' }}>TOTAL</span>
-              <span style={{ fontSize: '32px', color: '#8B4A3C', fontFamily: 'monospace', letterSpacing: '-1px' }}>{amount}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', fontSize: '9px', color: '#3D3933', letterSpacing: '2px', fontFamily: 'monospace' }}>TOTAL</div>
+              <div style={{ display: 'flex', fontSize: '32px', color: '#8B4A3C', fontFamily: 'monospace', letterSpacing: '-1px' }}>{amount}</div>
             </div>
 
             {/* Divider */}
             <div style={{ borderTop: '1px dashed #D4CFC8', marginTop: '16px', marginBottom: '16px', width: '100%', height: '1px' }} />
 
             {/* Date */}
-            <div style={{ fontSize: '8px', color: '#C4BFB8', textAlign: 'center', fontFamily: 'monospace', letterSpacing: '2px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', fontSize: '8px', color: '#C4BFB8', fontFamily: 'monospace', letterSpacing: '2px', width: '100%' }}>
               {date}
             </div>
           </div>
