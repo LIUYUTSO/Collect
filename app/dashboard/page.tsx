@@ -310,29 +310,52 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isScrolling, setIsScrolling] = useState(false)
-  const scrollEndTimer = useRef<NodeJS.Timeout | null>(null)
+  const [displayedProgress, setDisplayedProgress] = useState(0)
+  const velocity = useRef(0)
+  const lastTime = useRef(Date.now())
 
   useEffect(() => {
     const handleScroll = () => {
-      // Mark as scrolling to disable transitions and prevent "tracking lag"
-      setIsScrolling(true)
-      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current)
-      
       const progress = Math.min(window.scrollY / 80, 1)
       setScrollProgress(progress)
-      
-      // Settle after 150ms of no scroll activity
-      scrollEndTimer.current = setTimeout(() => {
-        setIsScrolling(false)
-      }, 150)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current)
-    }
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Physics Engine: Micro-spring "Chase" logic
+  // This makes the UI elements feel like they are connected by springs to your finger.
+  // They will naturally overshoot and bounce back when you stop scrolling.
+  useEffect(() => {
+    let raf: number;
+    const step = () => {
+      const now = Date.now();
+      const dt = Math.min(now - lastTime.current, 32) / 1000; // Cap dt to prevent huge jumps
+      lastTime.current = now;
+
+      // Spring constants for a snappy, premium bounce
+      const stiffness = 220; 
+      const damping = 22;
+
+      const error = scrollProgress - displayedProgress;
+      const springForce = error * stiffness;
+      const dampingForce = velocity.current * damping;
+      const acceleration = springForce - dampingForce;
+
+      velocity.current += acceleration * dt;
+      const nextProgress = displayedProgress + velocity.current * dt;
+
+      // Settle if close enough to save battery
+      if (Math.abs(scrollProgress - nextProgress) < 0.0001 && Math.abs(velocity.current) < 0.0001) {
+        setDisplayedProgress(scrollProgress);
+      } else {
+        setDisplayedProgress(nextProgress);
+        raf = requestAnimationFrame(step);
+      }
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [scrollProgress, displayedProgress]);
 
   // List filters
   const [searchTitle, setSearchTitle] = useState('')
@@ -834,33 +857,26 @@ export default function Dashboard() {
   // ─── LIST ────────────────────────────────────────────────────────────────
   // Mathematical interpolations for fluid shape-shifting
   const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  const progress = easeInOutQuad(Math.min(1, Math.max(0, scrollProgress)));
+  // We use the physics-driven displayedProgress instead of raw scroll progress
+  const progress = easeInOutQuad(Math.min(1.2, Math.max(-0.2, displayedProgress)));
 
   // Re-tuned translation curves: 
-  // Using milder Quad easing instead of Cubic. 
-  // Gives enough horizontal early-separation to prevent crossing, but avoids the stiff L-shaped arc.
-  const xProgress = 1 - Math.pow(1 - progress, 2); 
-  const yProgress = Math.pow(progress, 2);
+  // Using Quad easing for the "path", but the spring now provides the "bounce".
+  const xProgress = 1 - Math.pow(1 - Math.max(0, Math.min(1, progress)), 2); 
+  const yProgress = Math.pow(Math.max(0, Math.min(1, progress)), 2);
 
   // Container metrics
-  const headerHeight = 170 - (progress * 90); // Shrinks from 170px to 80px
+  const headerHeight = 170 - (Math.max(0, Math.min(1, progress)) * 90); 
   
   // Font sizes: Logo starts much larger, shrinks to 16px.
-  const collectFontSize = 28 - (progress * 12);
-  const adminFontSize = 11 - (progress * 4);
+  const collectFontSize = 28 - (Math.max(0, Math.min(1, progress)) * 12);
+  const adminFontSize = 11 - (Math.max(0, Math.min(1, progress)) * 4);
   
   // Shared metric calculations for buttons
-  // Start gap at 8, original end was 16. 15% smaller = 13.6
-  const buttonGap = 8 + (progress * 5.6);
+  const buttonGap = 8 + (Math.max(0, Math.min(1, progress)) * 5.6);
   
   // Base height starts at original 34, shrinks by 15% to ~29
-  const currentButtonHeight = 34 - (progress * 5); 
-
-  // Micro-spring physics: Using a CSS variable approach to force browser repaint/re-eval
-  // Boosted overshoot (1.35) and adjusted timing for more "pop"
-  const springTransition = isScrolling 
-    ? 'none' 
-    : 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  const currentButtonHeight = 34 - (Math.max(0, Math.min(1, progress)) * 5); 
 
   const renderButtons = () => {
     return (
@@ -871,18 +887,18 @@ export default function Dashboard() {
           background: sumi, color: washi, border: 'none', 
           height: currentButtonHeight,
           minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - progress) * 48,
+          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 48,
           // Inner padding scales smoothly
-          padding: `0 ${16 * (1 - Math.pow(progress, 0.5))}px`, 
+          padding: `0 ${16 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
           borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          transition: springTransition
+          willChange: 'width, height, padding'
         }}>
-          <span style={{ fontSize: 18 - (progress * 2), marginRight: (1 - progress) * 4 }}>+</span>
+          <span style={{ fontSize: 18 - (Math.max(0, Math.min(1, progress)) * 2), marginRight: (1 - Math.max(0, Math.min(1, progress))) * 4 }}>+</span>
           <span style={{ 
             fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', 
-            width: (1 - progress) * 35,
-            opacity: 1 - progress,
+            width: (1 - Math.max(0, Math.min(1, progress))) * 35,
+            opacity: 1 - Math.max(0, Math.min(1, progress)),
             display: progress > 0.9 ? 'none' : 'inline-block'
           }}>NEW</span>
         </button>
@@ -893,17 +909,17 @@ export default function Dashboard() {
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
           height: currentButtonHeight,
           minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - progress) * 64,
-          padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
+          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 64,
+          padding: `0 ${14 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
           borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          transition: springTransition
+          willChange: 'width, height'
         }}>
-          <ContactIcon size={14 - (progress * 2)} />
+          <ContactIcon size={14 - (Math.max(0, Math.min(1, progress)) * 2)} />
           <span style={{ 
-            fontSize: 11, fontWeight: 600, marginLeft: (1 - progress) * 6,
-            width: (1 - progress) * 50,
-            opacity: 1 - progress,
+            fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
+            width: (1 - Math.max(0, Math.min(1, progress))) * 50,
+            opacity: 1 - Math.max(0, Math.min(1, progress)),
             display: progress > 0.99 ? 'none' : 'inline-block',
             whiteSpace: 'nowrap'
           }}>Contacts</span>
@@ -915,17 +931,17 @@ export default function Dashboard() {
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
           height: currentButtonHeight,
           minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - progress) * 54,
-          padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
+          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 54,
+          padding: `0 ${14 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
           borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          transition: springTransition 
+          willChange: 'width, height'
         }}>
-          <LockIcon size={12 - (progress * 1.8)} />
+          <LockIcon size={12 - (Math.max(0, Math.min(1, progress)) * 1.8)} />
           <span style={{ 
-            fontSize: 11, fontWeight: 600, marginLeft: (1 - progress) * 6,
-            width: (1 - progress) * 40,
-            opacity: 1 - progress,
+            fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
+            width: (1 - Math.max(0, Math.min(1, progress))) * 40,
+            opacity: 1 - Math.max(0, Math.min(1, progress)),
             display: progress > 0.99 ? 'none' : 'inline-block',
             whiteSpace: 'nowrap'
           }}>FaceID</span>
@@ -967,7 +983,6 @@ export default function Dashboard() {
               left: `${50 * (1 - xProgress)}%`,
               transform: `translateX(-${50 * (1 - xProgress)}%)`,
               textAlign: progress > 0.5 ? 'left' : 'center',
-              transition: springTransition,
               willChange: 'transform, top, left', 
             }}>
               <p style={{ 
@@ -982,7 +997,6 @@ export default function Dashboard() {
                 marginBottom: 0,
                 marginLeft: 0,
                 lineHeight: 1,
-                transition: springTransition,
                 willChange: 'font-size, letter-spacing'
               }}>COLLECT</p>
               
@@ -998,7 +1012,6 @@ export default function Dashboard() {
                 marginTop: 0,
                 marginBottom: 0,
                 marginLeft: 0,
-                transition: springTransition,
                 willChange: 'font-size, letter-spacing'
               }}>ADMIN PORTAL</p>
             </div>
@@ -1013,7 +1026,6 @@ export default function Dashboard() {
               top: `${106 - (yProgress * 83)}px`,
               right: `${50 * (1 - xProgress)}%`,
               transform: `translateX(${50 * (1 - xProgress)}%)`,
-              transition: springTransition,
               willChange: 'transform, top, right'
             }}>
               {renderButtons()}
