@@ -88,7 +88,10 @@ export async function GET(request: Request) {
               backgroundColor: 'white',
               display: 'flex',
               flexDirection: 'column',
-              padding: '32px 24px',
+              paddingTop: '32px',
+              paddingRight: '24px',
+              paddingBottom: '32px',
+              paddingLeft: '24px',
               opacity: 0.95, // Filter blur is not natively supported by Satori, relying on opacity
               borderRadius: '8px',
               boxShadow: '0 12px 24px rgba(0,0,0,0.1)' // Give it some depth instead of blur
@@ -119,7 +122,7 @@ export async function GET(request: Request) {
             </div>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+            <div style={{ borderTop: '1px dashed #D4CFC8', marginTop: '16px', marginBottom: '16px', width: '100%', height: '1px' }} />
 
             {/* Payees */}
             {payees.length > 0 ? (
@@ -138,7 +141,7 @@ export async function GET(request: Request) {
             )}
 
             {/* Divider */}
-            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+            <div style={{ borderTop: '1px dashed #D4CFC8', marginTop: '16px', marginBottom: '16px', width: '100%', height: '1px' }} />
 
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -147,7 +150,7 @@ export async function GET(request: Request) {
             </div>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+            <div style={{ borderTop: '1px dashed #D4CFC8', marginTop: '16px', marginBottom: '16px', width: '100%', height: '1px' }} />
 
             {/* Date */}
             <div style={{ fontSize: '8px', color: '#C4BFB8', textAlign: 'center', fontFamily: 'monospace', letterSpacing: '2px' }}>
