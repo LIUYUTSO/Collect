@@ -68,22 +68,23 @@ export default async function RequestPage({
               {formatDate(request.eventDate)}
             </p>
           )}
-          <h1
-            style={{
-              fontFamily: 'var(--font-zen, serif)',
-              fontSize: `clamp(24px, calc((100vw - 48px) / ${Math.max(1, request.title.length) * 0.55}), 48px)`,
-              fontWeight: 800,
-              color: 'var(--sumi)',
-              lineHeight: 1.1,
-              marginBottom: 8,
-              width: '100%',
-              textAlign: 'left',
-              letterSpacing: '-0.02em',
-              wordBreak: 'break-word',
-            } as any}
-          >
-            {request.title}
-          </h1>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <h1
+              style={{
+                fontFamily: 'var(--font-zen, serif)',
+                fontSize: `clamp(12px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(request.title || '')].length) * 0.55}), 48px)`,
+                fontWeight: 800,
+                color: 'var(--sumi)',
+                lineHeight: 1,
+                marginBottom: 8,
+                whiteSpace: 'nowrap',
+                textAlign: 'center',
+                letterSpacing: '-0.02em',
+              } as any}
+            >
+              {request.title}
+            </h1>
+          </div>
           {request.location && (
             <p className="no-wrap" style={{ 
               fontSize: 12, 
