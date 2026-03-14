@@ -203,11 +203,6 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: Reques
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
-export const metadata = {
-  title: 'Collect | Portal',
-  description: 'Manage your payment requests.',
-}
-
 export default function Dashboard() {
   const [view, setView] = useState<View>('login')
   const [password, setPassword] = useState('')
