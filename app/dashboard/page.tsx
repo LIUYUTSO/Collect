@@ -856,11 +856,11 @@ export default function Dashboard() {
   // Base height starts at original 34, shrinks by 15% to ~29
   const currentButtonHeight = 34 - (progress * 5); 
 
-  // Micro-spring physics: ONLY active when the user STOPS scrolling 
-  // Refined curve: milder overshoot (1.08) for a premium "settle" rather than a "bounce"
+  // Micro-spring physics: Using a CSS variable approach to force browser repaint/re-eval
+  // Boosted overshoot (1.35) and adjusted timing for more "pop"
   const springTransition = isScrolling 
     ? 'none' 
-    : 'all 0.5s cubic-bezier(0.34, 1.25, 0.64, 1)';
+    : 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
   const renderButtons = () => {
     return (
@@ -967,30 +967,39 @@ export default function Dashboard() {
               left: `${50 * (1 - xProgress)}%`,
               transform: `translateX(-${50 * (1 - xProgress)}%)`,
               textAlign: progress > 0.5 ? 'left' : 'center',
-              transition: springTransition
+              transition: springTransition,
+              willChange: 'transform, top, left', 
             }}>
               <p style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
                 fontSize: collectFontSize, 
                 letterSpacing: '0.42em',
-                marginRight: '-0.42em', // Optically chops off trailing right-side letter-spacing box
-                paddingLeft: progress > 0.5 ? 0 : '0.42em', // Restores optical center
+                marginRight: '-0.42em',
+                paddingLeft: progress > 0.5 ? 0 : '0.42em',
                 color: sumi, 
                 fontWeight: 700, 
-                margin: 0, 
+                marginTop: 0,
+                marginBottom: 0,
+                marginLeft: 0,
                 lineHeight: 1,
+                transition: springTransition,
+                willChange: 'font-size, letter-spacing'
               }}>COLLECT</p>
               
               <p style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
                 fontSize: adminFontSize, 
                 letterSpacing: '0.89em',
-                marginRight: '-0.89em', // Chops off trailing layout space
-                paddingLeft: progress > 0.5 ? 0 : '1.3em', // Matches 'A' left edge to 'C' center
+                marginRight: '-0.89em',
+                paddingLeft: progress > 0.5 ? 0 : '1.3em',
                 color: ash, 
                 fontWeight: 500,
                 opacity: 0.9,
-                margin: 0,
+                marginTop: 0,
+                marginBottom: 0,
+                marginLeft: 0,
+                transition: springTransition,
+                willChange: 'font-size, letter-spacing'
               }}>ADMIN PORTAL</p>
             </div>
 
@@ -1004,7 +1013,8 @@ export default function Dashboard() {
               top: `${106 - (yProgress * 83)}px`,
               right: `${50 * (1 - xProgress)}%`,
               transform: `translateX(${50 * (1 - xProgress)}%)`,
-              transition: springTransition
+              transition: springTransition,
+              willChange: 'transform, top, right'
             }}>
               {renderButtons()}
             </div>
