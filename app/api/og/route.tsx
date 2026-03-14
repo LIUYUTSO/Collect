@@ -22,95 +22,136 @@ export async function GET(request: Request) {
       return new Response('Not found', { status: 404 })
     }
 
-    // Map snake_case to camelCase
     const title = requestData.title
     const amount = formatCAD(requestData.amount)
     const date = formatDate(requestData.created_at)
-    const receiver = requestData.payer_name || 'COLLECT INVOICE'
+    const payerName = requestData.payer_name
+    
+    // Safely parse JSON array depending on the DB driver
+    const rawPayees = requestData.payees
+    const payees: { name: string; amount: number }[] = typeof rawPayees === 'string' ? JSON.parse(rawPayees) : (rawPayees || [])
+
+    // Load Zen Old Mincho font
+    const fontUrl = 'https://fonts.gstatic.com/s/zenoldmincho/v10/tss0ApVaYytLwxTqcxfMyBLack0Zx7tS.woff'
+    const fontData = await fetch(fontUrl).then((res) => res.arrayBuffer())
 
     return new ImageResponse(
       (
         <div
           style={{
-            height: '100%',
-            width: '100%',
+            width: '1200px',
+            height: '630px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: '#F2EDE4',
-            fontFamily: 'sans-serif',
-            padding: '80px',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          {/* Main Card */}
+          {/* COLLECT — large, sharp, behind blur (Satori z-index trick since blur filter lacks full support) */}
           <div
             style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
               display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: 'white',
-              width: '800px',
-              height: '500px',
-              borderRadius: '24px',
-              boxShadow: '0 24px 48px rgba(0,0,0,0.08)',
-              padding: '60px',
-              justifyContent: 'space-between',
-              position: 'relative',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
             }}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span
-                style={{
-                  fontSize: '24px',
-                  letterSpacing: '0.2em',
-                  color: '#6D5A42',
-                  fontWeight: 600,
-                  marginBottom: '20px',
-                }}
-              >
-                {receiver.toUpperCase()}
-              </span>
-              <span
-                style={{
-                  fontSize: '64px',
-                  fontWeight: 800,
-                  color: '#1A1714',
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                {title}
-              </span>
+            <span
+              style={{
+                fontFamily: '"Zen Old Mincho"',
+                fontSize: '120px',
+                fontWeight: 400,
+                color: '#1A1714',
+                letterSpacing: '0.35em',
+                textShadow: '0px 1px 1px rgba(26,23,20,0.25)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              COLLECT
+            </span>
+          </div>
+
+          {/* Receipt — centered over the text */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '320px',
+              backgroundColor: 'white',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '32px 24px',
+              opacity: 0.95, // Filter blur is not natively supported by Satori, relying on opacity
+              borderRadius: '8px',
+              boxShadow: '0 12px 24px rgba(0,0,0,0.1)' // Give it some depth instead of blur
+            }}
+          >
+            {/* BILLING INVOICE */}
+            <div style={{
+              fontSize: '8px',
+              letterSpacing: '4px',
+              color: '#A09D98',
+              textAlign: 'center',
+              marginBottom: '16px',
+              fontFamily: 'monospace',
+            }}>
+              BILLING INVOICE
             </div>
 
-            {/* Footer containing Amount */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                 <span style={{ fontSize: '20px', color: '#A09D98', letterSpacing: '0.1em', marginBottom: '8px' }}>
-                  {date}
-                 </span>
-                 <span style={{ fontSize: '24px', fontWeight: 600, color: '#3D3933' }}>
-                  by Collect
-                 </span>
+            {/* Title */}
+            <div style={{
+              fontSize: '18px',
+              fontWeight: 800,
+              color: '#1A1714',
+              textAlign: 'center',
+              marginBottom: '4px',
+              fontFamily: 'serif',
+            }}>
+              {title}
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+
+            {/* Payees */}
+            {payees.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {payees.map((p, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{p.name}</span>
+                    <span style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace' }}>{formatCAD(p.amount)}</span>
+                  </div>
+                ))}
               </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <span style={{ fontSize: '20px', letterSpacing: '0.2em', color: '#1A1714', fontWeight: 700, marginBottom: '12px' }}>
-                  TOTAL OWED
-                </span>
-                <span
-                  style={{
-                    fontSize: '84px',
-                    fontWeight: 400,
-                    color: '#8B4A3C',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1,
-                  }}
-                >
-                  {amount}
-                </span>
+            ) : (
+              <div style={{ fontSize: '9px', color: '#A09D98', fontFamily: 'monospace', textAlign: 'center' }}>
+                {payerName || '—'}
               </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+
+            {/* Total */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: '9px', color: '#3D3933', letterSpacing: '2px', fontFamily: 'monospace' }}>TOTAL</span>
+              <span style={{ fontSize: '32px', color: '#8B4A3C', fontFamily: 'monospace', letterSpacing: '-1px' }}>{amount}</span>
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px dashed #D4CFC8', margin: '16px 0', width: '100%', height: '1px' }} />
+
+            {/* Date */}
+            <div style={{ fontSize: '8px', color: '#C4BFB8', textAlign: 'center', fontFamily: 'monospace', letterSpacing: '2px' }}>
+              {date}
             </div>
           </div>
         </div>
@@ -118,12 +159,18 @@ export async function GET(request: Request) {
       {
         width: 1200,
         height: 630,
+        fonts: [
+          {
+            name: 'Zen Old Mincho',
+            data: fontData,
+            weight: 400,
+            style: 'normal',
+          },
+        ],
       }
     )
   } catch (e: any) {
     console.error(e)
-    return new Response(`Failed to generate the image`, {
-      status: 500,
-    })
+    return new Response('Failed to generate image', { status: 500 })
   }
 }
