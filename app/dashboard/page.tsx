@@ -135,6 +135,14 @@ function ContactIcon({ size = 14 }: { size?: number }) {
   )
 }
 
+function FilterIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/><line x1="4" y1="10" x2="20" y2="10"/>
+    </svg>
+  )
+}
+
 interface RequestCardProps {
   r: Request
   onShare: (slug: string, title: string, amount: number) => void
@@ -705,28 +713,18 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ position: 'relative', flex: 1.2 }}>
-              <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: ash, opacity: 0.7 }}>
-                <PreviewIcon size={14} />
-              </div>
-              <input 
-                value={searchTitle} 
-                onChange={e => setSearchTitle(e.target.value)} 
-                placeholder="Search..." 
-                style={{ ...capsule, paddingLeft: 38, fontSize: 13, height: 46, fontWeight: 500 }} 
-              />
-            </div>
-            <div style={{ position: 'relative', flex: 1 }}>
-               <select 
-                value={searchName} 
-                onChange={e => setSearchName(e.target.value)} 
-                style={{ ...capsule, fontSize: 13, height: 46, color: sumi, fontWeight: 500 }}
-              >
-                <option value="">All Contacts</option>
-                {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-              </select>
-            </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <button style={{ ...pill, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <FilterIcon size={12} />
+            </button>
+            <select 
+              value={searchName} 
+              onChange={e => setSearchName(e.target.value)} 
+              style={{ ...pill, fontSize: 11, color: sumi, fontWeight: 600, flex: 1 }}
+            >
+              <option value="">All Contacts</option>
+              {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
           </div>
         </div>
 
