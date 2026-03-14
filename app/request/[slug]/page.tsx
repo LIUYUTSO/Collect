@@ -32,11 +32,8 @@ export default async function RequestPage({
 
   return (
     <ClientTransition title={request.title}>
-      <div className="desktop-backdrop">
-        <div className="ios-app-container">
-          <div className="ios-app-scroll-area">
-            <main
-              style={{
+      <main
+        style={{
           minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
@@ -47,7 +44,7 @@ export default async function RequestPage({
         }}
       >
         {/* Top decoration */}
-        <div style={{ width: '100%', paddingTop: 56, paddingBottom: 8 }}>
+        <div style={{ width: '100%', maxWidth: 390, paddingTop: 56, paddingBottom: 8 }}>
           <div className="brush-line" />
         </div>
 
@@ -55,6 +52,7 @@ export default async function RequestPage({
         <div
           style={{
             width: '100%',
+            maxWidth: 390,
             paddingTop: 32,
           }}
         >
@@ -76,12 +74,12 @@ export default async function RequestPage({
               fontSize: `clamp(24px, calc((100vw - 48px) / ${Math.max(1, request.title.length) * 0.55}), 48px)`,
               fontWeight: 800,
               color: 'var(--sumi)',
-              lineHeight: 1,
+              lineHeight: 1.1,
               marginBottom: 8,
-              whiteSpace: 'nowrap',
               width: '100%',
               textAlign: 'left',
-              letterSpacing: '-0.02em'
+              letterSpacing: '-0.02em',
+              wordBreak: 'break-word',
             } as any}
           >
             {request.title}
@@ -128,6 +126,7 @@ export default async function RequestPage({
         {request.note && (
           <div style={{ 
             width: '100%', 
+            maxWidth: 390,
             marginTop: 20, 
             overflow: 'hidden', 
             position: 'relative',
@@ -145,6 +144,7 @@ export default async function RequestPage({
           className="animate-in delay-100 receipt-edge"
           style={{
             width: '100%',
+            maxWidth: 390,
             marginTop: 28,
             padding: '40px 32px 48px 32px',
             background: 'white',
@@ -246,6 +246,7 @@ export default async function RequestPage({
           className="animate-in delay-400"
           style={{
             width: '100%',
+            maxWidth: 390,
             marginTop: 'auto',
             paddingTop: 64,
             paddingBottom: 48,
@@ -274,9 +275,6 @@ export default async function RequestPage({
           </p>
         </div>
       </main>
-          </div>
-        </div>
-      </div>
     </ClientTransition>
   )
 }

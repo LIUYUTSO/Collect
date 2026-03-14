@@ -31,9 +31,8 @@ export default function PaymentAccordion({ tdEmail, wsHandle, title }: PaymentAc
 
   return (
     <div className="animate-in delay-300" style={{ 
-      width: 'calc(100% + 48px)', 
-      marginLeft: -24, 
-      marginRight: -24, 
+      width: 'calc(100% + 48px)',
+      maxWidth: 438, /* Limits max stretching on desktop to look like mobile cards */
       marginTop: 24,
       position: 'relative'
     }}>
