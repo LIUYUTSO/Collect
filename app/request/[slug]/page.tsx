@@ -7,6 +7,11 @@ import WsPayment, { WsIcon } from '@/components/WsPayment'
 import PaymentAccordion from '@/components/PaymentAccordion'
 import ClientTransition from '@/components/ClientTransition'
 
+interface Payee {
+  name: string
+  amount: number
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const { rows } = await db.sql`
@@ -117,7 +122,7 @@ export default async function RequestPage({
                 whiteSpace: 'nowrap',
                 textAlign: 'center',
                 letterSpacing: '-0.02em',
-              } as any}
+              }}
             >
               {request.title}
             </h1>
@@ -226,7 +231,7 @@ export default async function RequestPage({
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(request.payees as any[]).map((p, idx) => (
+                {(request.payees as Payee[]).map((p, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 14, color: 'var(--ash)' }}>{p.name}</span>
                     <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: 'var(--ash)' }}>{formatCAD(p.amount)}</span>
