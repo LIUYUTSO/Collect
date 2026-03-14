@@ -310,15 +310,28 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const scrollEndTimer = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
-      // Reduced tracking distance to 80px to prevent awkward mid-states on short lists
+      // Mark as scrolling to disable transitions and prevent "tracking lag"
+      setIsScrolling(true)
+      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current)
+      
       const progress = Math.min(window.scrollY / 80, 1)
       setScrollProgress(progress)
+      
+      // Settle after 150ms of no scroll activity
+      scrollEndTimer.current = setTimeout(() => {
+        setIsScrolling(false)
+      }, 150)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollEndTimer.current) clearTimeout(scrollEndTimer.current)
+    }
   }, [])
 
   // List filters
@@ -843,6 +856,12 @@ export default function Dashboard() {
   // Base height starts at original 34, shrinks by 15% to ~29
   const currentButtonHeight = 34 - (progress * 5); 
 
+  // Micro-spring physics: ONLY active when the user STOPS scrolling 
+  // Refined curve: milder overshoot (1.08) for a premium "settle" rather than a "bounce"
+  const springTransition = isScrolling 
+    ? 'none' 
+    : 'all 0.5s cubic-bezier(0.34, 1.25, 0.64, 1)';
+
   const renderButtons = () => {
     return (
       <>
@@ -856,7 +875,8 @@ export default function Dashboard() {
           // Inner padding scales smoothly
           padding: `0 ${16 * (1 - Math.pow(progress, 0.5))}px`, 
           borderRadius: 100, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          transition: springTransition
         }}>
           <span style={{ fontSize: 18 - (progress * 2), marginRight: (1 - progress) * 4 }}>+</span>
           <span style={{ 
@@ -876,7 +896,8 @@ export default function Dashboard() {
           width: currentButtonHeight + (1 - progress) * 64,
           padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
           borderRadius: 100, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          transition: springTransition
         }}>
           <ContactIcon size={14 - (progress * 2)} />
           <span style={{ 
@@ -897,7 +918,8 @@ export default function Dashboard() {
           width: currentButtonHeight + (1 - progress) * 54,
           padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
           borderRadius: 100, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          transition: springTransition 
         }}>
           <LockIcon size={12 - (progress * 1.8)} />
           <span style={{ 
@@ -944,7 +966,8 @@ export default function Dashboard() {
               top: `${32 - (yProgress * 6)}px`, // Moves from 32px to safely centered 26px
               left: `${50 * (1 - xProgress)}%`,
               transform: `translateX(-${50 * (1 - xProgress)}%)`,
-              textAlign: progress > 0.5 ? 'left' : 'center'
+              textAlign: progress > 0.5 ? 'left' : 'center',
+              transition: springTransition
             }}>
               <p style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
@@ -981,6 +1004,7 @@ export default function Dashboard() {
               top: `${106 - (yProgress * 83)}px`,
               right: `${50 * (1 - xProgress)}%`,
               transform: `translateX(${50 * (1 - xProgress)}%)`,
+              transition: springTransition
             }}>
               {renderButtons()}
             </div>
