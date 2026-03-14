@@ -493,7 +493,7 @@ export default function Dashboard() {
   // ─── LOGIN ───────────────────────────────────────────────────────────────
   if (view === 'login') return (
     <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: washi }}>
-      <div style={{ width: '100%', maxWidth: 360 }}>
+      <div style={{ width: '100%' }}>
         <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
         <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}>COLLECT</h1>
         <form onSubmit={handleLogin} autoComplete="off">
@@ -509,7 +509,7 @@ export default function Dashboard() {
   // ─── CONTACTS ────────────────────────────────────────────────────────────
   if (view === 'contacts') return (
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
-      <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
+      <div style={{ width: '100%', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
           <button onClick={() => setView('list')} style={btnGhost}>← BACK</button>
           <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>CONTACTS</p>
@@ -550,7 +550,7 @@ export default function Dashboard() {
   // ─── CREATE ──────────────────────────────────────────────────────────────
   if (view === 'create') return (
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
-      <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
+      <div style={{ width: '100%', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
           <button onClick={() => { setView('list'); setNewRequests([]); setEditingRequest(null) }} style={btnGhost}>← BACK</button>
           <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>{editingRequest ? 'EDIT REQUEST' : 'NEW REQUEST'}</p>
@@ -690,7 +690,7 @@ export default function Dashboard() {
   // ─── LIST ────────────────────────────────────────────────────────────────
   return (
     <main style={{ minHeight: '100dvh', padding: '0 20px', background: washi }}>
-      <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
+      <div style={{ width: '100%', margin: '0 auto' }}>
         <div style={{ paddingTop: 56, paddingBottom: 8 }}><div className="brush-line" /></div>
         
         <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>

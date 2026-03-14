@@ -44,7 +44,7 @@ export default async function RequestPage({
         }}
       >
         {/* Top decoration */}
-        <div style={{ width: '100%', maxWidth: 390, paddingTop: 56, paddingBottom: 8 }}>
+        <div style={{ width: '100%', paddingTop: 56, paddingBottom: 8 }}>
           <div className="brush-line" />
         </div>
 
@@ -52,7 +52,6 @@ export default async function RequestPage({
         <div
           style={{
             width: '100%',
-            maxWidth: 390,
             paddingTop: 32,
           }}
         >
@@ -126,7 +125,6 @@ export default async function RequestPage({
         {request.note && (
           <div style={{ 
             width: '100%', 
-            maxWidth: 390, 
             marginTop: 20, 
             overflow: 'hidden', 
             position: 'relative',
@@ -144,7 +142,6 @@ export default async function RequestPage({
           className="animate-in delay-100 receipt-edge"
           style={{
             width: '100%',
-            maxWidth: 390,
             marginTop: 28,
             padding: '40px 32px 48px 32px',
             background: 'white',
@@ -246,7 +243,6 @@ export default async function RequestPage({
           className="animate-in delay-400"
           style={{
             width: '100%',
-            maxWidth: 390,
             marginTop: 'auto',
             paddingTop: 64,
             paddingBottom: 48,

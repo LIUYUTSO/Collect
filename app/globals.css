@@ -32,7 +32,7 @@ html {
 }
 
 body {
-  background-color: var(--washi);
+  background-color: var(--雾); /* We'll use a neutral background for the desktop backplate */
   color: var(--sumi);
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-weight: 300;
@@ -40,9 +40,51 @@ body {
   letter-spacing: 0.02em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Darker background for desktop to frame the app */
+  background: #EAEAEA; 
+}
+
+/* iOS App Container */
+.ios-app-container {
+  width: 100%;
+  min-height: 100dvh;
+  background-color: var(--washi);
+  position: relative;
+  overflow-x: hidden;
   /* Subtle paper texture */
   background-image: 
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Desktop App Framing */
+@media (min-width: 480px) {
+  .ios-app-container {
+    width: 390px; /* iPhone 14 Pro width */
+    height: 844px; /* iPhone 14 Pro height */
+    min-height: auto;
+    border-radius: 44px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0,0,0,0.05); /* External shadow and thin 1px border */
+    border: 8px solid #FFFFFF; /* White Bezel */
+    overflow: hidden; /* Clip to the rounded bezel */
+    position: relative; /* Contain absolute absolute elements */
+  }
+  
+  /* Make content scrollable inside the fixed height container */
+  .ios-app-scroll-area {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/* Mobile defaults back to native scrolling */
+@media (max-width: 479px) {
+  .ios-app-scroll-area {
+    min-height: 100dvh;
+  }
 }
 
 /* Wabi-sabi divider */
@@ -222,12 +264,12 @@ input, textarea, select, button {
 
 .payment-slider-container::before {
   left: 0;
-  background: linear-gradient(to left, transparent, var(--washi));
+  background: linear-gradient(to left, rgba(242, 237, 228, 0.5), var(--washi));
 }
 
 .payment-slider-container::after {
   right: 0;
-  background: linear-gradient(to right, transparent, var(--washi));
+  background: linear-gradient(to right, rgba(242, 237, 228, 0.5), var(--washi));
 }
 
 .payment-slider {
