@@ -714,13 +714,27 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <button style={{ ...pill, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button style={{ ...pill, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0, cursor: 'pointer' }}>
               <FilterIcon size={12} />
             </button>
             <select 
               value={searchName} 
               onChange={e => setSearchName(e.target.value)} 
-              style={{ ...pill, fontSize: 11, color: sumi, fontWeight: 600, flex: 1 }}
+              style={{ 
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: `1px solid ${fog}`,
+                background: 'rgba(255,255,255,0.4)',
+                fontFamily: 'inherit',
+                fontSize: 11,
+                color: sumi,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                fontWeight: 600,
+                appearance: 'none',
+                outline: 'none'
+              }}
             >
               <option value="">All Contacts</option>
               {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
