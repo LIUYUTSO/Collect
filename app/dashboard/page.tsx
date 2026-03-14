@@ -694,17 +694,15 @@ export default function Dashboard() {
         <div style={{ paddingTop: 56, paddingBottom: 8 }}><div className="brush-line" /></div>
         
         <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 10, letterSpacing: '0.3em', color: ash, fontWeight: 600 }}>ADMIN PORTAL</p>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 14px', fontSize: 11, fontWeight: 700 }}>+ NEW</button>
-              <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                <ContactIcon size={12} /> Contacts
-              </button>
-              <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                <LockIcon size={11} /> FaceID
-              </button>
-            </div>
+          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 10, letterSpacing: '0.3em', color: ash, fontWeight: 600 }}>ADMIN PORTAL</p>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 14px', fontSize: 11, fontWeight: 700, flex: 1 }}>+ NEW</button>
+            <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 600, flex: 1 }}>
+              <ContactIcon size={12} /> Contacts
+            </button>
+            <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+              <LockIcon size={11} /> FaceID
+            </button>
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
