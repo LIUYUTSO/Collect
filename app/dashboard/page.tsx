@@ -333,9 +333,9 @@ export default function Dashboard() {
       const dt = Math.min(now - lastTime.current, 32) / 1000; // Cap dt to prevent huge jumps
       lastTime.current = now;
 
-      // Spring constants for a snappy, premium bounce
-      const stiffness = 220; 
-      const damping = 22;
+      // Spring constants for a "Critically Damped" settle (smooth buffer/glide, no bounce)
+      const stiffness = 180; 
+      const damping = 26;
 
       const error = scrollProgress - displayedProgress;
       const springForce = error * stiffness;
