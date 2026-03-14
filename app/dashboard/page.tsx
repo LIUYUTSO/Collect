@@ -95,10 +95,10 @@ function ShareIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function PreviewIcon({ size = 15 }: { size?: number }) {
+function GlobeIcon({ size = 15 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   )
 }
@@ -127,9 +127,28 @@ function LockIcon({ size = 14 }: { size?: number }) {
   )
 }
 
+function MoreIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+    </svg>
+  )
+}
+
+function ChevronIcon({ size = 12, rotated = false }: { size?: number, rotated?: boolean }) {
+  return (
+    <svg 
+      width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: rotated ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
+    >
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  )
+}
+
 function ContactIcon({ size = 14 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>
   )
@@ -145,59 +164,137 @@ interface RequestCardProps {
 }
 
 function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [showActions, setShowActions] = useState(false)
   const payeeList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
-  
-  return (
-    <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 600 }} className="no-wrap">{r.title}</p>
-        <p style={{ fontSize: 11, color: ash, opacity: 0.9, marginBottom: 8 }} className="no-wrap">{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
-        
-        {r.payerName && (
-          <p style={{ fontSize: 11, color: rust, fontWeight: 700, marginBottom: 12 }} className="no-wrap">
-            CREDITOR: {r.payerName?.toUpperCase()}
-          </p>
-        )}
 
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }} className="no-wrap">
-          <button aria-label="Share request" onClick={() => onShare(r.slug, r.title, r.amount)} style={{ ...pill, padding: '7px 10px', background: sumi, color: washi, border: 'none' }}>
-            <ShareIcon size={13} />
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
+      {/* Full-Card Action Overlay */}
+      <div 
+        onClick={() => setShowActions(false)}
+        style={{ 
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(255, 255, 255, 0.4)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: showActions ? 1 : 0,
+          pointerEvents: showActions ? 'auto' : 'none',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          zIndex: 10
+        }}
+      >
+        <div style={{ 
+          display: 'flex', 
+          gap: 12, 
+          transform: showActions ? 'translateX(0)' : 'translateX(-30px)', 
+          transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)' 
+        }}>
+          {/* Share Button Group */}
+          <button aria-label="Share request" onClick={(e) => { e.stopPropagation(); onShare(r.slug, r.title, r.amount) }} style={{ ...pill, padding: 0, background: sumi, color: washi, border: 'none', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15 }}>
+            <ShareIcon size={18} />
           </button>
-          <a aria-label="Preview request" href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" style={{ ...pill, padding: '7px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            <PreviewIcon size={13} />
+          <a aria-label="Open link" href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ ...pill, padding: 0, background: washi, color: sumi, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 15, border: `1.5px solid ${fog}` }}>
+            <GlobeIcon size={18} />
           </a>
-          <button aria-label="Edit request" onClick={() => onEdit(r)} style={{ ...pill, padding: '7px 10px' }}>
-            <EditIcon size={13} />
+          {/* Management Group */}
+          <button aria-label="Edit request" onClick={(e) => { e.stopPropagation(); onEdit(r) }} style={{ ...pill, padding: 0, background: washi, color: sumi, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15, border: `1.5px solid ${fog}` }}>
+            <EditIcon size={18} />
           </button>
-          <button aria-label="Delete request" onClick={() => onDelete(r.id)} style={{ ...pill, padding: '7px 10px', background: rust, color: washi, border: 'none' }}>
-            <TrashIcon size={13} />
+          <button aria-label="Delete request" onClick={(e) => { e.stopPropagation(); onDelete(r.id) }} style={{ ...pill, padding: 0, background: washi, color: rust, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15, border: `1.5px solid rgba(139, 74, 60, 0.1)` }}>
+            <TrashIcon size={18} />
           </button>
         </div>
       </div>
 
-      <div style={{ borderTop: `1px solid ${fog}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {payeeList.map((p: RequestPayee, idx: number) => (
-          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-              <p style={{ fontSize: 14, fontWeight: 600, color: sumi }} className="no-wrap">{p.name}</p>
-              <p style={{ fontSize: 12, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
-            </div>
-            <button 
-              onClick={() => onPayeePaid(r, idx)} 
-              style={{
-                padding: '6px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6,
-                border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600,
-                background: p.paid ? moss : 'rgba(139, 74, 60, 0.1)',
-                color: p.paid ? 'white' : rust,
-                transition: 'all 0.2s',
-                letterSpacing: '0.05em'
-              }}
-            >
-              {p.paid ? 'PAID 💰' : 'UNPAID'}
-            </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div 
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={{ flex: 1, minWidth: 0, paddingRight: 12, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+        >
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden', paddingTop: 2 }}>
+            <p style={{ fontSize: 13, color: ash, marginBottom: 2, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</p>
+            <p style={{ fontSize: 11, color: ash, opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatDate(r.createdAt)} · {r.method?.toUpperCase?.()}</p>
           </div>
-        ))}
+          <div style={{ opacity: 0.3, flexShrink: 0, paddingTop: 2 }}>
+            <ChevronIcon rotated={isExpanded} size={14} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <button 
+            onClick={() => setShowActions(!showActions)} 
+            style={{ 
+              ...pill, 
+              padding: 0, 
+              background: 'transparent', 
+              width: 34, 
+              height: 34, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              borderRadius: 10,
+              color: ash,
+              opacity: 0.3,
+              transition: 'all 0.3s',
+              border: 'none',
+              zIndex: 2,
+              paddingTop: 2
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
+          >
+            <MoreIcon size={16} />
+          </button>
+        </div>
       </div>
+
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateRows: isExpanded ? '1fr' : '0fr', 
+        transition: 'grid-template-rows 0.7s cubic-bezier(0.85, 0, 0.15, 1)',
+        overflow: 'hidden'
+      }}>
+        <div style={{ minHeight: 0 }}>
+          <div style={{ padding: '16px 0 4px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ height: 1, background: fog, marginBottom: 6, transition: 'opacity 0.7s', opacity: isExpanded ? 0.3 : 0 }} />
+            {payeeList.map((p: RequestPayee, idx: number) => {
+              const isCreditor = p.name === r.payerName
+              return (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: sumi }} className="no-wrap">
+                      {p.name}
+                      {isCreditor && <span style={{ color: rust, fontSize: 10, fontWeight: 700, opacity: 0.9, marginLeft: 14, letterSpacing: '0.05em' }}>CREDITOR</span>}
+                    </p>
+                    <p style={{ fontSize: 11, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
+                  </div>
+                  <button 
+                    onClick={() => onPayeePaid(r, idx)} 
+                    disabled={isCreditor}
+                    style={{
+                      width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
+                      background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
+                      color: p.paid || isCreditor ? 'white' : rust,
+                      transition: 'all 0.2s',
+                      letterSpacing: '0.05em',
+                      opacity: isCreditor ? 0.7 : 1
+                    }}
+                  >
+                    {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -212,6 +309,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
+  const [scrollProgress, setScrollProgress] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Reduced tracking distance to 80px to prevent awkward mid-states on short lists
+      const progress = Math.min(window.scrollY / 80, 1)
+      setScrollProgress(progress)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // List filters
   const [searchTitle, setSearchTitle] = useState('')
@@ -242,6 +350,15 @@ export default function Dashboard() {
 
   const titleRef = useRef<HTMLDivElement>(null)
   const noteRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Attempt auto-login in local development without password
+    if (process.env.NODE_ENV === 'development') {
+      setAdminKey('dev')
+      fetchData('dev')
+      setView('list')
+    }
+  }, [])
 
   const fetchData = useCallback(async (key: string) => {
     setLoading(true)
@@ -346,17 +463,21 @@ export default function Dashboard() {
         const amt = splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { name: payee?.name || '', amount: parseFloat(amt as string), paid: false }
+        return { name: payee?.name || '', amount: parseFloat(amt as string), paid: payee?.name === payerName }
       })
       const totalAmt = parseFloat(totalAmount) || recipientItems.reduce((sum, item) => sum + item.amount, 0)
-      payload = { ...commonFields, amount: totalAmt, payees: recipientItems }
+      
+      // Determine initial status based on recipients
+      const allPaid = recipientItems.length > 0 && recipientItems.every(r => r.paid)
+      payload = { ...commonFields, amount: totalAmt, payees: recipientItems, status: allPaid ? 'paid' : 'pending' }
     } else {
       payload = validRecipients.map(r => {
         const payee = payees.find(p => p.id === r.payeeId)
         const amt = validRecipients.length > 1 && splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { ...commonFields, amount: parseFloat(amt as string), fromName: payee?.name || '' }
+        const isCreditor = payee?.name === payerName
+        return { ...commonFields, amount: parseFloat(amt as string), fromName: payee?.name || '', status: isCreditor ? 'paid' : 'pending' }
       })
       if (editingRequest) payload = payload[0]
     }
@@ -449,7 +570,7 @@ export default function Dashboard() {
     } else copyLink(slug)
   }
 
-  // WebAuthn
+  // WebAuthn Helpers
   const toBase64Url = (buf: ArrayBuffer) => btoa(Array.from(new Uint8Array(buf)).map(b => String.fromCharCode(b)).join('')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
   const fromBase64Url = (str: string) => { const bin = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); return buf.buffer }
 
@@ -497,10 +618,19 @@ export default function Dashboard() {
         <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
         <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}>COLLECT</h1>
         <form onSubmit={handleLogin} autoComplete="off">
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ ...capsule, marginBottom: 12 }} autoFocus />
+          <div style={{ position: 'relative' }}>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ ...capsule, marginBottom: 12, paddingRight: 48 }} autoFocus />
+            <button 
+              type="button" 
+              onClick={handleWebAuthnLogin} 
+              style={{ position: 'absolute', right: 12, top: 12, background: 'transparent', border: 'none', cursor: 'pointer', color: ash, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, width: 28 }}
+              title="Login with FaceID"
+            >
+              <LockIcon size={18} />
+            </button>
+          </div>
           {error && <p style={{ fontSize: 12, color: rust, marginBottom: 12 }}>{error}</p>}
           <button type="submit" disabled={loading} style={btnPrimary}>{loading ? 'Verifying…' : 'Sign In'}</button>
-          <button type="button" onClick={handleWebAuthnLogin} style={{ ...btnGhost, width: '100%', marginTop: 16, textAlign: 'center' }}>Login with FaceID / TouchID</button>
         </form>
       </div>
     </main>
@@ -688,52 +818,181 @@ export default function Dashboard() {
   )
 
   // ─── LIST ────────────────────────────────────────────────────────────────
+  // ─── LIST ────────────────────────────────────────────────────────────────
+  // Mathematical interpolations for fluid shape-shifting
+  const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const progress = easeInOutQuad(Math.min(1, Math.max(0, scrollProgress)));
+
+  // Re-tuned translation curves: 
+  // Using milder Quad easing instead of Cubic. 
+  // Gives enough horizontal early-separation to prevent crossing, but avoids the stiff L-shaped arc.
+  const xProgress = 1 - Math.pow(1 - progress, 2); 
+  const yProgress = Math.pow(progress, 2);
+
+  // Container metrics
+  const headerHeight = 170 - (progress * 90); // Shrinks from 170px to 80px
+  
+  // Font sizes: Logo starts much larger, shrinks to 16px.
+  const collectFontSize = 28 - (progress * 12);
+  const adminFontSize = 11 - (progress * 4);
+  
+  // Shared metric calculations for buttons
+  // Start gap at 8, original end was 16. 15% smaller = 13.6
+  const buttonGap = 8 + (progress * 5.6);
+  
+  // Base height starts at original 34, shrinks by 15% to ~29
+  const currentButtonHeight = 34 - (progress * 5); 
+
+  const renderButtons = () => {
+    return (
+      <>
+        {/* New Button */}
+        <button onClick={() => setView('create')} aria-label="New request" style={{ 
+          ...pill, 
+          background: sumi, color: washi, border: 'none', 
+          height: currentButtonHeight,
+          minWidth: currentButtonHeight,
+          width: currentButtonHeight + (1 - progress) * 48,
+          // Inner padding scales smoothly
+          padding: `0 ${16 * (1 - Math.pow(progress, 0.5))}px`, 
+          borderRadius: 100, 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+        }}>
+          <span style={{ fontSize: 18 - (progress * 2), marginRight: (1 - progress) * 4 }}>+</span>
+          <span style={{ 
+            fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', 
+            width: (1 - progress) * 35,
+            opacity: 1 - progress,
+            display: progress > 0.9 ? 'none' : 'inline-block'
+          }}>NEW</span>
+        </button>
+
+        {/* Contacts Button */}
+        <button onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
+          ...pill, 
+          background: 'none', border: `1.5px solid ${fog}`, color: sumi,
+          height: currentButtonHeight,
+          minWidth: currentButtonHeight,
+          width: currentButtonHeight + (1 - progress) * 64,
+          padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
+          borderRadius: 100, 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+        }}>
+          <ContactIcon size={14 - (progress * 2)} />
+          <span style={{ 
+            fontSize: 11, fontWeight: 600, marginLeft: (1 - progress) * 6,
+            width: (1 - progress) * 50,
+            opacity: 1 - progress,
+            display: progress > 0.99 ? 'none' : 'inline-block',
+            whiteSpace: 'nowrap'
+          }}>Contacts</span>
+        </button>
+
+        {/* FaceID Button */}
+        <button onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
+          ...pill, 
+          background: 'none', border: `1.5px solid ${fog}`, color: sumi,
+          height: currentButtonHeight,
+          minWidth: currentButtonHeight,
+          width: currentButtonHeight + (1 - progress) * 54,
+          padding: `0 ${14 * (1 - Math.pow(progress, 0.5))}px`, 
+          borderRadius: 100, 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' 
+        }}>
+          <LockIcon size={12 - (progress * 1.8)} />
+          <span style={{ 
+            fontSize: 11, fontWeight: 600, marginLeft: (1 - progress) * 6,
+            width: (1 - progress) * 40,
+            opacity: 1 - progress,
+            display: progress > 0.99 ? 'none' : 'inline-block',
+            whiteSpace: 'nowrap'
+          }}>FaceID</span>
+        </button>
+      </>
+    );
+  };
+
   return (
-    <main style={{ minHeight: '100dvh', padding: '0 20px', background: washi }}>
-      <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
-        <div style={{ paddingTop: 56, paddingBottom: 8 }}><div className="brush-line" /></div>
-        
-        <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 10, letterSpacing: '0.3em', color: ash, fontWeight: 600 }}>ADMIN PORTAL</p>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button onClick={() => setView('create')} style={{ ...pill, background: sumi, color: washi, border: 'none', padding: '8px 14px', fontSize: 11, fontWeight: 700 }}>+ NEW</button>
-              <button onClick={() => setView('contacts')} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                <ContactIcon size={12} /> Contacts
-              </button>
-              <button onClick={handleRegisterPasskey} style={{ ...pill, fontSize: 11, color: sumi, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                <LockIcon size={11} /> FaceID
-              </button>
+    <main style={{ minHeight: '100dvh', background: washi }}>
+      {/* Sticky Header Container */}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, left: 0, right: 0, 
+        zIndex: 100,
+        height: headerHeight,
+        background: washi,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div className="layout-responsive-container" style={{ width: '100%', padding: '0 20px', position: 'relative', height: '100%' }}>
+          
+          {/* Combined Layout Container */}
+          <div style={{ 
+            width: '100%',
+            height: '100%',
+            position: 'relative'
+          }}>
+            {/* Logo Group */}
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: progress > 0.5 ? 'flex-start' : 'center', 
+              gap: 2,
+              position: 'absolute',
+              // Mathematically exact absolute pixel heights for ~33px equidistant spacing (-10px from before)
+              top: `${32 - (yProgress * 6)}px`, // Moves from 32px to safely centered 26px
+              left: `${50 * (1 - xProgress)}%`,
+              transform: `translateX(-${50 * (1 - xProgress)}%)`,
+              textAlign: progress > 0.5 ? 'left' : 'center'
+            }}>
+              <p style={{ 
+                fontFamily: 'var(--font-zen,serif)', 
+                fontSize: collectFontSize, 
+                letterSpacing: '0.42em',
+                marginRight: '-0.42em', // Optically chops off trailing right-side letter-spacing box
+                paddingLeft: progress > 0.5 ? 0 : '0.42em', // Restores optical center
+                color: sumi, 
+                fontWeight: 700, 
+                margin: 0, 
+                lineHeight: 1,
+              }}>COLLECT</p>
+              
+              <p style={{ 
+                fontFamily: 'var(--font-zen,serif)', 
+                fontSize: adminFontSize, 
+                letterSpacing: '0.89em',
+                marginRight: '-0.89em', // Chops off trailing layout space
+                paddingLeft: progress > 0.5 ? 0 : '1.3em', // Matches 'A' left edge to 'C' center
+                color: ash, 
+                fontWeight: 500,
+                opacity: 0.9,
+                margin: 0,
+              }}>ADMIN PORTAL</p>
+            </div>
+
+            {/* Button Group */}
+            <div style={{ 
+              display: 'flex', 
+              gap: buttonGap, 
+              alignItems: 'center',
+              position: 'absolute',
+              // Y moves from 106px (maintaining 33px gap with logo) to 23px (centered in 80px target)
+              top: `${106 - (yProgress * 83)}px`,
+              right: `${50 * (1 - xProgress)}%`,
+              transform: `translateX(${50 * (1 - xProgress)}%)`,
+            }}>
+              {renderButtons()}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ position: 'relative', flex: 1.2 }}>
-              <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: ash, opacity: 0.7 }}>
-                <PreviewIcon size={14} />
-              </div>
-              <input 
-                value={searchTitle} 
-                onChange={e => setSearchTitle(e.target.value)} 
-                placeholder="Search..." 
-                style={{ ...capsule, paddingLeft: 38, fontSize: 13, height: 46, fontWeight: 500 }} 
-              />
-            </div>
-            <div style={{ position: 'relative', flex: 1 }}>
-               <select 
-                value={searchName} 
-                onChange={e => setSearchName(e.target.value)} 
-                style={{ ...capsule, fontSize: 13, height: 46, color: sumi, fontWeight: 500 }}
-              >
-                <option value="">All Contacts</option>
-                {payees.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-              </select>
-            </div>
-          </div>
         </div>
+      </div>
 
+      <div className="layout-responsive-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 174 }}>
+        
         {pendingRequests.length > 0 && (
-          <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
+          <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
             <div>
               <p style={{ fontSize: 10, letterSpacing: '0.15em', color: ash, marginBottom: 4, fontWeight: 600 }}>PENDING TOTAL</p>
               <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: rust, fontWeight: 400 }}>{formatCAD(totalPending)}</p>
@@ -761,7 +1020,9 @@ export default function Dashboard() {
         )}
 
         {!loading && requests.length === 0 && <div style={{ textAlign: 'center', paddingTop: 64 }}><p style={{ fontSize: 13, color: fog, letterSpacing: '0.1em' }}>No records found.</p></div>}
-        <div style={{ height: 60 }} />
+        
+        {/* Generous bottom spacer mathematically guarantees enough scroll real-estate (80px minimum needed) to trigger the completed collapsed header state, even on near-empty lists */}
+        <div style={{ height: '40vh' }} />
       </div>
     </main>
   )

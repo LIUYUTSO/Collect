@@ -101,6 +101,25 @@ body {
   }
 }
 
+/* 
+ * Layout Responsive Framework: 
+ * Ensures the app content aligns uniformly without breaking the app bounds,
+ * maintaining proper 390px limit on mobile while gently expanding to a slightly
+ * larger column format on Desktop (e.g. 580px) for readability.
+ */
+.layout-responsive-container {
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  .layout-responsive-container {
+    max-width: 580px; 
+  }
+}
+
 /* Wabi-sabi divider */
 .brush-line {
   height: 1px;
