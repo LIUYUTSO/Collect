@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://collect.adamliu.uk'),
   title: '請款 · Collect',
   description: 'Simple, quiet payment requests.',
   manifest: '/manifest.json',

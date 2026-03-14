@@ -437,7 +437,10 @@ export default function Dashboard() {
     fetchData(adminKey)
   }
 
-  const getUrl = (slug: string) => `${window.location.origin}/request/${slug}`
+  const getUrl = (slug: string) => {
+    const base = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+    return `${base}/request/${slug}`
+  }
   const copyLink = (slug: string) => { navigator.clipboard.writeText(getUrl(slug)); setCopied(slug); setTimeout(() => setCopied(''), 2000) }
   const shareLink = async (slug: string, title?: string, amount?: number) => {
     const url = getUrl(slug)
