@@ -32,8 +32,11 @@ export default async function RequestPage({
 
   return (
     <ClientTransition title={request.title}>
-      <main
-        style={{
+      <div className="desktop-backdrop">
+        <div className="ios-app-container">
+          <div className="ios-app-scroll-area">
+            <main
+              style={{
           minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
@@ -271,6 +274,9 @@ export default async function RequestPage({
           </p>
         </div>
       </main>
+          </div>
+        </div>
+      </div>
     </ClientTransition>
   )
 }
