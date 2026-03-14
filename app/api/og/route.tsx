@@ -22,6 +22,19 @@ export async function GET(request: Request) {
             fontFamily: 'sans-serif',
           }}
         >
+          {/* COLLECT above the white card */}
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 24,
+              color: '#A09D98',
+              letterSpacing: '8px',
+              marginBottom: 40,
+            }}
+          >
+            COLLECT
+          </div>
+
           <div
             style={{
               display: 'flex',
@@ -60,18 +73,6 @@ export async function GET(request: Request) {
                 {amount}
               </div>
             )}
-            
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 24,
-                color: '#A09D98',
-                marginTop: 40,
-                letterSpacing: '4px',
-              }}
-            >
-              COLLECT
-            </div>
           </div>
         </div>
       ),
