@@ -26,9 +26,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     openGraph: {
       title,
+      images: [
+        {
+          url: `/api/og?title=${encodeURIComponent(request.title)}&amount=${encodeURIComponent(formattedAmount)}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     twitter: {
+      card: 'summary_large_image',
       title,
+      images: [`/api/og?title=${encodeURIComponent(request.title)}&amount=${encodeURIComponent(formattedAmount)}`],
     },
     metadataBase: baseUrl,
   }
