@@ -22,10 +22,10 @@ export async function GET(request: Request) {
       return new Response('Not found', { status: 404 })
     }
 
-    const title = requestData.title
-    const amount = formatCAD(requestData.amount)
-    const date = formatDate(requestData.created_at)
-    const payerName = requestData.payer_name
+    const title = requestData.title || 'Invoice'
+    const amount = formatCAD(requestData.amount || 0)
+    const date = formatDate(requestData.created_at || new Date())
+    const payerName = requestData.payer_name || 'Anonymous'
     
     // Safely parse JSON array depending on the DB driver
     const rawPayees = requestData.payees
