@@ -31,9 +31,10 @@ export async function GET(request: Request) {
     const rawPayees = requestData.payees
     const payees: { name: string; amount: number }[] = typeof rawPayees === 'string' ? JSON.parse(rawPayees) : (rawPayees || [])
 
-    // Load Zen Old Mincho font
+    // Load Zen Old Mincho font (Using default weight for all text)
     const fontUrl = 'https://fonts.gstatic.com/s/zenoldmincho/v10/tss0ApVaYytLwxTqcxfMyBLack0Zx7tS.woff'
-    const fontData = await fetch(fontUrl).then((res) => res.arrayBuffer())
+    const fontResponse = await fetch(fontUrl)
+    const fontData = await fontResponse.arrayBuffer()
 
     return new ImageResponse(
       (
@@ -111,12 +112,14 @@ export async function GET(request: Request) {
 
             {/* Title */}
             <div style={{
+              display: 'flex',
               fontSize: '18px',
               fontWeight: 800,
               color: '#1A1714',
               textAlign: 'center',
               marginBottom: '4px',
-              fontFamily: 'serif',
+              fontFamily: '"Zen Old Mincho"',
+              justifyContent: 'center',
             }}>
               {title}
             </div>
