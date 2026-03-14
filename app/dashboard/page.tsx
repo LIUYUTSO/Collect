@@ -899,7 +899,7 @@ export default function Dashboard() {
             fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', 
             width: (1 - Math.max(0, Math.min(1, progress))) * 35,
             opacity: 1 - Math.max(0, Math.min(1, progress)),
-            display: progress > 0.9 ? 'none' : 'inline-block'
+            overflow: 'hidden'
           }}>NEW</span>
         </button>
 
@@ -920,8 +920,8 @@ export default function Dashboard() {
             fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
             width: (1 - Math.max(0, Math.min(1, progress))) * 50,
             opacity: 1 - Math.max(0, Math.min(1, progress)),
-            display: progress > 0.99 ? 'none' : 'inline-block',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
           }}>Contacts</span>
         </button>
 
@@ -942,8 +942,8 @@ export default function Dashboard() {
             fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
             width: (1 - Math.max(0, Math.min(1, progress))) * 40,
             opacity: 1 - Math.max(0, Math.min(1, progress)),
-            display: progress > 0.99 ? 'none' : 'inline-block',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
           }}>FaceID</span>
         </button>
       </>
@@ -975,14 +975,13 @@ export default function Dashboard() {
             <div style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              alignItems: progress > 0.5 ? 'flex-start' : 'center', 
+              alignItems: 'flex-start', // Constant to avoid jump
               gap: 2,
               position: 'absolute',
-              // Mathematically exact absolute pixel heights for ~33px equidistant spacing (-10px from before)
-              top: `${32 - (yProgress * 6)}px`, // Moves from 32px to safely centered 26px
+              top: `${32 - (yProgress * 6)}px`,
               left: `${50 * (1 - xProgress)}%`,
               transform: `translateX(-${50 * (1 - xProgress)}%)`,
-              textAlign: progress > 0.5 ? 'left' : 'center',
+              textAlign: 'left',
               willChange: 'transform, top, left', 
             }}>
               <p style={{ 
@@ -990,7 +989,8 @@ export default function Dashboard() {
                 fontSize: collectFontSize, 
                 letterSpacing: '0.42em',
                 marginRight: '-0.42em',
-                paddingLeft: progress > 0.5 ? 0 : '0.42em',
+                // Fade optical centering padding linearly to avoid glitch at 0.5
+                paddingLeft: `${0.42 * (1 - Math.max(0, Math.min(1, progress)))}em`, 
                 color: sumi, 
                 fontWeight: 700, 
                 marginTop: 0,
@@ -1005,7 +1005,8 @@ export default function Dashboard() {
                 fontSize: adminFontSize, 
                 letterSpacing: '0.89em',
                 marginRight: '-0.89em',
-                paddingLeft: progress > 0.5 ? 0 : '1.3em',
+                // Fade optical centering padding linearly to avoid glitch at 0.5
+                paddingLeft: `${1.3 * (1 - Math.max(0, Math.min(1, progress)))}em`,
                 color: ash, 
                 fontWeight: 500,
                 opacity: 0.9,
