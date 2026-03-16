@@ -246,7 +246,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     // ─── 修改五：Cleanup ──────────────────────────────────────────────────
 
     return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
+      ScrollTrigger.getAll().forEach((t: any) => t.kill());
       gsap.killTweensOf('*');
     };
 
