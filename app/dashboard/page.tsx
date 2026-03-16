@@ -441,6 +441,17 @@ export default function Dashboard() {
   const [editingRequest, setEditingRequest] = useState<Request | null>(null)
   const [searchingLocation, setSearchingLocation] = useState(false)
 
+  const pendingRequests = requests.filter(r => r.status === 'pending')
+  const paidRequests = requests.filter(r => r.status === 'paid')
+  const totalPending = pendingRequests.reduce((s, r) => s + r.amount, 0)
+  const filteredPending = pendingRequests.filter(r => {
+    const matchTitle = r.title.toLowerCase().includes(searchTitle.toLowerCase())
+    const matchName = searchName ? (r.fromName || '').includes(searchName) : true
+    return matchTitle && matchName
+  })
+
+  const isMultiRecipient = recipients.length > 1
+
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // ─── GSAP Animations ───
@@ -519,8 +530,29 @@ export default function Dashboard() {
         scrollTrigger: { trigger: 'body', start: '30px top', end: '80px top', scrub: true }
       });
 
+    // ③ 數字計數動畫 (Counter Animation)
+    if (totalPending > 0) {
+      const counterEl = document.getElementById('pending-counter');
+      if (counterEl) {
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: totalPending,
+          duration: 1.5,
+          ease: 'expo.out', // 緩動效果：前面快、後面慢
+          onUpdate: () => {
+            counterEl.textContent = formatCAD(obj.val);
+          },
+          scrollTrigger: {
+            trigger: '#pending-counter',
+            start: 'top 95%',
+            once: true
+          }
+        });
+      }
+    }
+
     return () => { ScrollTrigger.getAll().forEach((t: any) => t.kill()); };
-  }, [view, requests, gsapLoaded]);
+  }, [view, requests, gsapLoaded, totalPending]);
 
 
 
@@ -781,16 +813,6 @@ export default function Dashboard() {
     setCreating(false)
   }
 
-  const pendingRequests = requests.filter(r => r.status === 'pending')
-  const paidRequests = requests.filter(r => r.status === 'paid')
-  const totalPending = pendingRequests.reduce((s, r) => s + r.amount, 0)
-  const filteredPending = pendingRequests.filter(r => {
-    const matchTitle = r.title.toLowerCase().includes(searchTitle.toLowerCase())
-    const matchName = searchName ? (r.fromName || '').includes(searchName) : true
-    return matchTitle && matchName
-  })
-
-  const isMultiRecipient = recipients.length > 1
 
   // ─── LOGIN ───────────────────────────────────────────────────────────────
   if (view === 'login') return (
@@ -825,9 +847,9 @@ export default function Dashboard() {
   if (view === 'contacts') return (
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }} className="gsap-fade-in">
           <button onClick={() => setView('list')} style={btnGhost}>← BACK</button>
-          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>CONTACTS</p>
+          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}><SplitText text="CONTACTS" /></p>
           <div style={{ width: 48 }} />
         </div>
 
@@ -866,9 +888,9 @@ export default function Dashboard() {
   if (view === 'create') return (
     <main style={{ minHeight: '100dvh', padding: '0 24px', background: washi }}>
       <div style={{ width: '100%', maxWidth: 390, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 32 }} className="gsap-fade-in">
           <button onClick={() => { setView('list'); setNewRequests([]); setEditingRequest(null) }} style={btnGhost}>← BACK</button>
-          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}>{editingRequest ? 'EDIT REQUEST' : 'NEW REQUEST'}</p>
+          <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.2em', color: ash }}><SplitText text={editingRequest ? 'EDIT REQUEST' : 'NEW REQUEST'} /></p>
           <div style={{ width: 48 }} />
         </div>
 
@@ -1010,40 +1032,40 @@ export default function Dashboard() {
     return (
       <>
         {/* New Button */}
-        <button className="gsap-btn" onClick={() => setView('create')} aria-label="New request" style={{ 
+        <MagneticButton onClick={() => setView('create')} aria-label="New request" style={{ 
           ...pill, 
           background: sumi, color: washi, border: 'none', 
           height: 34, minWidth: 34, width: 82, padding: '0 16px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height, padding'
-        }}>
+        }} className="gsap-btn">
           <span style={{ fontSize: 18, marginRight: 4 }}>+</span>
           <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', width: 35, opacity: 1, overflow: 'hidden' }}>NEW</span>
-        </button>
+        </MagneticButton>
 
         {/* Contacts Button */}
-        <button className="gsap-btn" onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
+        <MagneticButton onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
           ...pill, 
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
           height: 34, minWidth: 34, width: 98, padding: '0 14px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
-        }}>
+        }} className="gsap-btn">
           <ContactIcon size={14} />
           <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, width: 50, opacity: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>Contacts</span>
-        </button>
+        </MagneticButton>
 
         {/* FaceID Button */}
-        <button className="gsap-btn" onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
+        <MagneticButton onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
           ...pill, 
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
           height: 34, minWidth: 34, width: 88, padding: '0 14px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
-        }}>
+        }} className="gsap-btn">
           <LockIcon size={12} />
           <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, width: 40, opacity: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>FaceID</span>
-        </button>
+        </MagneticButton>
       </>
     );
   };
@@ -1139,10 +1161,10 @@ export default function Dashboard() {
       <div className="layout-responsive-container gsap-list-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 174 }}>
         
         {pendingRequests.length > 0 && (
-          <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
+          <div className="gsap-fade-in" style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
             <div>
               <p style={{ fontSize: 10, letterSpacing: '0.15em', color: ash, marginBottom: 4, fontWeight: 600 }}>PENDING TOTAL</p>
-              <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: rust, fontWeight: 400 }}>{formatCAD(totalPending)}</p>
+              <p id="pending-counter" style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: rust, fontWeight: 400 }}>{formatCAD(totalPending)}</p>
             </div>
             <p style={{ fontSize: 11, color: ash, fontWeight: 600 }}>{pendingRequests.length} items</p>
           </div>
