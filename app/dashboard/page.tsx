@@ -505,10 +505,10 @@ export default function Dashboard() {
     
     headerTl
       .to('.gsap-header-container', { height: 80, ease: 'none'}, 0)
-      .to('.gsap-logo-group', { top: 23, left: '50%', xPercent: -50, ease: 'power1.inOut' }, 0)
+      .to('.gsap-logo-group', { top: 23, left: '0%', xPercent: 0, ease: 'power1.inOut' }, 0)
       .to('.gsap-logo-text', { fontSize: 16, paddingLeft: 0, ease: 'none' }, 0)
       .to('.gsap-admin-text', { fontSize: 7, paddingLeft: 0, ease: 'none' }, 0)
-      .to('.gsap-btn-group', { top: 23, right: '50%', xPercent: 50, ease: 'power1.inOut' }, 0)
+      .to('.gsap-btn-group', { top: 23, right: '0%', xPercent: 0, ease: 'power1.inOut' }, 0)
       .to('.gsap-btn', { height: 29, minWidth: 29, width: 29, borderRadius: 100, padding: 0, ease: 'none' }, 0)
       .to('.gsap-btn-text', { width: 0, opacity: 0, marginLeft: 0, ease: 'none' }, 0);
       
@@ -1081,9 +1081,9 @@ export default function Dashboard() {
               alignItems: 'flex-start',
               gap: 2,
               position: 'absolute',
-              top: 32, // GSAP 控制為 23
-              left: 0, // GSAP 控制為 50%
-              transform: 'translateX(0)', // GSAP 控制為 translateX(-50%)
+              top: 32,
+              left: '50%',
+              transform: 'translateX(-50%)',
               textAlign: 'left',
               willChange: 'transform, top, left', 
             }}>
@@ -1121,12 +1121,12 @@ export default function Dashboard() {
             {/* Button Group */}
             <div className="gsap-btn-group" style={{ 
               display: 'flex', 
-              gap: 8, // GSAP 控制為 13.6
+              gap: 8,
               alignItems: 'center',
               position: 'absolute',
-              top: 106, // GSAP 到 23
-              right: 0, // GSAP 到 50%
-              transform: 'translateX(0)',
+              top: 106,
+              right: '50%',
+              transform: 'translateX(50%)',
               willChange: 'transform, top, right, gap'
             }}>
               {renderButtons()}
