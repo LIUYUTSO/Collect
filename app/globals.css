@@ -284,26 +284,7 @@ input, textarea, select, button {
   width: 100%;
 }
 
-.payment-slider-container::before,
-.payment-slider-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 8px; /* Ultra narrow */
-  pointer-events: none;
-  z-index: 20;
-}
-
-.payment-slider-container::before {
-  left: 0;
-  background: linear-gradient(to left, rgba(242, 237, 228, 0.5), var(--washi));
-}
-
-.payment-slider-container::after {
-  right: 0;
-  background: linear-gradient(to right, rgba(242, 237, 228, 0.5), var(--washi));
-}
+/* Gradient masks removed – cards are flush to container */
 
 .payment-slider {
   display: flex;
