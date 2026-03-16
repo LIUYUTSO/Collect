@@ -20,34 +20,72 @@ interface RequestClientProps {
 const getGsap = () => (typeof window !== 'undefined' ? (window as any).gsap : undefined);
 const getScrollTrigger = () => (typeof window !== 'undefined' ? (window as any).ScrollTrigger : undefined);
 
-// ─── Animations Helpers ──────────────────────────────────────────────────────
+// ─── 修改一：Apple Precision Cursor ───────────────────────────────────────────
 
 const CustomCursor = () => {
-  const cursorRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const gsap = getGsap();
-    if (!gsap || !cursorRef.current) return;
-    const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.3, ease: "power3", force3D: true});
-    const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.3, ease: "power3", force3D: true});
-    
-    const moveCursor = (e: MouseEvent) => {
-      xTo(e.clientX);
-      yTo(e.clientY);
+    if (!gsap) return;
+
+    // 小點：極快跟隨，提供精準的定位反饋
+    const dotX = gsap.quickTo(dotRef.current, "x", { duration: 0.15, ease: "power3" });
+    const dotY = gsap.quickTo(dotRef.current, "y", { duration: 0.15, ease: "power3" });
+
+    // 外環：滯後跟隨，製造如 Apple 介面般的物理慣性質感
+    const ringX = gsap.quickTo(ringRef.current, "x", { duration: 0.55, ease: "power2" });
+    const ringY = gsap.quickTo(ringRef.current, "y", { duration: 0.55, ease: "power2" });
+
+    const onMove = (e: MouseEvent) => {
+      dotX(e.clientX);
+      dotY(e.clientY);
+      ringX(e.clientX);
+      ringY(e.clientY);
     };
-    window.addEventListener("mousemove", moveCursor);
-    return () => window.removeEventListener("mousemove", moveCursor);
+
+    // Hover 互動：當滑鼠移入可點擊元素時，變換型態
+    const onEnter = () => {
+      gsap.to(ringRef.current, { scale: 2.2, opacity: 0.4, duration: 0.4, ease: "power2.out" });
+      gsap.to(dotRef.current, { scale: 0, duration: 0.3, ease: "power2.out" });
+    };
+    const onLeave = () => {
+      gsap.to(ringRef.current, { scale: 1, opacity: 0.9, duration: 0.5, ease: "expo.out" });
+      gsap.to(dotRef.current, { scale: 1, duration: 0.4, ease: "back.out(2)" });
+    };
+
+    const clickables = document.querySelectorAll('button, a, [role="button"]');
+    clickables.forEach(el => {
+      el.addEventListener("mouseenter", onEnter);
+      el.addEventListener("mouseleave", onLeave);
+    });
+
+    window.addEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      clickables.forEach(el => {
+        el.removeEventListener("mouseenter", onEnter);
+        el.removeEventListener("mouseleave", onLeave);
+      });
+    };
   }, []);
 
   return (
-    <div 
-      ref={cursorRef} 
-      style={{
-        position: 'fixed', top: 0, left: 0, width: 14, height: 14, 
-        backgroundColor: 'var(--sumi)', borderRadius: '50%', pointerEvents: 'none', 
-        zIndex: 9999, transform: 'translate(-50%, -50%)', opacity: 1,
-        mixBlendMode: 'difference'
-      }} 
-    />
+    <>
+      {/* 外環：慢速跟隨，呈現優雅的惰性 */}
+      <div ref={ringRef} style={{
+        position: 'fixed', top: 0, left: 0, width: 36, height: 36,
+        border: '1.5px solid var(--sumi)', borderRadius: '50%', pointerEvents: 'none', zIndex: 9998,
+        transform: 'translate(-50%, -50%)', opacity: 0.9, backdropFilter: 'blur(1px)', willChange: 'transform'
+      }} />
+      {/* 小點：快速精準，滿足操作直覺 */}
+      <div ref={dotRef} style={{
+        position: 'fixed', top: 0, left: 0, width: 5, height: 5,
+        backgroundColor: 'var(--sumi)', borderRadius: '50%', pointerEvents: 'none', zIndex: 9999,
+        transform: 'translate(-50%, -50%)', willChange: 'transform'
+      }} />
+    </>
   );
 };
 
@@ -70,75 +108,151 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
   useEffect(() => {
     const gsap = getGsap();
     const ScrollTrigger = getScrollTrigger();
-    
-    // 確保 gsap 和 ScrollTrigger 都載入後才執行
-    if (!gsap || !ScrollTrigger || !mounted) return;
+    if (!gsap || !ScrollTrigger || !mounted || !gsapLoaded) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
-    const tl = gsap.timeline();
+    // ─── 修改二：Apple Keynote Reveal 節奏 — 初始化及 MasterTimeline ───────
 
-    // 1. Header 進場
-    tl.fromTo('.gsap-header-date', { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out', delay: 0.4 })
-      .fromTo('.gsap-header-title', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, "-=0.5")
-      .fromTo('.gsap-header-location', { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'power2.out' }, "-=0.6");
+    // 初始化狀態：全部隱藏，並加入 Blur 濾鏡製造焦距感，交由 GSAP 統一控制
+    gsap.set('.gsap-main-container', { autoAlpha: 0 });
+    gsap.set('.gsap-header-date', { autoAlpha: 0, y: 16, filter: 'blur(4px)' });
+    gsap.set('.gsap-header-title', { autoAlpha: 0, y: 32, filter: 'blur(8px)' });
+    gsap.set('.gsap-header-location', { autoAlpha: 0, y: 16, filter: 'blur(4px)' });
+    gsap.set('.gsap-note-container', { autoAlpha: 0, y: 10 });
+    gsap.set('.gsap-receipt-card', { clipPath: 'inset(0% 0% 100% 0%)' });
+    gsap.set('.gsap-print-slot', { scaleX: 0, transformOrigin: 'center center' });
 
-    // 2. 優化跑馬燈：單次循環，不重複顯示
-    if (noteRef.current && request.note) {
-      const noteWidth = noteRef.current.offsetWidth;
-      const maskWidth = 390; // 固定容器寬度
-      
-      // 文字從右側進入，穿過容器，消失在左側，再重新開始
-      gsap.fromTo(noteRef.current, 
-        { x: maskWidth },
-        {
-          x: -noteWidth,
-          duration: (noteWidth + maskWidth) / 45, // 調整速度
-          ease: 'none',
-          repeat: -1,
-          delay: 1
-        }
-      );
-      
-      tl.fromTo('.gsap-note-container', { opacity: 0 }, { opacity: 1, duration: 0.8 }, "-=0.2");
-    }
+    const masterTl = gsap.timeline({ defaults: { ease: 'expo.out' } });
 
-    // 3. 收據列印特效
-    tl.fromTo('.gsap-receipt-card', 
-      { clipPath: 'inset(0% 0% 100% 0%)' }, 
-      { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.8, ease: 'power2.inOut' }, 
-      "-=0.5"
-    );
+    masterTl
+      // 1. 舞台亮起：建立頁面基礎呈現
+      .to('.gsap-main-container', { autoAlpha: 1, duration: 1.2 })
 
-    // 4. 重獲金額計數器 - 明確指定 ScrollTrigger
-    const amountObj = { val: 0 };
-    gsap.to(amountObj, {
-      val: request.amount,
-      duration: 2.5,
-      ease: 'expo.out',
+      // 2. 日期：小標先出，在空間中建立時間座標
+      .to('.gsap-header-date', {
+        autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.0
+      }, '-=0.6')
+
+      // 3. 主標題：給予最長的 Duration (1.4s)，並透過 Blur 消散模擬眼睛對焦過程
+      .to('.gsap-header-title', {
+        autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.4
+      }, '-=0.7')
+
+      // 4. 地點：緊隨標題之後，完善活動資訊
+      .to('.gsap-header-location', {
+        autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.0
+      }, '-=0.8')
+
+      // 5. 備註跑馬燈進場
+      .to('.gsap-note-container', {
+        autoAlpha: 1, y: 0, duration: 0.9
+      }, '-=0.6')
+
+      // 6. 印表機插槽：從中心向兩側展開，像機器準備就緒的機械感
+      .to('.gsap-print-slot', {
+        scaleX: 1, duration: 1.0, ease: 'power4.inOut'
+      }, '-=0.3')
+
+      // 7. 自動首印 (Peek)：紙張從插槽中冒出頂部約 18%
+      .to('.gsap-receipt-card', {
+        clipPath: 'inset(0% 0% 82% 0%)',
+        duration: 1.6,
+        ease: 'power3.out'
+      }, '-=0.2');
+
+
+    // ─── 修改三：收據列印 — 重力感紙張展開與 Scrub 聯動 ──────────────────────
+
+    // 滾動列印：紙張隨著滾動軌跡手動吐出，具備高級皮革般的絲滑慣性 (scrub: 2.5)
+    gsap.to('.gsap-receipt-card', {
+      clipPath: 'inset(0% 0% 0% 0%)', 
+      ease: 'none',
       scrollTrigger: {
-        trigger: '.gsap-amount-display', // 使用更具體的計數器區域作為觸發點
-        start: 'top 85%',
-        toggleActions: 'play none none none',
-        // markers: true, // 開發調試可用
-      },
-      onUpdate: () => {
-        if (amountRef.current) {
-          amountRef.current.textContent = formatCAD(amountObj.val);
-        }
+        trigger: '.gsap-print-slot',
+        start: 'top 52%',       
+        end: '+=680',           // 需要捲動 680px 才能完全出紙，製造長收據的體感
+        scrub: 2.5,             
+        invalidateOnRefresh: true
       }
     });
 
-    // 5. 清單 Stagger
-    tl.fromTo('.gsap-payee-item', 
-      { y: 15, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.08, duration: 0.8, ease: 'power2.out' },
-      "-=1.5"
+    // 紙張展開時，讓插槽產生微弱的提示發光
+    gsap.to('.gsap-print-slot', {
+      scrollTrigger: {
+        trigger: '.gsap-print-slot',
+        start: 'top 52%',
+        end: '+=100',
+        scrub: true,
+        onEnter: () => gsap.to('.gsap-print-slot', {
+          boxShadow: '0 0 12px 2px rgba(0,0,0,0.12)',
+          duration: 0.6, ease: 'power2.out',
+          yoyo: true, repeat: 1
+        })
+      }
+    });
+
+
+    // ─── 修改四：內容 Stagger 與金額動畫定錨 ─────────────────────────────────
+
+    // 金額計數器：當收據印到一半 (38%) 才開始觸發計數，並給予 2.2s 的長尾緩動
+    let amountFired = false;
+    ScrollTrigger.create({
+      trigger: '.gsap-receipt-card',
+      start: 'top 38%',
+      onEnter: () => {
+        if (amountFired) return;
+        amountFired = true;
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: request.amount,
+          duration: 2.2,
+          ease: 'expo.out', // 迅速上升後緩慢定錨，呈現數字的莊重感
+          onUpdate: () => {
+            if (amountRef.current) {
+              amountRef.current.textContent = formatCAD(obj.val);
+            }
+          }
+        });
+      }
+    });
+
+    // Payee 列表：每行依序滑入，Stagger 設定為 0.14s，確保護資訊被視覺充分捕捉
+    gsap.fromTo('.gsap-payee-item', 
+      { y: 20, autoAlpha: 0 },
+      { 
+        y: 0, autoAlpha: 1, 
+        stagger: 0.14, 
+        duration: 1.0, 
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.gsap-receipt-card',
+          start: 'top 32%',
+          once: true
+        }
+      }
     );
+
+    // 跑馬燈穩定執行動畫
+    if (noteRef.current && request.note) {
+      const noteWidth = noteRef.current.offsetWidth;
+      const maskWidth = Math.min(window.innerWidth - 48, 390);
+      gsap.fromTo(noteRef.current, 
+        { x: maskWidth },
+        { x: -noteWidth, duration: (noteWidth + maskWidth) / 40, ease: 'none', repeat: -1 }
+      );
+    }
+
+    // ─── 修改五：Cleanup ──────────────────────────────────────────────────
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+      gsap.killTweensOf('*');
+    };
 
   }, [gsapLoaded, mounted, request.amount, request.note]);
 
-  if (!mounted) return <main style={{ minHeight: '100dvh', background: 'var(--washi)', opacity: 0 }} />;
+  if (!mounted) return <main style={{ minHeight: '100dvh', background: '#F2EDE4' }} />;
 
   return (
     <>
@@ -155,45 +269,76 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       />
       
       <style jsx global>{`
+        /* 避免瀏覽器初次渲染與 GSAP 衝突 */
+        .gsap-header-title,
+        .gsap-header-date,
+        .gsap-header-location {
+          will-change: transform, opacity, filter;
+        }
+        .gsap-receipt-card {
+          will-change: clip-path;
+        }
+        .gsap-print-slot {
+          will-change: transform;
+        }
+
         .receipt-edge { position: relative; }
         .receipt-edge::after {
           content: ""; position: absolute; bottom: -12px; left: 0; right: 0; height: 12px;
           background-image: linear-gradient(-45deg, transparent 6px, white 6px), linear-gradient(45deg, transparent 6px, white 6px);
           background-size: 12px 12px; background-repeat: repeat-x;
         }
+
         .note-mask {
           width: 100%; max-width: 390px; margin-top: 24px; overflow: hidden; position: relative; height: 32px;
           mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
           display: flex; align-items: center;
         }
-        .receipt-dashed { width: 100%; height: 1px; border-top: 1.5px dashed var(--fog); margin: 24px 0; }
         
+        .gsap-print-slot {
+          width: 100%; max-width: 390px; height: 4px; background: #e0dcd5; 
+          margin-top: 40px; border-radius: 4px; position: relative; z-index: 10;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;
+        }
+
         .header-block {
-          width: 100%; max-width: 390px; display: flex; flex-direction: column; align-items: center; padding-top: 80px;
+          width: 100%; max-width: 390px; display: flex; flex-direction: column; align-items: center; padding-top: 100px;
         }
         .header-lockup { width: fit-content; max-width: 100%; display: flex; flex-direction: column; align-items: center; }
         .header-title-text {
           font-family: var(--font-zen, serif); font-weight: 800; color: var(--sumi); line-height: 1.1; letter-spacing: -0.02em;
-          text-align: center; margin: 12px 0; width: 100%;
+          text-align: center; margin: 16px 0; width: 100%;
         }
         .header-date-text {
-          font-size: 11px; letter-spacing: 0.25em; color: var(--clay); font-weight: 700; font-family: var(--font-mono, monospace); text-transform: uppercase;
+          font-size: 11px; letter-spacing: 0.3em; color: var(--clay); font-weight: 700; font-family: var(--font-mono, monospace); text-transform: uppercase;
         }
         .header-location-text {
           font-size: 13px; letter-spacing: 0.05em; color: var(--ash); font-weight: 500; text-align: center; width: 100%;
         }
+        
+        .receipt-dashed { width: 100%; height: 1px; border-top: 1.5px dashed var(--fog); margin: 24px 0; }
+        
+        .gsap-payment-section {
+          width: 100%;
+          max-width: 390px;
+          margin-top: 48px;
+          display: flex;
+          justify-content: center;
+        }
       `}</style>
 
       <main
+        className="gsap-main-container"
         style={{
           minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: '0 24px', paddingTop: 'env(safe-area-inset-top)', background: 'var(--washi)', paddingBottom: 100
+          padding: '0 24px', paddingTop: 'env(safe-area-inset-top)', background: 'var(--washi)', paddingBottom: 150,
+          overflowX: 'hidden'
         }}
       >
         <div className="header-block">
           <div className="header-lockup">
             {request.eventDate && (
-              <div className="gsap-header-date header-date-text" style={{ opacity: 0 }}>
+              <div className="gsap-header-date header-date-text">
                 {formatDate(request.eventDate)}
               </div>
             )}
@@ -201,41 +346,42 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
             <h1 
               className="gsap-header-title header-title-text"
               style={{
-                fontSize: `clamp(16px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(request.title || '')].length) * 0.55}), 48px)`,
-                opacity: 0
+                fontSize: `clamp(18px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(request.title || '')].length) * 0.55}), 48px)`,
               }}
             >
               {request.title}
             </h1>
 
             {request.location && (
-              <div className="gsap-header-location header-location-text" style={{ opacity: 0 }}>
+              <div className="gsap-header-location header-location-text">
                 {request.location}
               </div>
             )}
           </div>
         </div>
 
-        {/* 跑馬燈：確保區塊內只出現一次文字 */}
         {request.note && (
-          <div className="gsap-note-container note-mask" style={{ opacity: 0 }}>
+          <div className="gsap-note-container note-mask">
             <div ref={noteRef} style={{ whiteSpace: 'nowrap', display: 'inline-block', fontSize: 13, color: 'var(--ash)', fontWeight: 500, letterSpacing: '0.02em' }}>
               {request.note}
             </div>
           </div>
         )}
 
-        {/* 帳單卡片 */}
+        <div className="gsap-print-slot" />
+
         <div
           className="gsap-receipt-card receipt-edge"
           style={{
-            width: '100%', maxWidth: 390, marginTop: 32, padding: '48px 32px 56px 32px',
-            background: 'white', boxShadow: '0 12px 32px rgba(26,23,20,0.05)', borderRadius: '2px',
+            width: '100%', maxWidth: 390, marginTop: 0, padding: '40px 32px 56px 32px',
+            background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.03)', borderRadius: '2px',
+            position: 'relative', top: -4, zIndex: 1,
+            clipPath: 'inset(0% 0% 100% 0%)'
           }}
         >
           <div className="receipt-dashed" style={{ marginTop: 0 }} />
           
-          <p style={{ fontSize: 10, letterSpacing: '0.3em', color: 'var(--ash)', marginBottom: 24, textAlign: 'center', fontWeight: 800, opacity: 0.6 }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.3em', color: 'var(--ash)', marginBottom: 20, textAlign: 'center', fontWeight: 800, opacity: 0.6 }}>
             {request.payerName ? 'BILLING INVOICE' : 'COLLECT RECEIPT'}
           </p>
           
@@ -311,7 +457,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         </div>
 
         {!isPaid && (
-          <div className="gsap-payment-section" style={{ width: '100%', maxWidth: 390, marginTop: 32 }}>
+          <div className="gsap-payment-section">
             <PaymentAccordion 
               tdEmail={tdEmail} 
               wsHandle={wsHandle}
