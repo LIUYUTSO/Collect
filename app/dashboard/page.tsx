@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react'
+import Script from 'next/script'
 import { formatCAD, formatDate } from '@/lib/utils'
 
 type RequestPayee = { name: string; amount: number; paid: boolean }
@@ -16,6 +17,12 @@ type Recipient = { payeeId: string; amount: string }
 
 // ─── Styles ────────────────────────────────────────────────────────────────
 const washi = '#F2EDE4'
+
+// @ts-ignore
+const getGsap = () => (typeof window !== 'undefined' ? (window as any).gsap : undefined);
+// @ts-ignore
+const getScrollTrigger = () => (typeof window !== 'undefined' ? (window as any).ScrollTrigger : undefined);
+
 const sumi = '#1A1714'
 const ash = 'var(--ash)' // Using darkened variable from CSS
 const fog = '#D4CFC8'
@@ -84,6 +91,96 @@ const pill: React.CSSProperties = {
   color: sumi,
   cursor: 'pointer',
   whiteSpace: 'nowrap',
+}
+
+
+// ─── GSAP Micro-interactions Hooks ──────────────────────────────────────────
+const useMagnetic = (ref: React.RefObject<HTMLElement>) => {
+  useEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !ref.current) return;
+    const element = ref.current;
+    const handleMouseMove = (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { height, width, left, top } = element.getBoundingClientRect();
+      const x = clientX - (left + width / 2);
+      const y = clientY - (top + height / 2);
+      gsap.to(element, { x: x * 0.2, y: y * 0.2, duration: 0.4, ease: 'power3.out' });
+    };
+    const handleMouseLeave = () => {
+      gsap.to(element, { x: 0, y: 0, duration: 0.6, ease: 'back.out(1.7)' });
+    };
+    element.addEventListener('mousemove', handleMouseMove);
+    element.addEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove);
+      element.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+};
+
+function MagneticButton({ children, style, onClick, className, 'aria-label': ariaLabel, type }: any) {
+  const ref = useRef<HTMLButtonElement>(null);
+  useMagnetic(ref);
+  const handleEnter = () => {
+    const gsap = getGsap();
+    if(gsap) gsap.to(ref.current, { scale: 1.03, backgroundColor: 'rgba(26,23,20, 0.9)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', duration: 0.2, ease: 'power2.out' })
+    if(gsap) gsap.to('.custom-cursor', { scale: 1.5, opacity: 0.5, duration: 0.2 })
+  };
+  const handleLeave = () => {
+    const gsap = getGsap();
+    if(gsap) gsap.to(ref.current, { scale: 1, backgroundColor: style?.background || sumi, boxShadow: 'none', duration: 0.3, ease: 'power2.in' })
+    if(gsap) gsap.to('.custom-cursor', { scale: 1, opacity: 1, duration: 0.2 })
+  };
+  return (
+    <button ref={ref} type={type} onClick={onClick} style={style} className={className} aria-label={ariaLabel} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+    </button>
+  );
+}
+
+const CustomCursor = () => {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !cursorRef.current) return;
+    // 自訂游標跟隨：使用 gsap.quickTo() 確保平滑 60fps
+    const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.3, ease: "power3", force3D: true});
+    const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.3, ease: "power3", force3D: true});
+    
+    const moveCursor = (e: MouseEvent) => {
+      xTo(e.clientX);
+      yTo(e.clientY);
+    };
+    window.addEventListener("mousemove", moveCursor);
+    return () => window.removeEventListener("mousemove", moveCursor);
+  }, []);
+
+  return (
+    <div 
+      ref={cursorRef} 
+      className="custom-cursor" 
+      style={{
+        position: 'fixed', top: 0, left: 0, width: 16, height: 16, 
+        backgroundColor: '#1A1714', borderRadius: '50%', pointerEvents: 'none', 
+        zIndex: 9999, transform: 'translate(-50%, -50%)', opacity: 1,
+        mixBlendMode: 'difference' // 給予高端視覺過濾
+      }} 
+    />
+  );
+};
+
+// Text Split Animation Utils
+const SplitText = ({ text, className, style }: { text: string, className?: string, style?: any }) => {
+  return (
+    <span className={className} style={{ display: 'inline-block', ...style }}>
+      {text.split('').map((char, i) => (
+        <span key={i} className="split-char" style={{ display: 'inline-block', opacity: 0, transform: 'translateY(20px)' }}>
+          {char === ' ' ? '\u00A0' : char}
+        </span>
+      ))}
+    </span>
+  )
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -164,12 +261,26 @@ interface RequestCardProps {
 }
 
 function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Card hover effect (卡片微互動)
+  const handleMouseEnter = () => {
+    const gsap = getGsap();
+    if (!gsap || !cardRef.current) return;
+    gsap.to(cardRef.current, { y: -8, boxShadow: '0 10px 20px rgba(0,0,0,0.06)', borderColor: 'rgba(212,207,200, 0.9)', duration: 0.3, ease: 'power2.out' });
+  };
+  const handleMouseLeave = () => {
+    const gsap = getGsap();
+    if (!gsap || !cardRef.current) return;
+    gsap.to(cardRef.current, { y: 0, boxShadow: 'none', borderColor: fog, duration: 0.4, ease: 'power2.inOut' });
+  };
+
   const [isExpanded, setIsExpanded] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const payeeList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
+    <div ref={cardRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="gsap-request-card" style={{ position: 'relative', overflow: 'hidden', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
       {/* Full-Card Action Overlay */}
       <div 
         onClick={() => setShowActions(false)}
@@ -309,59 +420,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [displayedProgress, setDisplayedProgress] = useState(0)
-  const velocity = useRef(0)
-  const lastTime = useRef(Date.now())
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const progress = Math.min(window.scrollY / 80, 1)
-      setScrollProgress(progress)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Physics Engine: Micro-spring "Chase" logic
-  // This makes the UI elements feel like they are connected by springs to your finger.
-  // They will naturally overshoot and bounce back when you stop scrolling.
-  useEffect(() => {
-    let raf: number;
-    const step = () => {
-      const now = Date.now();
-      const dt = Math.min(now - lastTime.current, 32) / 1000; // Cap dt to prevent huge jumps
-      lastTime.current = now;
-
-      // Spring constants for a "Critically Damped" settle (smooth buffer/glide, no bounce)
-      const stiffness = 180; 
-      const damping = 26;
-
-      const error = scrollProgress - displayedProgress;
-      const springForce = error * stiffness;
-      const dampingForce = velocity.current * damping;
-      const acceleration = springForce - dampingForce;
-
-      velocity.current += acceleration * dt;
-      const nextProgress = displayedProgress + velocity.current * dt;
-
-      // Settle if close enough to save battery
-      if (Math.abs(scrollProgress - nextProgress) < 0.0001 && Math.abs(velocity.current) < 0.0001) {
-        setDisplayedProgress(scrollProgress);
-      } else {
-        setDisplayedProgress(nextProgress);
-        raf = requestAnimationFrame(step);
-      }
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [scrollProgress, displayedProgress]);
 
   // List filters
   const [searchTitle, setSearchTitle] = useState('')
   const [searchName, setSearchName] = useState('')
 
-  // New create form state
+  // Create form state
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
   const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '' }])
@@ -375,10 +439,91 @@ export default function Dashboard() {
   const [creating, setCreating] = useState(false)
   const [newRequests, setNewRequests] = useState<any[]>([])
   const [editingRequest, setEditingRequest] = useState<Request | null>(null)
-
-  // New fields
   const [searchingLocation, setSearchingLocation] = useState(false)
+
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // ─── GSAP Animations ───
+  // Page Load Sequence & View Transitions
+  const mainRef = useRef<HTMLElement>(null);
+  const [gsapLoaded, setGsapLoaded] = useState(false);
+
+  useEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !gsapLoaded) return;
+    
+    // 清除舊的動畫以防衝突
+    gsap.killTweensOf('.split-char');
+    gsap.killTweensOf('.gsap-fade-in');
+    
+    // ① 頁面進場 (Page Load Sequence)
+    // - 標題文字按字元浮現
+    // - UI 元素依序入場
+    const tl = gsap.timeline();
+    tl.to('.split-char', {
+      y: 0, opacity: 1, stagger: 0.05, duration: 0.8, ease: 'expo.out' // 奢華緩動：極快入場、極長尾巴
+    })
+    .fromTo('.gsap-fade-in', 
+      { y: 20, autoAlpha: 0 }, 
+      { y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out' }, // 快入慢出，自然降落
+      "-=0.6"
+    );
+
+  }, [view, gsapLoaded]);
+
+  // ② 滾動驅動動畫 (ScrollTrigger)
+  useEffect(() => {
+    const gsap = getGsap();
+    const ScrollTrigger = getScrollTrigger();
+    if (!gsap || !ScrollTrigger || view !== 'list' || !gsapLoaded) return;
+    
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // 列表項目依序滑入 (Stagger)
+    gsap.fromTo('.gsap-request-card', 
+      { y: 50, autoAlpha: 0 },
+      { 
+        y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.gsap-list-container',
+          start: 'top 85%',
+          once: true // 滾動觸發使用 once: true
+        }
+      }
+    );
+
+    // Header 視差縮放效果搭配 ScrollTrigger scrub: true
+    // 取代原有的物理引擎
+    const headerTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: 'body',
+        start: 'top top',
+        end: '+=120',
+        scrub: true // 根據滾動距離即時更新
+      }
+    });
+    
+    headerTl
+      .to('.gsap-header-container', { height: 80, ease: 'none'}, 0)
+      .to('.gsap-logo-group', { top: 23, left: '50%', xPercent: -50, ease: 'power1.inOut' }, 0)
+      .to('.gsap-logo-text', { fontSize: 16, paddingLeft: 0, ease: 'none' }, 0)
+      .to('.gsap-admin-text', { fontSize: 7, paddingLeft: 0, ease: 'none' }, 0)
+      .to('.gsap-btn-group', { top: 23, right: '50%', xPercent: 50, ease: 'power1.inOut' }, 0)
+      .to('.gsap-btn', { height: 29, minWidth: 29, width: 29, borderRadius: 100, padding: 0, ease: 'none' }, 0)
+      .to('.gsap-btn-text', { width: 0, opacity: 0, marginLeft: 0, ease: 'none' }, 0);
+      
+      // 導覽列玻璃態過渡 (backdrop-filter)
+      gsap.to('.gsap-header-container', {
+        backgroundColor: 'rgba(242, 237, 228, 0.85)',
+        backdropFilter: 'blur(12px)',
+        scrollTrigger: { trigger: 'body', start: '30px top', end: '80px top', scrub: true }
+      });
+
+    return () => { ScrollTrigger.getAll().forEach((t: any) => t.kill()); };
+  }, [view, requests, gsapLoaded]);
+
+
+
 
   // Contacts management
   const [newContactName, setNewContactName] = useState('')
@@ -649,11 +794,15 @@ export default function Dashboard() {
 
   // ─── LOGIN ───────────────────────────────────────────────────────────────
   if (view === 'login') return (
-    <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: washi }}>
+    <main ref={mainRef} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: washi }}>
+      <CustomCursor />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
+      
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <p style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
-        <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}>COLLECT</h1>
-        <form onSubmit={handleLogin} autoComplete="off">
+        <p className="gsap-fade-in" style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
+        <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}><SplitText text="COLLECT" /></h1>
+        <form onSubmit={handleLogin} autoComplete="off" className="gsap-fade-in">
           <div style={{ position: 'relative' }}>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ ...capsule, marginBottom: 12, paddingRight: 48 }} autoFocus />
             <button 
@@ -666,7 +815,7 @@ export default function Dashboard() {
             </button>
           </div>
           {error && <p style={{ fontSize: 12, color: rust, marginBottom: 12 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={btnPrimary}>{loading ? 'Verifying…' : 'Sign In'}</button>
+          <MagneticButton type="submit" disabled={loading} style={btnPrimary}>{loading ? 'Verifying…' : 'Sign In'}</MagneticButton>
         </form>
       </div>
     </main>
@@ -855,113 +1004,67 @@ export default function Dashboard() {
 
   // ─── LIST ────────────────────────────────────────────────────────────────
   // ─── LIST ────────────────────────────────────────────────────────────────
-  // Mathematical interpolations for fluid shape-shifting
-  const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  // We use the physics-driven displayedProgress instead of raw scroll progress
-  const progress = easeInOutQuad(Math.min(1.2, Math.max(-0.2, displayedProgress)));
-
-  // Re-tuned translation curves: 
-  // Using Quad easing for the "path", but the spring now provides the "bounce".
-  const xProgress = 1 - Math.pow(1 - Math.max(0, Math.min(1, progress)), 2); 
-  const yProgress = Math.pow(Math.max(0, Math.min(1, progress)), 2);
-
-  // Container metrics
-  const headerHeight = 170 - (Math.max(0, Math.min(1, progress)) * 90); 
-  
-  // Font sizes: Logo starts much larger, shrinks to 16px.
-  const collectFontSize = 28 - (Math.max(0, Math.min(1, progress)) * 12);
-  const adminFontSize = 11 - (Math.max(0, Math.min(1, progress)) * 4);
-  
-  // Shared metric calculations for buttons
-  const buttonGap = 8 + (Math.max(0, Math.min(1, progress)) * 5.6);
-  
-  // Base height starts at original 34, shrinks by 15% to ~29
-  const currentButtonHeight = 34 - (Math.max(0, Math.min(1, progress)) * 5); 
+ 
 
   const renderButtons = () => {
     return (
       <>
         {/* New Button */}
-        <button onClick={() => setView('create')} aria-label="New request" style={{ 
+        <button className="gsap-btn" onClick={() => setView('create')} aria-label="New request" style={{ 
           ...pill, 
           background: sumi, color: washi, border: 'none', 
-          height: currentButtonHeight,
-          minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 48,
-          // Inner padding scales smoothly
-          padding: `0 ${16 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
-          borderRadius: 100, 
+          height: 34, minWidth: 34, width: 82, padding: '0 16px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height, padding'
         }}>
-          <span style={{ fontSize: 18 - (Math.max(0, Math.min(1, progress)) * 2), marginRight: (1 - Math.max(0, Math.min(1, progress))) * 4 }}>+</span>
-          <span style={{ 
-            fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', 
-            width: (1 - Math.max(0, Math.min(1, progress))) * 35,
-            opacity: 1 - Math.max(0, Math.min(1, progress)),
-            overflow: 'hidden'
-          }}>NEW</span>
+          <span style={{ fontSize: 18, marginRight: 4 }}>+</span>
+          <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', width: 35, opacity: 1, overflow: 'hidden' }}>NEW</span>
         </button>
 
         {/* Contacts Button */}
-        <button onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
+        <button className="gsap-btn" onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
           ...pill, 
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
-          height: currentButtonHeight,
-          minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 64,
-          padding: `0 ${14 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
-          borderRadius: 100, 
+          height: 34, minWidth: 34, width: 98, padding: '0 14px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
         }}>
-          <ContactIcon size={14 - (Math.max(0, Math.min(1, progress)) * 2)} />
-          <span style={{ 
-            fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
-            width: (1 - Math.max(0, Math.min(1, progress))) * 50,
-            opacity: 1 - Math.max(0, Math.min(1, progress)),
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-          }}>Contacts</span>
+          <ContactIcon size={14} />
+          <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, width: 50, opacity: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>Contacts</span>
         </button>
 
         {/* FaceID Button */}
-        <button onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
+        <button className="gsap-btn" onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
           ...pill, 
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
-          height: currentButtonHeight,
-          minWidth: currentButtonHeight,
-          width: currentButtonHeight + (1 - Math.max(0, Math.min(1, progress))) * 54,
-          padding: `0 ${14 * (1 - Math.pow(Math.max(0, Math.min(1, progress)), 0.5))}px`, 
-          borderRadius: 100, 
+          height: 34, minWidth: 34, width: 88, padding: '0 14px', borderRadius: 100, 
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
         }}>
-          <LockIcon size={12 - (Math.max(0, Math.min(1, progress)) * 1.8)} />
-          <span style={{ 
-            fontSize: 11, fontWeight: 600, marginLeft: (1 - Math.max(0, Math.min(1, progress))) * 6,
-            width: (1 - Math.max(0, Math.min(1, progress))) * 40,
-            opacity: 1 - Math.max(0, Math.min(1, progress)),
-            whiteSpace: 'nowrap',
-            overflow: 'hidden'
-          }}>FaceID</span>
+          <LockIcon size={12} />
+          <span className="gsap-btn-text" style={{ fontSize: 11, fontWeight: 600, marginLeft: 6, width: 40, opacity: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>FaceID</span>
         </button>
       </>
     );
   };
 
   return (
-    <main style={{ minHeight: '100dvh', background: washi }}>
+    <main ref={mainRef} style={{ minHeight: '100dvh', background: washi, overflow: 'hidden' }}>
+      <CustomCursor />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
+      
       {/* Sticky Header Container */}
-      <div style={{ 
+      <div className="gsap-header-container" style={{ 
         position: 'fixed', 
         top: 0, left: 0, right: 0, 
         zIndex: 100,
-        height: headerHeight,
+        height: 170, // GSAP 將動態控制為 80
         background: washi,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        willChange: 'height, background-color, backdrop-filter'
       }}>
         <div className="layout-responsive-container" style={{ width: '100%', padding: '0 20px', position: 'relative', height: '100%' }}>
           
@@ -972,62 +1075,59 @@ export default function Dashboard() {
             position: 'relative'
           }}>
             {/* Logo Group */}
-            <div style={{ 
+            <div className="gsap-logo-group" style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              alignItems: 'flex-start', // Constant to avoid jump
+              alignItems: 'flex-start',
               gap: 2,
               position: 'absolute',
-              top: `${32 - (yProgress * 6)}px`,
-              left: `${50 * (1 - xProgress)}%`,
-              transform: `translateX(-${50 * (1 - xProgress)}%)`,
+              top: 32, // GSAP 控制為 23
+              left: 0, // GSAP 控制為 50%
+              transform: 'translateX(0)', // GSAP 控制為 translateX(-50%)
               textAlign: 'left',
               willChange: 'transform, top, left', 
             }}>
-              <p style={{ 
+              <p className="gsap-logo-text" style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
-                fontSize: collectFontSize, 
+                fontSize: 28, // GSAP: 16
                 letterSpacing: '0.42em',
                 marginRight: '-0.42em',
-                // Fade optical centering padding linearly to avoid glitch at 0.5
-                paddingLeft: `${0.42 * (1 - Math.max(0, Math.min(1, progress)))}em`, 
+                paddingLeft: '0.42em', 
                 color: sumi, 
                 fontWeight: 700, 
                 marginTop: 0,
                 marginBottom: 0,
                 marginLeft: 0,
                 lineHeight: 1,
-                willChange: 'font-size, letter-spacing'
+                willChange: 'font-size, padding-left'
               }}>COLLECT</p>
               
-              <p style={{ 
+              <p className="gsap-admin-text" style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
-                fontSize: adminFontSize, 
+                fontSize: 11, // GSAP: 7
                 letterSpacing: '0.89em',
                 marginRight: '-0.89em',
-                // Fade optical centering padding linearly to avoid glitch at 0.5
-                paddingLeft: `${1.3 * (1 - Math.max(0, Math.min(1, progress)))}em`,
+                paddingLeft: '1.3em',
                 color: ash, 
                 fontWeight: 500,
                 opacity: 0.9,
                 marginTop: 0,
                 marginBottom: 0,
                 marginLeft: 0,
-                willChange: 'font-size, letter-spacing'
+                willChange: 'font-size, padding-left'
               }}>ADMIN PORTAL</p>
             </div>
 
             {/* Button Group */}
-            <div style={{ 
+            <div className="gsap-btn-group" style={{ 
               display: 'flex', 
-              gap: buttonGap, 
+              gap: 8, // GSAP 控制為 13.6
               alignItems: 'center',
               position: 'absolute',
-              // Y moves from 106px (maintaining 33px gap with logo) to 23px (centered in 80px target)
-              top: `${106 - (yProgress * 83)}px`,
-              right: `${50 * (1 - xProgress)}%`,
-              transform: `translateX(${50 * (1 - xProgress)}%)`,
-              willChange: 'transform, top, right'
+              top: 106, // GSAP 到 23
+              right: 0, // GSAP 到 50%
+              transform: 'translateX(0)',
+              willChange: 'transform, top, right, gap'
             }}>
               {renderButtons()}
             </div>
@@ -1036,7 +1136,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="layout-responsive-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 174 }}>
+      <div className="layout-responsive-container gsap-list-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 174 }}>
         
         {pendingRequests.length > 0 && (
           <div style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
@@ -1074,3 +1174,21 @@ export default function Dashboard() {
     </main>
   )
 }
+
+
+/*
+【動畫設計決策說明】
+
+1. 為何選擇這個 easing:
+- 頁面進場使用 expo.out：在初始加載時給予極快浮現的動態感，並有長尾平移，創造奢華與質感，非常適合 "COLLECT" 這樣大字的品牌名稱。
+- UI卡片入場使用 power3.out：快入慢出，能在捲動時帶來順暢而不拖沓的自然降落感。
+- 微互動(Magnetic Button hover)使用 power2.out(進)與 back.out(1.7)(出)：模仿真實物理的回彈與吸力效果，讓體驗更直覺、愉悅。
+
+2. 為何選擇這個時序:
+- Stagger 間隔設為 0.05s~0.1s：這是確保使用者閱讀視線能被緊湊引導的節奏，不至於過度等待而造成煩躁感，同時又能看到「層次感」。
+- Hover 動畫為 0.2~0.4s 之間：微互動需維持在人類感知的最優範圍（少於0.1s太跳躍，多於0.4s太遲鈍）。
+
+3. 這個動畫如何強化品牌/用戶體驗:
+- 使用 GSAP 的 quickTo() 自訂游標與磁吸按鈕，打破傳統矩形點擊區域的無趣感，提升互動的科技黏滯感。
+- 捲動時透過 scrub: true 直接將 Header 固定、縮小，加上 backdrop-filter 的引入，不僅有效節省垂直空間，視覺焦點也自然轉移到請款內容上。此種玻璃態過渡也增加了界面的現代感。
+*/
