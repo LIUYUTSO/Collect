@@ -409,6 +409,11 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                               fontWeight: isActive ? 700 : 600
                             }}>
                               {p.name}
+                              {p.note && (
+                                <span style={{ fontSize: 11, color: 'var(--ash)', opacity: 0.6, fontWeight: 400, fontStyle: 'italic', marginLeft: 6 }}>
+                                  · {p.note}
+                                </span>
+                              )}
                             </span>
                             {p.name === request.payerName && (
                               <span style={{ fontSize: 8, background: 'var(--sumi)', color: 'var(--washi)', padding: '1px 5px', borderRadius: 4, transform: 'translateY(-1px)', fontWeight: 800 }}>PAYER</span>
@@ -417,11 +422,6 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                           <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
                             {p.paid ? 'PAID ✓' : 'UNPAID'}
                           </span>
-                          {p.note && (
-                            <span style={{ fontSize: 10, color: 'var(--ash)', opacity: 0.6, marginTop: 4, fontStyle: 'italic' }}>
-                              {p.note}
-                            </span>
-                          )}
                         </div>
                         <span style={{ 
                           fontFamily: 'DM Mono, monospace', 
