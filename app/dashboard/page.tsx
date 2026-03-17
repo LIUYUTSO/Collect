@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react
 import Script from 'next/script'
 import { formatCAD, formatDate } from '@/lib/utils'
 
-type RequestPayee = { name: string; amount: number; paid: boolean }
+type RequestPayee = { name: string; amount: number; paid: boolean; note?: string }
 type Request = {
   id: string; slug: string; title: string; amount: number
   note?: string; method: string; status: string; fromName?: string
@@ -13,7 +13,7 @@ type Request = {
 }
 type Payee = { id: string; name: string }
 type View = 'login' | 'list' | 'create' | 'contacts'
-type Recipient = { payeeId: string; amount: string }
+type Recipient = { payeeId: string; amount: string; note: string }
 
 // ─── Styles ────────────────────────────────────────────────────────────────
 const washi = '#F2EDE4'
@@ -384,6 +384,7 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
                       {isCreditor && <span style={{ color: rust, fontSize: 10, fontWeight: 700, opacity: 0.9, marginLeft: 14, letterSpacing: '0.05em' }}>CREDITOR</span>}
                     </p>
                     <p style={{ fontSize: 11, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
+                    {p.note && <p style={{ fontSize: 11, color: ash, opacity: 0.6, marginTop: 2, fontStyle: 'italic' }}>{p.note}</p>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
                     <button 
@@ -461,7 +462,7 @@ export default function Dashboard() {
   // Create form state
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
-  const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '' }])
+  const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '', note: '' }])
   const [splitEqually, setSplitEqually] = useState(false)
   const [groupRequest, setGroupRequest] = useState(false)
   const [totalAmount, setTotalAmount] = useState('')
@@ -674,12 +675,12 @@ export default function Dashboard() {
       if (isGroup) {
         setRecipients(editingRequest.payees!.map((p: RequestPayee) => {
             const payee = payees.find(contact => contact.name === p.name)
-            return { payeeId: payee?.id || '', amount: p.amount.toString() }
+            return { payeeId: payee?.id || '', amount: p.amount.toString(), note: p.note || '' }
         }))
         setTotalAmount(editingRequest.amount.toString())
       } else {
         const payee = payees.find(p => p.name === editingRequest.fromName)
-        setRecipients([{ payeeId: payee?.id || '', amount: editingRequest.amount.toString() }])
+        setRecipients([{ payeeId: payee?.id || '', amount: editingRequest.amount.toString(), note: editingRequest.note || '' }])
       }
     }
   }, [editingRequest, view, payees])
@@ -709,7 +710,7 @@ export default function Dashboard() {
         const amt = splitEqually
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
-        return { name: payee?.name || '', amount: parseFloat(amt as string), paid: payee?.name === payerName }
+        return { name: payee?.name || '', amount: parseFloat(amt as string), paid: payee?.name === payerName, note: r.note }
       })
       const totalAmt = parseFloat(totalAmount) || recipientItems.reduce((sum, item) => sum + item.amount, 0)
       
@@ -723,7 +724,7 @@ export default function Dashboard() {
           ? (parseFloat(totalAmount) / validRecipients.length).toFixed(2)
           : r.amount
         const isCreditor = payee?.name === payerName
-        return { ...commonFields, amount: parseFloat(amt as string), fromName: payee?.name || '', status: isCreditor ? 'paid' : 'pending' }
+        return { ...commonFields, amount: parseFloat(amt as string), fromName: payee?.name || '', status: isCreditor ? 'paid' : 'pending', note: r.note || commonFields.note }
       })
       if (editingRequest) payload = payload[0]
     }
@@ -745,7 +746,7 @@ export default function Dashboard() {
         if (titleRef.current) titleRef.current.textContent = ''
         if (noteRef.current) noteRef.current.textContent = ''
         setTitle(''); setNote('')
-        setRecipients([{ payeeId: '', amount: '' }])
+        setRecipients([{ payeeId: '', amount: '', note: '' }])
         setSplitEqually(false); setGroupRequest(false); setTotalAmount('')
         setEventDate(''); setLocation(''); setPayerName('')
       }
@@ -1041,19 +1042,22 @@ export default function Dashboard() {
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {recipients.map((r, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <select value={r.payeeId} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], payeeId: e.target.value }; setRecipients(next) }} style={{ ...capsule, flex: 1, color: r.payeeId ? sumi : ash }} required>
+                    <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', background: 'rgba(255,255,255,0.3)', padding: 12, borderRadius: 12, border: `1px solid ${fog}` }}>
+                      <select value={r.payeeId} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], payeeId: e.target.value }; setRecipients(next) }} style={{ ...capsule, flex: 1, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', color: r.payeeId ? sumi : ash }} required>
                         <option value="">Select Contact</option>
                         {payees.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
-                      {!(isMultiRecipient && splitEqually) && (
-                        <input type="number" step="0.01" min="0.01" value={r.amount} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], amount: e.target.value }; setRecipients(next) }} placeholder="Amt" style={{ ...capsule, width: 80, fontFamily: 'DM Mono, monospace', fontSize: 14 }} required />
-                      )}
-                      {recipients.length > 1 && <button type="button" onClick={() => setRecipients(recipients.filter((_, idx) => idx !== i))} style={{ ...btnGhost, color: rust, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>✕</button>}
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', width: isMultiRecipient && splitEqually ? 'auto' : '100%', marginTop: isMultiRecipient && splitEqually ? 0 : 4 }}>
+                        {!(isMultiRecipient && splitEqually) && (
+                          <input type="number" step="0.01" min="0.01" value={r.amount} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], amount: e.target.value }; setRecipients(next) }} placeholder="Amt" style={{ ...capsule, width: 80, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', fontFamily: 'DM Mono, monospace', fontSize: 14 }} required />
+                        )}
+                        <input type="text" value={r.note} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], note: e.target.value }; setRecipients(next) }} placeholder="Item note (memo)" style={{ ...capsule, flex: 1, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', fontSize: 12, opacity: 0.7 }} />
+                        {recipients.length > 1 && <button type="button" onClick={() => setRecipients(recipients.filter((_, idx) => idx !== i))} style={{ ...btnGhost, color: rust, fontSize: 18, lineHeight: 1, flexShrink: 0, padding: '0 4px' }}>✕</button>}
+                      </div>
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={() => setRecipients([...recipients, { payeeId: '', amount: '' }])} style={{ ...btnGhost, color: moss, marginTop: 12, display: 'flex', alignItems: 'center', gap: 4 }}>+ ADD RECIPIENT</button>
+                <button type="button" onClick={() => setRecipients([...recipients, { payeeId: '', amount: '', note: '' }])} style={{ ...btnGhost, color: moss, marginTop: 12, display: 'flex', alignItems: 'center', gap: 4 }}>+ ADD RECIPIENT</button>
               </>
             )}
 

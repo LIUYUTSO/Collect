@@ -10,6 +10,7 @@ interface RequestPayee {
   name: string
   amount: number
   paid: boolean
+  note?: string
 }
 
 interface RequestClientProps {
@@ -416,6 +417,11 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                           <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
                             {p.paid ? 'PAID ✓' : 'UNPAID'}
                           </span>
+                          {p.note && (
+                            <span style={{ fontSize: 10, color: 'var(--ash)', opacity: 0.6, marginTop: 4, fontStyle: 'italic' }}>
+                              {p.note}
+                            </span>
+                          )}
                         </div>
                         <span style={{ 
                           fontFamily: 'DM Mono, monospace', 
