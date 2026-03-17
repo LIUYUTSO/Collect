@@ -378,15 +378,19 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
               const isCreditor = p.name === r.payerName
               return (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
+                  <div style={{ minWidth: 100, flexShrink: 0, paddingRight: 10 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: sumi }} className="no-wrap">
                       {p.name}
                       {isCreditor && <span style={{ color: rust, fontSize: 10, fontWeight: 700, opacity: 0.9, marginLeft: 14, letterSpacing: '0.05em' }}>CREDITOR</span>}
-                      {p.note && <span style={{ color: ash, fontSize: 10, fontWeight: 500, opacity: 0.6, marginLeft: 8, fontStyle: 'italic' }}>· {p.note}</span>}
                     </p>
                     <p style={{ fontSize: 11, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                  {p.note && (
+                    <div style={{ flex: 1, textAlign: 'center', fontSize: 12, color: ash, opacity: 0.5, fontStyle: 'italic', padding: '0 10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.note}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', flexShrink: 0 }}>
                     <button 
                       onClick={() => onPayeePaid(r, idx)} 
                       disabled={isCreditor}
