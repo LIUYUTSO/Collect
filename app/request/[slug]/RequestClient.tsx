@@ -401,34 +401,33 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                           transition: 'all 0.3s ease'
                         }}
                       >
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ 
-                            fontSize: 15, 
-                            color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
-                            fontWeight: isActive ? 700 : 600
-                          }}>
-                            {p.name}
-                          </span>
-                          <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
-                            {p.paid ? 'PAID ✓' : 'UNPAID'}
-                          </span>
-                        </div>
-                        {p.note && (
-                          <div style={{ 
-                            flex: 1, 
-                            textAlign: 'center', 
-                            fontSize: 13, 
-                            color: 'var(--ash)', 
-                            opacity: 0.6, 
-                            fontStyle: 'italic',
-                            padding: '0 12px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {p.note}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                            <span style={{ 
+                              fontSize: 15, 
+                              color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
+                              fontWeight: isActive ? 700 : 600
+                            }}>
+                              {p.name}
+                            </span>
+                            <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
+                              {p.paid ? 'PAID ✓' : 'UNPAID'}
+                            </span>
                           </div>
-                        )}
+                          {p.note && (
+                            <div style={{ 
+                              fontSize: 13, 
+                              color: 'var(--ash)', 
+                              opacity: 0.6, 
+                              fontStyle: 'italic',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              · {p.note}
+                            </div>
+                          )}
+                        </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                           {p.name === request.payerName && (
                             <span style={{ fontSize: 8, background: 'var(--sumi)', color: 'var(--washi)', padding: '1px 5px', borderRadius: 4, marginBottom: 6, fontWeight: 800 }}>PAYER</span>
