@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { formatCAD, formatDate } from '@/lib/utils'
@@ -22,6 +22,164 @@ interface RequestClientProps {
 const getGsap = () => (typeof window !== 'undefined' ? (window as any).gsap : undefined);
 const getScrollTrigger = () => (typeof window !== 'undefined' ? (window as any).ScrollTrigger : undefined);
 
+function ChevronIcon({ size = 12, rotated = false }: { size?: number, rotated?: boolean }) {
+  return (
+    <svg 
+      width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: rotated ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
+    >
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  )
+}
+
+function ListIcon({ size = 10 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  );
+}
+
+const ParticipantRow = ({ 
+  p, 
+  isActive, 
+  isPayer, 
+  initialExpanded 
+}: { 
+  p: { name: string; amount: number; paid: boolean; items: { title: string; amount: number; note?: string; paid: boolean; payerName: string }[] }, 
+  isActive: boolean, 
+  isPayer: boolean, 
+  initialExpanded: boolean 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(initialExpanded);
+  const expandRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !expandRef.current) return;
+    
+    if (isExpanded) {
+      gsap.fromTo(expandRef.current, 
+        { height: 0, opacity: 0 }, 
+        { height: 'auto', opacity: 1, duration: 0.5, ease: 'power3.inOut' }
+      );
+    } else {
+      gsap.to(expandRef.current, { 
+        height: 0, 
+        opacity: 0, 
+        duration: 0.4, 
+        ease: 'power3.inOut' 
+      });
+    }
+  }, [isExpanded]);
+
+  return (
+    <div 
+      className={isActive ? "gsap-payee-item active-payee" : "gsap-payee-item"}
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        gap: 12,
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ 
+              fontSize: 15, 
+              color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
+              fontWeight: isActive ? 700 : 800,
+              letterSpacing: '-0.01em'
+            }}>
+              {isPayer ? `Pay to ${p.name}` : p.name}
+            </span>
+            {!isPayer && (
+              p.paid ? (
+                <span style={{ fontSize: 10, color: 'var(--moss)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
+                  All paid ✓
+                </span>
+              ) : (
+                <span style={{ fontSize: 10, color: 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
+                  UNPAID
+                </span>
+              )
+            )}
+          </div>
+          {isPayer && (
+            <span style={{ 
+              fontSize: 8, 
+              background: 'var(--sumi)', 
+              color: 'var(--washi)', 
+              padding: '1px 5px', 
+              borderRadius: 4, 
+              fontWeight: 800,
+              flexShrink: 0
+            }}>
+              PAYER
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ 
+            fontFamily: 'DM Mono, monospace', 
+            fontSize: 18, 
+            color: p.paid ? 'var(--fog)' : 'var(--sumi)', 
+            textDecoration: (p.paid && !isPayer) ? 'line-through' : 'none', 
+            opacity: p.paid ? 0.6 : 1,
+            fontWeight: isActive ? 600 : 400
+          }} suppressHydrationWarning>
+            {formatCAD(p.amount)}
+          </span>
+          {!isPayer && (
+            <div style={{ opacity: 0.3, flexShrink: 0 }}>
+              <ChevronIcon rotated={isExpanded} size={14} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {!isPayer && (
+        <div ref={expandRef} style={{ height: initialExpanded ? 'auto' : 0, opacity: initialExpanded ? 1 : 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 0, paddingBottom: 4 }}>
+             {p.items.map((item: any, iIdx: number) => (
+               <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', opacity: 0.6 }}>
+                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0, flex: 1 }}>
+                   <span style={{ fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</span>
+                   {item.note && <span style={{ fontSize: 10, color: 'var(--ash)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}> · {item.note}</span>}
+                 </div>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                   <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, flexShrink: 0 }}>{formatCAD(item.amount)}</span>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                     <span style={{ 
+                        fontSize: 8, 
+                        background: item.paid ? 'var(--moss)' : 'rgba(219, 104, 75, 0.1)', 
+                        color: item.paid ? 'white' : 'var(--rust)', 
+                        padding: '2px 6px', 
+                        borderRadius: 4, 
+                        fontWeight: 800,
+                        letterSpacing: '0.02em',
+                        flexShrink: 0
+                      }}>
+                        {item.paid ? 'PAID' : 'UNPAID'}
+                      </span>
+                   </div>
+                 </div>
+               </div>
+             ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function RequestClient({ request, tdEmail, wsHandle }: RequestClientProps) {
   const searchParams = useSearchParams();
   const activePayeeName = searchParams.get('p');
@@ -34,9 +192,115 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
 
   const isPaid = request.status === 'paid';
   const isGroup = !!request.payees && Array.isArray(request.payees) && request.payees.length > 0;
-  const payeesList: RequestPayee[] = isGroup
-    ? (request.payees as RequestPayee[])
-    : (request.fromName ? [{ name: request.fromName, amount: request.amount, paid: isPaid }] : []);
+
+  // ─── Consolidation Logic ───
+  const consolidatedData = useMemo(() => {
+    // 1. Identify all requests (primary and consolidated)
+    const allRequests = [
+      { 
+        title: request.title, 
+        amount: request.amount, 
+        payerName: request.payerName,
+        fromName: request.fromName,
+        payees: request.payees,
+        status: request.status
+      },
+      ...(request.consolidated || []).map((r: any) => ({
+        title: r.title,
+        amount: r.amount,
+        payerName: r.payerName || request.payerName,
+        fromName: r.fromName,
+        payees: r.payees,
+        status: 'pending'
+      }))
+    ];
+
+    // 2. Identify "Involved" requests (the ones the activePayeeName is part of)
+    // If no activePayeeName, we show all (e.g. payer's view)
+    const involvedRequests = activePayeeName 
+      ? allRequests.filter(r => {
+          const names = Array.isArray(r.payees) ? r.payees.map((p: any) => p.name) : [r.fromName];
+          return names.includes(activePayeeName);
+        })
+      : allRequests;
+
+    // 3. Calculate Payer Total: Sum of the full original amounts of involved requests
+    const payerTotal = involvedRequests.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+    // 4. Map participants from involved requests
+    type ParticipantItem = { title: string; amount: number; note: string; paid: boolean; payerName: string };
+    type Participant = { name: string; amount: number; paid: boolean; items: ParticipantItem[] };
+    const map = new Map<string, Participant>();
+
+    // Helper to add/update entry in map
+    involvedRequests.forEach(r => {
+      const isRGroup = Array.isArray(r.payees) && r.payees.length > 0;
+      if (isRGroup) {
+        (r.payees as any[]).forEach(p => {
+          const existing = map.get(p.name);
+          if (existing) {
+            existing.amount += p.amount;
+            existing.items.push({ title: r.title, amount: p.amount, note: p.note || '', paid: p.paid, payerName: r.payerName });
+            if (!p.paid) existing.paid = false;
+          } else {
+            map.set(p.name, {
+              name: p.name,
+              amount: p.amount,
+              paid: p.paid,
+              items: [{ title: r.title, amount: p.amount, note: p.note || '', paid: p.paid, payerName: r.payerName }]
+            });
+          }
+        });
+      } else if (r.fromName) {
+        const pPaid = r.status === 'paid';
+        const existing = map.get(r.fromName);
+        if (existing) {
+          existing.amount += r.amount;
+          existing.items.push({ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName });
+          if (!pPaid) existing.paid = false;
+        } else {
+          map.set(r.fromName, {
+            name: r.fromName,
+            amount: r.amount,
+            paid: pPaid,
+            items: [{ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName }]
+          });
+        }
+      }
+    });
+
+    // 5. Build final list
+    const finalItems = Array.from(map.values()) as Participant[];
+    
+    // Amount for Payer is how much they EXPENDED originally.
+    const payerItem: Participant = {
+      name: request.payerName,
+      amount: payerTotal,
+      paid: true,
+      items: []
+    };
+
+    // Filter out the Payer from the participant list to avoid double listing 
+    const otherParticipants = finalItems.filter(p => p.name !== request.payerName);
+    
+    // Sort active participant to the top among participants
+    otherParticipants.sort((a, b) => {
+      if (a.name === activePayeeName) return -1;
+      if (b.name === activePayeeName) return 1;
+      return 0;
+    });
+
+    return [payerItem, ...otherParticipants];
+  }, [request, activePayeeName]);
+
+  const payeesList = consolidatedData;
+  
+  // Owed Summary Logic
+  const activeParticipant = activePayeeName ? payeesList.find(p => p.name === activePayeeName) : null;
+  const unpaidItems = activeParticipant ? activeParticipant.items.filter(i => !i.paid) : [];
+  const totalAmount = unpaidItems.length > 0 
+    ? unpaidItems.reduce((sum: number, item) => sum + item.amount, 0)
+    : (activePayeeName ? 0 : payeesList[0]?.amount || 0);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -58,8 +322,6 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     gsap.set('.gsap-receipt-card', { y: '-100%', autoAlpha: 0 });
 
     // ─── 統一主時間軸 ────────────────────────────────────────────────────────
-    // 移除 delay 2.2s，讓內容在載入動畫結束後立即銜接
-    // 動畫結束後刷新 ScrollTrigger，確保佈局變動後計數器觸發點正確
     const masterTl = gsap.timeline({ 
       defaults: { ease: 'expo.out' },
       onComplete: () => ScrollTrigger.refresh()
@@ -94,7 +356,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         onStart: () => {
           const obj = { val: 0 };
           gsap.to(obj, {
-            val: request.amount,
+            val: totalAmount,
             duration: 2.2,
             ease: 'expo.out',
             onUpdate: () => {
@@ -116,7 +378,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       }
     });
 
-    // ─── 跑馬燈循環 ──────────────────────────────────────────────────────────
+    // ─── 跑馬燈循環 ──────────────────────────────────────────────────────
     if (noteRef.current && request.note) {
       const noteWidth = noteRef.current.offsetWidth;
       const maskWidth = Math.min(window.innerWidth - 48, 390);
@@ -126,7 +388,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       );
     }
 
-    // ─── 浮動 PAY 按鈕邏輯 ──────────────────────────────────────────────────
+    // ─── 浮動 PAY 按鈕邏輯 ───────────────────────────────────────────────
     if (!isPaid) {
       gsap.set('.gsap-floating-pay', { y: 100, autoAlpha: 0 });
       
@@ -165,7 +427,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       gsap.killTweensOf('*');
     };
 
-  }, [gsapLoaded, mounted, request.amount, request.note]);
+  }, [gsapLoaded, mounted, totalAmount, request.note]);
 
   if (!mounted) return <main style={{ minHeight: '100dvh', background: '#F2EDE4' }} />;
 
@@ -374,11 +636,11 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
               <div className="receipt-dashed" style={{ marginTop: 0 }} />
 
               <p style={{ fontSize: 10, letterSpacing: '0.3em', color: 'var(--ash)', marginBottom: 20, textAlign: 'center', fontWeight: 800, opacity: 0.6 }}>
-                {request.payerName ? 'BILLING INVOICE' : 'COLLECT RECEIPT'}
+                {request.payerName ? 'CONSOLIDATED INVOICE' : 'COLLECT RECEIPT'}
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {!isGroup && (
+                {payeesList.length === 1 && (
                   <div className="gsap-amount-display" style={{ textAlign: 'center', marginBottom: 24 }}>
                     <p style={{ fontSize: 11, color: 'var(--ash)', marginBottom: 12, letterSpacing: '0.15em', fontWeight: 700 }}>AMOUNT DUE</p>
                     <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 52, fontWeight: 400, color: isPaid ? 'var(--moss)' : 'var(--sumi)', letterSpacing: '-0.04em', lineHeight: 1 }}>
@@ -387,94 +649,52 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                   </div>
                 )}
 
-                <div className="gsap-payee-list" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div className="gsap-payee-list" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   {payeesList.map((p, idx) => {
                     const isActive = p.name === activePayeeName;
+                    const isPayer = p.name === request.payerName;
                     return (
-                      <div 
-                        key={idx} 
-                        className={isActive ? "gsap-payee-item active-payee" : "gsap-payee-item"}
-                        style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          transition: 'all 0.3s ease',
-                          opacity: activePayeeName && !isActive && p.name !== request.payerName ? 0.3 : 1
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                            <span style={{ 
-                              fontSize: 15, 
-                              color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
-                              fontWeight: isActive ? 700 : 600
-                            }}>
-                              {p.name}
-                            </span>
-                            <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
-                              {p.paid ? 'PAID ✓' : 'UNPAID'}
-                            </span>
-                          </div>
-                          
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 8,
-                            flex: 1,
-                            minWidth: 0,
-                            paddingTop: 2
-                          }}>
-                            {p.name === request.payerName && (
-                              <span style={{ 
-                                fontSize: 8, 
-                                background: 'var(--sumi)', 
-                                color: 'var(--washi)', 
-                                padding: '1px 5px', 
-                                borderRadius: 4, 
-                                fontWeight: 800,
-                                fontStyle: 'normal',
-                                flexShrink: 0
-                              }}>
-                                PAYER
-                              </span>
-                            )}
-                            {p.note && (
-                              <div style={{ 
-                                fontSize: 13, 
-                                color: 'var(--ash)', 
-                                opacity: 0.6, 
-                                fontStyle: 'italic',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }}>
-                                · {p.note}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <span style={{ 
-                            fontFamily: 'DM Mono, monospace', 
-                            fontSize: 18, 
-                            color: p.paid ? 'var(--fog)' : 'var(--sumi)', 
-                            textDecoration: p.paid ? 'line-through' : 'none', 
-                            opacity: p.paid ? 0.6 : 1,
-                            fontWeight: isActive ? 600 : 400
-                          }} suppressHydrationWarning>
-                            {formatCAD(p.amount)}
-                          </span>
-                        </div>
-                      </div>
+                      <ParticipantRow 
+                        key={`${p.name}-${idx}`}
+                        p={p}
+                        isActive={isActive}
+                        isPayer={isPayer}
+                        initialExpanded={isActive}
+                      />
                     );
                   })}
                 </div>
 
-                {isGroup && (
+                {(unpaidItems.length > 0) && (
+                  <>
+                    <div className="receipt-dashed" style={{ margin: '24px 0 14px 0' }} />
+                    <div className="gsap-unpaid-summary" style={{ padding: '8px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+                        <ListIcon size={10} />
+                        <p style={{ fontSize: 10, letterSpacing: '0.15em', color: 'var(--clay)', fontWeight: 800 }}>UNPAID</p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {unpaidItems.map((item, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--sumi)' }}>{item.title}</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, fontWeight: 600, color: 'var(--rust)' }}>{formatCAD(item.amount)}</span>
+                              <span style={{ fontSize: 9, color: 'var(--sumi)', fontWeight: 500 }}>pay to {item.payerName}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {(payeesList.length > 1 || (payeesList[0]?.items.length > 1)) && (
                   <>
                     <div className="receipt-dashed" style={{ margin: '14px 0' }} />
                     <div className="gsap-amount-display" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>TOTAL</span>
+                      <span style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
+                        {activePayeeName ? 'TOTAL OWED' : 'TOTAL'}
+                      </span>
                       <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 32, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
                         <span ref={amountRef} suppressHydrationWarning>{formatCAD(0)}</span>
                       </span>

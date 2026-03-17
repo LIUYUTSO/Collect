@@ -124,12 +124,10 @@ function MagneticButton({ children, style, onClick, className, 'aria-label': ari
   useMagnetic(ref);
   const handleEnter = () => {
     const gsap = getGsap();
-    if(gsap) gsap.to(ref.current, { scale: 1.03, backgroundColor: 'rgba(26,23,20, 0.9)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', duration: 0.2, ease: 'power2.out' })
     if(gsap) gsap.to('.custom-cursor', { scale: 1.5, opacity: 0.5, duration: 0.2 })
   };
   const handleLeave = () => {
     const gsap = getGsap();
-    if(gsap) gsap.to(ref.current, { scale: 1, backgroundColor: style?.background || sumi, boxShadow: 'none', duration: 0.3, ease: 'power2.in' })
     if(gsap) gsap.to('.custom-cursor', { scale: 1, opacity: 1, duration: 0.2 })
   };
   return (
@@ -261,27 +259,107 @@ interface RequestCardProps {
   paid?: boolean
 }
 
+const ParticipantMenu = ({ open, onShare, onPreview, fog, washi, sumi }: { open: boolean, onShare: () => void, onPreview: () => void, fog: string, washi: string, sumi: string }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  useLayoutEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !menuRef.current) return;
+    
+    if (open) {
+      gsap.set(menuRef.current, { display: 'flex' });
+      gsap.fromTo(menuRef.current, 
+        { height: 0, opacity: 0 }, 
+        { height: 'auto', opacity: 1, duration: 0.4, ease: 'power3.out' }
+      );
+    } else {
+      gsap.to(menuRef.current, { 
+        height: 0, 
+        opacity: 0, 
+        duration: 0.3, 
+        ease: 'power3.in',
+        onComplete: () => {
+          if (menuRef.current) menuRef.current.style.display = 'none';
+        }
+      });
+    }
+  }, [open]);
+
+  return (
+    <div ref={menuRef} style={{
+      position: 'absolute',
+      bottom: 'calc(100% + 4px)',
+      right: 0,
+      background: washi,
+      border: `1px solid ${fog}`,
+      borderRadius: 10,
+      padding: '4px',
+      display: 'none',
+      flexDirection: 'column',
+      gap: 2,
+      zIndex: 999,
+      boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+      minWidth: 130,
+      overflow: 'hidden'
+    }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); onShare(); }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12, color: sumi, fontFamily: 'inherit', textAlign: 'left' }}
+      >
+        <ShareIcon size={13} />
+        分享連結
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onPreview(); }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12, color: sumi, fontFamily: 'inherit', textAlign: 'left' }}
+      >
+        <GlobeIcon size={13} />
+        預覽頁面
+      </button>
+    </div>
+  );
+};
+
 function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   
-  // Card hover effect (卡片微互動)
-  const handleMouseEnter = () => {
-    const gsap = getGsap();
-    if (!gsap || !cardRef.current) return;
-    gsap.to(cardRef.current, { y: -8, boxShadow: '0 10px 20px rgba(0,0,0,0.06)', borderColor: 'rgba(212,207,200, 0.9)', duration: 0.3, ease: 'power2.out' });
-  };
-  const handleMouseLeave = () => {
-    const gsap = getGsap();
-    if (!gsap || !cardRef.current) return;
-    gsap.to(cardRef.current, { y: 0, boxShadow: 'none', borderColor: fog, duration: 0.4, ease: 'power2.inOut' });
-  };
+  // Card hover removed per user request
+  const handleMouseEnter = () => {};
+  const handleMouseLeave = () => {};
 
   const [isExpanded, setIsExpanded] = useState(false)
   const [showActions, setShowActions] = useState(false)
+  const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null)
+  
   const payeeList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
 
+  const expandRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const gsap = getGsap();
+    if (!gsap || !expandRef.current) return;
+    if (isExpanded) {
+      gsap.set(expandRef.current, { overflow: 'hidden', display: 'block' });
+      gsap.fromTo(expandRef.current, 
+        { height: 0 }, 
+        { height: 'auto', duration: 0.6, ease: 'power3.inOut', onComplete: () => {
+          if (expandRef.current) expandRef.current.style.overflow = 'visible';
+        }}
+      );
+    } else {
+      gsap.to(expandRef.current, { 
+        height: 0, 
+        duration: 0.5, 
+        ease: 'power3.inOut', 
+        onStart: () => {
+          if (expandRef.current) expandRef.current.style.overflow = 'hidden';
+        }
+      });
+    }
+  }, [isExpanded]);
+
   return (
-    <div ref={cardRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="gsap-request-card" style={{ position: 'relative', overflow: 'hidden', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
+    // Note: overflow is NOT hidden here so dropdowns can escape the card boundary
+    <div ref={cardRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="gsap-request-card" style={{ position: 'relative', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
       {/* Full-Card Action Overlay */}
       <div 
         onClick={() => setShowActions(false)}
@@ -297,7 +375,8 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
           opacity: showActions ? 1 : 0,
           pointerEvents: showActions ? 'auto' : 'none',
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-          zIndex: 10
+          zIndex: 10,
+          borderRadius: 12,
         }}
       >
         <div style={{ 
@@ -306,14 +385,12 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
           transform: showActions ? 'translateX(0)' : 'translateX(-30px)', 
           transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)' 
         }}>
-          {/* Share Button Group */}
           <button aria-label="Share request" onClick={(e) => { e.stopPropagation(); onShare(r.slug, r.title, r.amount) }} style={{ ...pill, padding: 0, background: sumi, color: washi, border: 'none', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15 }}>
             <ShareIcon size={18} />
           </button>
           <a aria-label="Open link" href={`/request/${r.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ ...pill, padding: 0, background: washi, color: sumi, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 15, border: `1.5px solid ${fog}` }}>
             <GlobeIcon size={18} />
           </a>
-          {/* Management Group */}
           <button aria-label="Edit request" onClick={(e) => { e.stopPropagation(); onEdit(r) }} style={{ ...pill, padding: 0, background: washi, color: sumi, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15, border: `1.5px solid ${fog}` }}>
             <EditIcon size={18} />
           </button>
@@ -339,7 +416,7 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <button 
-            onClick={() => setShowActions(!showActions)} 
+            onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }} 
             style={{ 
               ...pill, 
               padding: 0, 
@@ -365,105 +442,66 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
         </div>
       </div>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateRows: isExpanded ? '1fr' : '0fr', 
-        transition: 'grid-template-rows 0.7s cubic-bezier(0.85, 0, 0.15, 1)',
-        overflow: 'hidden'
-      }}>
+      <div ref={expandRef} style={{ height: 0, overflow: 'hidden' }}>
         <div style={{ minHeight: 0 }}>
           <div style={{ padding: '16px 0 4px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ height: 1, background: fog, marginBottom: 6, transition: 'opacity 0.7s', opacity: isExpanded ? 0.3 : 0 }} />
+            <div style={{ height: 1, background: fog, marginBottom: 6, opacity: 0.3 }} />
             {payeeList.map((p: RequestPayee, idx: number) => {
               const isCreditor = p.name === r.payerName
+              const menuOpen = openMenuIdx === idx
               return (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, minWidth: 100 }}>
-                      <span style={{ fontSize: 13, color: sumi, fontWeight: 600 }}>{p.name}</span>
-                      <span style={{ fontSize: 9, color: p.paid || isCreditor ? moss : rust, fontWeight: 800, letterSpacing: '0.1em', marginTop: 2 }}>
-                        {p.paid || isCreditor ? 'PAID ✓' : 'UNPAID'}
+                <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 36, paddingTop: idx === 0 ? 6 : 0 }}>
+
+                  {/* Participant dropdown menu — using GSAP reveal */}
+                  <ParticipantMenu 
+                    open={menuOpen}
+                    onShare={() => { setOpenMenuIdx(null); onShareIndividual(r.slug, r.title, p.amount, p.name); }}
+                    onPreview={() => { setOpenMenuIdx(null); window.open(`/request/${r.slug}?p=${encodeURIComponent(p.name)}`, '_blank'); }}
+                    fog={fog}
+                    washi={washi}
+                    sumi={sumi}
+                  />
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, color: sumi, fontWeight: 600 }}>{p.name}</span>
+                    {isCreditor && (
+                      <span style={{ fontSize: 8, background: sumi, color: washi, padding: '1px 5px', borderRadius: 4, fontWeight: 800, flexShrink: 0 }}>
+                        PAYER
                       </span>
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, paddingTop: 2 }}>
-                      {isCreditor && (
-                        <span style={{ fontSize: 8, background: sumi, color: washi, padding: '1px 5px', borderRadius: 4, fontWeight: 800, flexShrink: 0 }}>
-                          PAYER
-                        </span>
-                      )}
-                      {p.note && (
-                        <div style={{ fontSize: 12, color: ash, opacity: 0.5, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          · {p.note}
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {p.note && (
+                      <div style={{ fontSize: 11, color: ash, opacity: 0.6, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        · {p.note}
+                      </div>
+                    )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: sumi, fontWeight: 600 }} suppressHydrationWarning>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 9, color: sumi, fontWeight: 400 }} suppressHydrationWarning>
                       {formatCAD(p.amount)}
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-                      <button 
-                        onClick={() => onPayeePaid(r, idx)} 
-                        disabled={isCreditor}
-                        style={{
-                          width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
-                          background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
-                          color: p.paid || isCreditor ? 'white' : rust,
-                          transition: 'all 0.2s',
-                          letterSpacing: '0.05em',
-                          opacity: isCreditor ? 0.7 : 1
-                        }}
-                      >
-                        {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
-                      </button>
-                      {!isCreditor && (
-                        <div style={{ position: 'relative' }}>
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation();
-                              const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (menu) {
-                                if (menu.style.display === 'flex') {
-                                  menu.style.opacity = '0';
-                                  menu.style.visibility = 'hidden';
-                                  setTimeout(() => { menu.style.display = 'none'; }, 200);
-                                } else {
-                                  menu.style.display = 'flex';
-                                  setTimeout(() => { menu.style.opacity = '1'; menu.style.visibility = 'visible'; }, 10);
-                                }
-                              }
-                            }}
-                            style={{
-                              width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              border: 'none', cursor: 'pointer', background: 'transparent', color: ash,
-                              transition: 'opacity 0.2s', padding: 0, opacity: 0.4
-                            }}
-                            aria-label="Payee actions"
-                            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                            onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}
-                          >
-                            <MoreIcon size={16} />
-                          </button>
-                          <div 
-                            className="payee-action-menu" 
-                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.visibility = 'hidden'; setTimeout(() => { e.currentTarget.style.display = 'none'; }, 200); }}
-                            style={{
-                              display: 'none', position: 'absolute', right: 0, bottom: '100%', marginBottom: 8,
-                              background: washi, border: `1px solid ${fog}`, borderRadius: 8,
-                              flexDirection: 'column', padding: 4, zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                              minWidth: 80, opacity: 0, visibility: 'hidden', transition: 'all 0.2s'
-                            }}
-                          >
-                            <button onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; onShareIndividual(r.slug, r.title, p.amount, p.name) }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11 }}>Share</button>
-                            <a href={`/request/${r.slug}?p=${encodeURIComponent(p.name)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11, textDecoration: 'none', display: 'block', color: 'inherit' }}>Preview</a>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <button 
+                      onClick={() => onPayeePaid(r, idx)} 
+                      disabled={isCreditor}
+                      style={{
+                        width: 45, height: 22, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 9, fontWeight: 700,
+                        background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
+                        color: p.paid || isCreditor ? 'white' : rust,
+                        transition: 'all 0.2s', letterSpacing: '0.05em', opacity: isCreditor ? 0.7 : 1
+                      }}
+                    >
+                      {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOpenMenuIdx(menuOpen ? null : idx); }}
+                      style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'transparent', color: ash, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4, transition: 'opacity 0.2s', padding: 0 }}
+                      aria-label="Payee options"
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '0.4')}
+                    >
+                      <MoreIcon size={15} />
+                    </button>
                   </div>
                 </div>
               )
@@ -475,6 +513,9 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
     </div>
   )
 }
+
+
+
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function Dashboard() {
@@ -494,20 +535,7 @@ export default function Dashboard() {
   // Create form state
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
-  useEffect(() => {
-    const handleClickOutside = () => {
-      const menus = document.querySelectorAll('.payee-action-menu') as NodeListOf<HTMLElement>;
-      menus.forEach(menu => {
-        if (menu.style.display === 'flex') {
-          menu.style.opacity = '0';
-          menu.style.visibility = 'hidden';
-          setTimeout(() => { menu.style.display = 'none'; }, 200);
-        }
-      });
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+
 
   const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '', note: '' }])
   const [splitEqually, setSplitEqually] = useState(false)

@@ -65,7 +65,14 @@ export async function ensureTables() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-      console.log('Database tables ensured');
+      // Add indexes for efficient lookup
+      try {
+        await sql`CREATE INDEX IF NOT EXISTS idx_requests_status_from_name ON requests (status, from_name) WHERE status = 'pending';`;
+        await sql`CREATE INDEX IF NOT EXISTS idx_requests_status_payees ON requests USING GIN (payees) WHERE status = 'pending';`;
+      } catch (e) {
+        // Ignore if index creation fails (some Postgres versions/environments might have different GIN support)
+      }
+      console.log('Database tables ensured and indexed');
       tablesEnsured = true;
     } catch (error) {
       console.error('Error ensuring tables:', error);
