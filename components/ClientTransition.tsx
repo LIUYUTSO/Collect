@@ -1,10 +1,13 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 
 export default function ClientTransition({ children, title }: { children: React.ReactNode, title?: string }) {
   const [loading, setLoading] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
+  const searchParams = useSearchParams()
+  const payee = searchParams.get('p')
 
   useEffect(() => {
     // Stage 1: Loading duration
@@ -94,31 +97,36 @@ export default function ClientTransition({ children, title }: { children: React.
           </div>
 
           {/* Bill-style Description below Progress Bar */}
-          {title && (
-            <div 
-              style={{ 
-                padding: '12px',
-                border: '1px solid rgba(0,0,0,0.05)',
-                background: 'rgba(255,255,255,0.2)',
-                borderRadius: 2,
-                textAlign: 'left',
-                fontFamily: 'DM Mono, monospace',
-                fontSize: 10,
-                color: 'var(--ash)',
-                letterSpacing: '0.05em',
-                lineHeight: 1.5,
-              }}
-            >
+          <div 
+            style={{ 
+              padding: '12px',
+              border: '1px solid rgba(0,0,0,0.05)',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: 2,
+              textAlign: 'left',
+              fontFamily: 'DM Mono, monospace',
+              fontSize: 10,
+              color: 'var(--ash)',
+              letterSpacing: '0.05em',
+              lineHeight: 1.5,
+            }}
+          >
+            {payee ? (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span>RECEIPT TO:</span>
+                <span style={{ color: 'var(--sumi)' }}>{payee.toUpperCase()}</span>
+              </div>
+            ) : title ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span>ITEM:</span>
-                <span style={{ color: 'var(--sumi)' }}>{title}</span>
+                <span style={{ color: 'var(--sumi)' }}>{title.toUpperCase()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, opacity: 0.6 }}>
-                <span>TYPE:</span>
-                <span>INVOICE / COLLECT</span>
-              </div>
+            ) : null}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, opacity: 0.6 }}>
+              <span>TYPE:</span>
+              <span>INVOICE / COLLECT</span>
             </div>
-          )}
+          </div>
         </div>
 
 

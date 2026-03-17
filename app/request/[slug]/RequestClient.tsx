@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { formatCAD, formatDate } from '@/lib/utils'
 import PaymentAccordion from '@/components/PaymentAccordion'
@@ -21,6 +22,9 @@ const getGsap = () => (typeof window !== 'undefined' ? (window as any).gsap : un
 const getScrollTrigger = () => (typeof window !== 'undefined' ? (window as any).ScrollTrigger : undefined);
 
 export default function RequestClient({ request, tdEmail, wsHandle }: RequestClientProps) {
+  const searchParams = useSearchParams();
+  const activePayeeName = searchParams.get('p');
+  
   const [mounted, setMounted] = useState(false);
   const [gsapLoaded, setGsapLoaded] = useState(false);
   const amountRef = useRef<HTMLSpanElement>(null);
@@ -49,12 +53,16 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     gsap.set('.gsap-header-location', { autoAlpha: 0, y: 16, filter: 'blur(4px)' });
     gsap.set('.gsap-note-container',  { autoAlpha: 0, y: 10 });
     
-    // 收據核心：絕對物理位移，藏在出紙口上方（y: -100%）
-    gsap.set('.gsap-receipt-card', { y: '-100%', opacity: 1 });
+    // 收據核心：絕對物理位移，藏在出紙口上方，初始不可見 (autoAlpha: 0)
+    gsap.set('.gsap-receipt-card', { y: '-100%', autoAlpha: 0 });
 
     // ─── 統一主時間軸 ────────────────────────────────────────────────────────
-    // delay 2.2s，讓 ClientTransition 進行到末尾時直接銜接，不留白
-    const masterTl = gsap.timeline({ delay: 2.2, defaults: { ease: 'expo.out' } });
+    // 移除 delay 2.2s，讓內容在載入動畫結束後立即銜接
+    // 動畫結束後刷新 ScrollTrigger，確保佈局變動後計數器觸發點正確
+    const masterTl = gsap.timeline({ 
+      defaults: { ease: 'expo.out' },
+      onComplete: () => ScrollTrigger.refresh()
+    });
 
     masterTl
       // 1. 舞台亮起
@@ -65,40 +73,44 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       .to('.gsap-header-title',    { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 1.2 }, '-=0.6')
       .to('.gsap-header-location', { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.8 }, '-=0.8')
       
-      // 3. 跑馬燈備註出現
-      .to('.gsap-note-container',  { autoAlpha: 1, y: 0, duration: 0.8 }, '-=0.4')
+      // 3. 跑馬燈備註出現，同步開始出紙
+      .addLabel('marqueeStart', '-=0.4')
+      .to('.gsap-note-container',  { autoAlpha: 1, y: 0, duration: 0.8 }, 'marqueeStart')
 
-      // 4. 收據 Peek：這才開始滑出，頂部冒出約 18%
+      // 4. 收據 Peek：同步開始滑出並顯現 (autoAlpha: 1)，頂部冒出約 18%
       .to('.gsap-receipt-card', {
+        autoAlpha: 1, // 開始顯現
         y: '-82%',
         duration: 1.4,
         ease: 'power2.out'
-      }, '+=0.2')
+      }, 'marqueeStart')
 
-      // 5. 完整滑出：整張收據徹底滾出來
+      // 5. 完整滑出：整張收據徹底滾出來 (同步開始跑數字)
       .to('.gsap-receipt-card', {
         y: '0%',
         duration: 2.5,
-        ease: 'power3.out'
-      }, '+=0.5');
+        ease: 'power3.out',
+        onStart: () => {
+          const obj = { val: 0 };
+          gsap.to(obj, {
+            val: request.amount,
+            duration: 2.2,
+            ease: 'expo.out',
+            onUpdate: () => {
+              if (amountRef.current) amountRef.current.textContent = formatCAD(obj.val);
+            }
+          });
+        }
+      }, '+=0.2');
 
-    // ─── 金額計數器：Scroll 到 80% 時觸發 ────────────────────────────────────
-    let amountFired = false;
-    ScrollTrigger.create({
-      trigger: '.gsap-amount-display',
-      start: 'top 80%',
-      once: true,
-      onEnter: () => {
-        if (amountFired) return;
-        amountFired = true;
-        const obj = { val: 0 };
-        gsap.to(obj, {
-          val: request.amount,
-          duration: 2.2,
-          ease: 'expo.out',
-          onUpdate: () => {
-            if (amountRef.current) amountRef.current.textContent = formatCAD(obj.val);
-          }
+    masterTl.eventCallback('onComplete', () => {
+      ScrollTrigger.refresh();
+      if (activePayeeName) {
+        gsap.to('.active-payee', {
+          scale: 1.05,
+          duration: 1.2,
+          ease: 'elastic.out(1, 0.6)',
+          delay: 0.2
         });
       }
     });
@@ -111,6 +123,39 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         { x: maskWidth },
         { x: -noteWidth, duration: (noteWidth + maskWidth) / 40, ease: 'none', repeat: -1 }
       );
+    }
+
+    // ─── 浮動 PAY 按鈕邏輯 ──────────────────────────────────────────────────
+    if (!isPaid) {
+      gsap.set('.gsap-floating-pay', { y: 100, autoAlpha: 0 });
+      
+      ScrollTrigger.create({
+        trigger: 'body',
+        start: '10 top',
+        endTrigger: '.gsap-payment-section',
+        end: 'top center',
+        onEnter: () => gsap.to('.gsap-floating-pay', { y: 0, autoAlpha: 1, duration: 0.5, ease: 'back.out(1.7)' }),
+        onLeave: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.4, ease: 'power2.in' }),
+        onEnterBack: () => gsap.to('.gsap-floating-pay', { y: 0, autoAlpha: 1, duration: 0.5, ease: 'back.out(1.7)' }),
+        onLeaveBack: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.4, ease: 'power2.in' }),
+      });
+
+      gsap.set('.gsap-floating-logo', { y: 20, autoAlpha: 0 });
+      ScrollTrigger.create({
+        trigger: '.gsap-payment-section',
+        start: 'bottom bottom',
+        onUpdate: (self: any) => {
+          const maxScroll = ScrollTrigger.maxScroll(window);
+          const isAtBottom = self.scroll() >= maxScroll - 2; 
+          
+          if (self.direction === -1 && !isAtBottom) {
+            gsap.to('.gsap-floating-logo', { y: 20, autoAlpha: 0, duration: 0.15, overwrite: true, ease: 'power1.in' });
+          } else if (self.direction === 1 && self.isActive) {
+            gsap.to('.gsap-floating-logo', { y: 0, autoAlpha: 1, duration: 0.4, overwrite: true, ease: 'power2.out' });
+          }
+        },
+        onLeaveBack: () => gsap.to('.gsap-floating-logo', { y: 20, autoAlpha: 0, duration: 0.15, overwrite: true }),
+      });
     }
 
     return () => {
@@ -210,6 +255,70 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         .gsap-payment-section {
           width: 100%; max-width: 390px; margin-top: 60px; display: flex; justify-content: center;
         }
+
+        .gsap-floating-pay {
+          position: fixed;
+          bottom: 5%;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          background: rgba(212, 207, 200, 0.7); /* var(--fog) with transparency */
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          color: var(--sumi);
+          padding: 8px 16px;
+          border-radius: 100px;
+          border: none;
+          cursor: pointer;
+          font-family: 'DM Mono', monospace;
+          font-weight: 700;
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+        }
+        .gsap-floating-pay:hover {
+          transform: translateX(-50%) scale(1.05);
+          background: rgba(200, 195, 188, 0.9);
+          opacity: 1;
+        }
+        .gsap-floating-pay:active {
+          transform: translateX(-50%) scale(0.95);
+        }
+
+        .gsap-floating-logo {
+          position: fixed;
+          bottom: 5%;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1001;
+          pointer-events: none;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .gsap-logo-text {
+          font-size: 13px;
+          letter-spacing: 0.5em;
+          color: var(--sumi);
+          text-transform: uppercase;
+          font-weight: 900;
+          opacity: 0.9;
+        }
+        .gsap-copyright-text {
+          font-size: 10px;
+          letter-spacing: 0.25em;
+          color: var(--ash);
+          margin-top: 12px;
+          opacity: 0.6;
+          fontWeight: 500;
+          text-transform: uppercase;
+        }
       `}</style>
 
       <main
@@ -249,16 +358,18 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         <div className="gsap-print-slot-wrapper">
           <div className="gsap-print-slot" />
           <div className="gsap-receipt-clip">
-            <div
-              ref={receiptRef}
-              className="gsap-receipt-card receipt-edge"
-              style={{
-                width: '100%', maxWidth: 390, padding: '40px 32px 56px 32px',
-                background: 'white',
-                boxShadow: '0 -4px 20px rgba(0,0,0,0.08), 0 10px 40px rgba(0,0,0,0.06)',
-                borderRadius: '0 0 2px 2px',
-              }}
-            >
+              <div
+                ref={receiptRef}
+                className="gsap-receipt-card receipt-edge"
+                style={{
+                  width: '100%', maxWidth: 390, padding: '40px 32px 56px 32px',
+                  background: 'white',
+                  boxShadow: '0 -4px 20px rgba(0,0,0,0.08), 0 10px 40px rgba(0,0,0,0.06)',
+                  borderRadius: '0 0 2px 2px',
+                  transform: 'translateY(-100%)', 
+                  opacity: 0, // 初始隱藏，防止 header 動畫期間看到白色區塊
+                }}
+              >
               <div className="receipt-dashed" style={{ marginTop: 0 }} />
 
               <p style={{ fontSize: 10, letterSpacing: '0.3em', color: 'var(--ash)', marginBottom: 20, textAlign: 'center', fontWeight: 800, opacity: 0.6 }}>
@@ -276,24 +387,49 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
                 )}
 
                 <div className="gsap-payee-list" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {payeesList.map((p, idx) => (
-                    <div key={idx} className="gsap-payee-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 15, color: p.paid ? 'var(--clay)' : 'var(--sumi)', fontWeight: 600 }}>{p.name}</span>
-                          {p.name === request.payerName && (
-                            <span style={{ fontSize: 8, background: 'var(--sumi)', color: 'var(--washi)', padding: '1px 5px', borderRadius: 4, transform: 'translateY(-1px)', fontWeight: 800 }}>PAYER</span>
-                          )}
+                  {payeesList.map((p, idx) => {
+                    const isActive = p.name === activePayeeName;
+                    return (
+                      <div 
+                        key={idx} 
+                        className={isActive ? "gsap-payee-item active-payee" : "gsap-payee-item"}
+                        style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ 
+                              fontSize: 15, 
+                              color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
+                              fontWeight: isActive ? 700 : 600
+                            }}>
+                              {p.name}
+                            </span>
+                            {p.name === request.payerName && (
+                              <span style={{ fontSize: 8, background: 'var(--sumi)', color: 'var(--washi)', padding: '1px 5px', borderRadius: 4, transform: 'translateY(-1px)', fontWeight: 800 }}>PAYER</span>
+                            )}
+                          </div>
+                          <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
+                            {p.paid ? 'PAID ✓' : 'UNPAID'}
+                          </span>
                         </div>
-                        <span style={{ fontSize: 10, color: p.paid ? 'var(--moss)' : 'var(--rust)', fontWeight: 800, letterSpacing: '0.1em', marginTop: 4 }}>
-                          {p.paid ? 'PAID ✓' : 'UNPAID'}
+                        <span style={{ 
+                          fontFamily: 'DM Mono, monospace', 
+                          fontSize: 18, 
+                          color: p.paid ? 'var(--fog)' : 'var(--sumi)', 
+                          textDecoration: p.paid ? 'line-through' : 'none', 
+                          opacity: p.paid ? 0.6 : 1,
+                          fontWeight: isActive ? 600 : 400
+                        }} suppressHydrationWarning>
+                          {formatCAD(p.amount)}
                         </span>
                       </div>
-                      <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 18, color: p.paid ? 'var(--fog)' : 'var(--sumi)', textDecoration: p.paid ? 'line-through' : 'none', opacity: p.paid ? 0.6 : 1 }} suppressHydrationWarning>
-                        {formatCAD(p.amount)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {isGroup && (
@@ -334,13 +470,32 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
           </div>
         )}
 
-        <div style={{ width: '100%', maxWidth: 390, marginTop: 'auto', paddingTop: 100, textAlign: 'center' }}>
-          <p style={{ fontSize: 13, letterSpacing: '0.5em', color: 'var(--sumi)', textTransform: 'uppercase', fontWeight: 900, opacity: 0.9 }}>
-            Collect
-          </p>
-          <p style={{ fontSize: 10, letterSpacing: '0.25em', color: 'var(--ash)', marginTop: 12, opacity: 0.6, fontWeight: 500 }}>
-            © BY ADAM LIU
-          </p>
+        {/* Tighter proximity for the logo */}
+        <div style={{ paddingBottom: 10 }} />
+
+        {!isPaid && (
+          <button 
+            className="gsap-floating-pay" 
+            onClick={() => {
+              const el = document.querySelector('.gsap-payment-section');
+              if (el) {
+                const rect = el.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const targetY = scrollTop + rect.top + (rect.height / 2) - (window.innerHeight / 2) - 38;
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+              }
+            }}
+          >
+            PAY
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 1 }}>
+              <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+            </svg>
+          </button>
+        )}
+
+        <div className="gsap-floating-logo">
+          <span className="gsap-logo-text">Collect</span>
+          <span className="gsap-copyright-text">© BY ADAM LIU</span>
         </div>
       </main>
     </>

@@ -254,13 +254,14 @@ function ContactIcon({ size = 14 }: { size?: number }) {
 interface RequestCardProps {
   r: Request
   onShare: (slug: string, title: string, amount: number) => void
+  onShareIndividual: (slug: string, title: string, amount: number, payeeName: string) => void
   onPayeePaid: (r: Request, index: number) => void
   onDelete: (id: string) => void
   onEdit: (r: Request) => void
   paid?: boolean
 }
 
-function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
+function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Card hover effect (卡片微互動)
@@ -384,21 +385,53 @@ function RequestCard({ r, onShare, onPayeePaid, onDelete, onEdit, paid }: Reques
                     </p>
                     <p style={{ fontSize: 11, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
                   </div>
-                  <button 
-                    onClick={() => onPayeePaid(r, idx)} 
-                    disabled={isCreditor}
-                    style={{
-                      width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
-                      background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
-                      color: p.paid || isCreditor ? 'white' : rust,
-                      transition: 'all 0.2s',
-                      letterSpacing: '0.05em',
-                      opacity: isCreditor ? 0.7 : 1
-                    }}
-                  >
-                    {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                    <button 
+                      onClick={() => onPayeePaid(r, idx)} 
+                      disabled={isCreditor}
+                      style={{
+                        width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
+                        background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
+                        color: p.paid || isCreditor ? 'white' : rust,
+                        transition: 'all 0.2s',
+                        letterSpacing: '0.05em',
+                        opacity: isCreditor ? 0.7 : 1
+                      }}
+                    >
+                      {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
+                    </button>
+                    {!isCreditor && (
+                      <div style={{ position: 'relative' }}>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation();
+                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (menu) menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                          }}
+                          style={{
+                            width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: 'none', cursor: 'pointer', background: 'transparent', color: ash,
+                            transition: 'opacity 0.2s', padding: 0, opacity: 0.4
+                          }}
+                          aria-label="Payee actions"
+                          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                          onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}
+                        >
+                          <MoreIcon size={16} />
+                        </button>
+                        <div className="payee-action-menu" style={{
+                          display: 'none', position: 'absolute', right: 0, top: '100%', marginTop: 8,
+                          background: washi, border: `1px solid ${fog}`, borderRadius: 8,
+                          flexDirection: 'column', padding: 4, zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                          minWidth: 80
+                        }}>
+                          <button onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; onShareIndividual(r.slug, r.title, p.amount, p.name) }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11 }}>Share</button>
+                          <a href={`/request/${r.slug}?p=${encodeURIComponent(p.name)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11, textDecoration: 'none', display: 'block', color: 'inherit' }}>Preview</a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -775,12 +808,23 @@ export default function Dashboard() {
     const base = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
     return `${base}/request/${slug}`
   }
-  const copyLink = (slug: string) => { navigator.clipboard.writeText(getUrl(slug)); setCopied(slug); setTimeout(() => setCopied(''), 2000) }
-  const shareLink = async (slug: string, title?: string, amount?: number) => {
-    const url = getUrl(slug)
+  const copyLink = (slug: string, payeeName?: string) => { 
+    const url = getUrl(slug) + (payeeName ? `?p=${encodeURIComponent(payeeName)}` : '')
+    navigator.clipboard.writeText(url); 
+    setCopied(slug + (payeeName || '')); 
+    setTimeout(() => setCopied(''), 2000) 
+  }
+  const shareLink = async (slug: string, title?: string, amount?: number, payeeName?: string) => {
+    const url = getUrl(slug) + (payeeName ? `?p=${encodeURIComponent(payeeName)}` : '')
     if (typeof navigator !== 'undefined' && (navigator as any).share) {
-      try { await (navigator as any).share({ title: `Collect · ${title}`, text: `Payment Request: ${formatCAD(amount || 0)}`, url }) } catch {}
-    } else copyLink(slug)
+      try { 
+        await (navigator as any).share({ 
+          title: `Collect · ${title}${payeeName ? ` for ${payeeName}` : ''}`, 
+          text: `Request for ${formatCAD(amount || 0)}`, 
+          url 
+        }) 
+      } catch {}
+    } else copyLink(slug, payeeName)
   }
 
   // WebAuthn Helpers
@@ -1174,7 +1218,7 @@ export default function Dashboard() {
           <section style={{ marginBottom: 36 }}>
             <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 14, fontWeight: 700 }}>PENDING ({filteredPending.length})</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} />)}
+              {filteredPending.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onShareIndividual={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} />)}
             </div>
           </section>
         )}
@@ -1183,7 +1227,7 @@ export default function Dashboard() {
           <section style={{ marginBottom: 48 }}>
             <p style={{ fontSize: 11, letterSpacing: '0.2em', color: ash, marginBottom: 14 }}>RECEIVED</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {paidRequests.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} paid />)}
+              {paidRequests.map(r => <RequestCard key={r.id} r={r} onShare={shareLink} onShareIndividual={shareLink} onDelete={deleteRequest} onEdit={handleEdit} onPayeePaid={onPayeePaid} paid />)}
             </div>
           </section>
         )}
