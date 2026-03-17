@@ -135,9 +135,9 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         endTrigger: '.gsap-payment-section',
         end: 'top center',
         onEnter: () => gsap.to('.gsap-floating-pay', { y: 0, autoAlpha: 1, duration: 0.5, ease: 'back.out(1.7)' }),
-        onLeave: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.4, ease: 'power2.in' }),
+        onLeave: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.15, ease: 'power2.in' }),
         onEnterBack: () => gsap.to('.gsap-floating-pay', { y: 0, autoAlpha: 1, duration: 0.5, ease: 'back.out(1.7)' }),
-        onLeaveBack: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.4, ease: 'power2.in' }),
+        onLeaveBack: () => gsap.to('.gsap-floating-pay', { y: 100, autoAlpha: 0, duration: 0.15, ease: 'power2.in' }),
       });
 
       gsap.set('.gsap-floating-logo', { y: 20, autoAlpha: 0 });
