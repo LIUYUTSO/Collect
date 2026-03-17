@@ -379,74 +379,91 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
               return (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                    <div style={{ minWidth: 100, flexShrink: 0, paddingRight: 10 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: sumi }} className="no-wrap">
-                        {p.name}
-                        {isCreditor && <span style={{ color: rust, fontSize: 10, fontWeight: 700, opacity: 0.9, marginLeft: 14, letterSpacing: '0.05em' }}>CREDITOR</span>}
-                      </p>
-                      <p style={{ fontSize: 11, color: ash, fontFamily: 'DM Mono, monospace', opacity: 0.8 }}>{formatCAD(p.amount)}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, minWidth: 100 }}>
+                      <span style={{ fontSize: 13, color: sumi, fontWeight: 600 }}>{p.name}</span>
+                      <span style={{ fontSize: 9, color: p.paid || isCreditor ? moss : rust, fontWeight: 800, letterSpacing: '0.1em', marginTop: 2 }}>
+                        {p.paid || isCreditor ? 'PAID ✓' : 'UNPAID'}
+                      </span>
                     </div>
-                    {p.note && (
-                      <div style={{ 
-                        fontSize: 12, 
-                        color: ash, 
-                        opacity: 0.5, 
-                        fontStyle: 'italic', 
-                        whiteSpace: 'nowrap', 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis',
-                        paddingTop: 2
-                      }}>
-                        · {p.note}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', flexShrink: 0 }}>
-                    <button 
-                      onClick={() => onPayeePaid(r, idx)} 
-                      disabled={isCreditor}
-                      style={{
-                        width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
-                        background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
-                        color: p.paid || isCreditor ? 'white' : rust,
-                        transition: 'all 0.2s',
-                        letterSpacing: '0.05em',
-                        opacity: isCreditor ? 0.7 : 1
-                      }}
-                    >
-                      {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
-                    </button>
-                    {!isCreditor && (
-                      <div style={{ position: 'relative' }}>
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation();
-                            const menu = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (menu) menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-                          }}
-                          style={{
-                            width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: 'none', cursor: 'pointer', background: 'transparent', color: ash,
-                            transition: 'opacity 0.2s', padding: 0, opacity: 0.4
-                          }}
-                          aria-label="Payee actions"
-                          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                          onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}
-                        >
-                          <MoreIcon size={16} />
-                        </button>
-                        <div className="payee-action-menu" style={{
-                          display: 'none', position: 'absolute', right: 0, top: '100%', marginTop: 8,
-                          background: washi, border: `1px solid ${fog}`, borderRadius: 8,
-                          flexDirection: 'column', padding: 4, zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                          minWidth: 80
-                        }}>
-                          <button onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; onShareIndividual(r.slug, r.title, p.amount, p.name) }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11 }}>Share</button>
-                          <a href={`/request/${r.slug}?p=${encodeURIComponent(p.name)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11, textDecoration: 'none', display: 'block', color: 'inherit' }}>Preview</a>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0, paddingTop: 2 }}>
+                      {isCreditor && (
+                        <span style={{ fontSize: 8, background: sumi, color: washi, padding: '1px 5px', borderRadius: 4, fontWeight: 800, flexShrink: 0 }}>
+                          PAYER
+                        </span>
+                      )}
+                      {p.note && (
+                        <div style={{ fontSize: 12, color: ash, opacity: 0.5, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          · {p.note}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 16, color: sumi, fontWeight: 600 }} suppressHydrationWarning>
+                      {formatCAD(p.amount)}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                      <button 
+                        onClick={() => onPayeePaid(r, idx)} 
+                        disabled={isCreditor}
+                        style={{
+                          width: 76, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: 'none', cursor: isCreditor ? 'default' : 'pointer', fontSize: 10, fontWeight: 700,
+                          background: p.paid || isCreditor ? moss : 'rgba(139, 74, 60, 0.1)',
+                          color: p.paid || isCreditor ? 'white' : rust,
+                          transition: 'all 0.2s',
+                          letterSpacing: '0.05em',
+                          opacity: isCreditor ? 0.7 : 1
+                        }}
+                      >
+                        {p.paid || isCreditor ? 'PAID' : 'UNPAID'}
+                      </button>
+                      {!isCreditor && (
+                        <div style={{ position: 'relative' }}>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              const menu = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (menu) {
+                                if (menu.style.display === 'flex') {
+                                  menu.style.opacity = '0';
+                                  menu.style.visibility = 'hidden';
+                                  setTimeout(() => { menu.style.display = 'none'; }, 200);
+                                } else {
+                                  menu.style.display = 'flex';
+                                  setTimeout(() => { menu.style.opacity = '1'; menu.style.visibility = 'visible'; }, 10);
+                                }
+                              }
+                            }}
+                            style={{
+                              width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: 'none', cursor: 'pointer', background: 'transparent', color: ash,
+                              transition: 'opacity 0.2s', padding: 0, opacity: 0.4
+                            }}
+                            aria-label="Payee actions"
+                            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '0.4'}
+                          >
+                            <MoreIcon size={16} />
+                          </button>
+                          <div 
+                            className="payee-action-menu" 
+                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; e.currentTarget.style.visibility = 'hidden'; setTimeout(() => { e.currentTarget.style.display = 'none'; }, 200); }}
+                            style={{
+                              display: 'none', position: 'absolute', right: 0, bottom: '100%', marginBottom: 8,
+                              background: washi, border: `1px solid ${fog}`, borderRadius: 8,
+                              flexDirection: 'column', padding: 4, zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                              minWidth: 80, opacity: 0, visibility: 'hidden', transition: 'all 0.2s'
+                            }}
+                          >
+                            <button onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; onShareIndividual(r.slug, r.title, p.amount, p.name) }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11 }}>Share</button>
+                            <a href={`/request/${r.slug}?p=${encodeURIComponent(p.name)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.stopPropagation(); (e.currentTarget.parentElement as HTMLElement).style.display='none'; }} style={{ ...btnGhost, textAlign: 'left', padding: '6px 10px', width: '100%', fontSize: 11, textDecoration: 'none', display: 'block', color: 'inherit' }}>Preview</a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
@@ -477,6 +494,21 @@ export default function Dashboard() {
   // Create form state
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
+  useEffect(() => {
+    const handleClickOutside = () => {
+      const menus = document.querySelectorAll('.payee-action-menu') as NodeListOf<HTMLElement>;
+      menus.forEach(menu => {
+        if (menu.style.display === 'flex') {
+          menu.style.opacity = '0';
+          menu.style.visibility = 'hidden';
+          setTimeout(() => { menu.style.display = 'none'; }, 200);
+        }
+      });
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const [recipients, setRecipients] = useState<Recipient[]>([{ payeeId: '', amount: '', note: '' }])
   const [splitEqually, setSplitEqually] = useState(false)
   const [groupRequest, setGroupRequest] = useState(false)
