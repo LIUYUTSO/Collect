@@ -119,7 +119,7 @@ const useMagnetic = (ref: React.RefObject<HTMLElement>) => {
   }, []);
 };
 
-function MagneticButton({ children, style, onClick, className, 'aria-label': ariaLabel, type }: any) {
+function MagneticButton({ children, style, onClick, className, 'aria-label': ariaLabel, type, disabled }: { children: React.ReactNode; style?: React.CSSProperties; onClick?: () => void; className?: string; 'aria-label'?: string; type?: 'button' | 'submit' | 'reset'; disabled?: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
   useMagnetic(ref);
   const handleEnter = () => {
@@ -131,7 +131,7 @@ function MagneticButton({ children, style, onClick, className, 'aria-label': ari
     if(gsap) gsap.to('.custom-cursor', { scale: 1, opacity: 1, duration: 0.2 })
   };
   return (
-    <button ref={ref} type={type} onClick={onClick} style={style} className={className} aria-label={ariaLabel} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+    <button ref={ref} type={type} disabled={disabled} onClick={onClick} style={style} className={className} aria-label={ariaLabel} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       {children}
     </button>
   );
@@ -169,7 +169,7 @@ const CustomCursor = () => {
 };
 
 // Text Split Animation Utils
-const SplitText = ({ text, className, style }: { text: string, className?: string, style?: any }) => {
+const SplitText = ({ text, className, style }: { text: string, className?: string, style?: React.CSSProperties }) => {
   return (
     <span className={className} style={{ display: 'inline-block', ...style }}>
       {text.split('').map((char, i) => (
@@ -544,9 +544,9 @@ export default function Dashboard() {
   const [eventDate, setEventDate] = useState('')
   const [location, setLocation] = useState('')
   const [payerName, setPayerName] = useState('')
-  const [locationResults, setLocationResults] = useState<any[]>([])
+  const [locationResults, setLocationResults] = useState<{ display_name: string; lat: string; lon: string }[]>([])
   const [creating, setCreating] = useState(false)
-  const [newRequests, setNewRequests] = useState<any[]>([])
+  const [newRequests, setNewRequests] = useState<any[]>([]) // complex nested request object
   const [editingRequest, setEditingRequest] = useState<Request | null>(null)
   const [searchingLocation, setSearchingLocation] = useState(false)
 

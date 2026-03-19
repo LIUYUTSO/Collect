@@ -40,7 +40,7 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
   if (!request) return notFound()
 
   // 2. Parse payees to identify participants
-  let parsedPayees: any[] = [];
+  let parsedPayees: import("@/lib/types").Payee[] = [];
   try {
     parsedPayees = typeof request.payees === 'string'
       ? JSON.parse(request.payees)
@@ -51,7 +51,7 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
 
   const participants = new Set<string>();
   if (Array.isArray(parsedPayees) && parsedPayees.length > 0) {
-    parsedPayees.forEach((p: any) => {
+    parsedPayees.forEach((p: import("@/lib/types").Payee) => {
       if (p.name && !p.paid) participants.add(p.name);
     });
   } else if (request.from_name && request.status === 'pending') {
@@ -79,6 +79,11 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
 
   const clientRequest = {
     ...request,
+    id: request.id,
+    slug: request.slug,
+    title: request.title,
+    method: request.method,
+    status: request.status,
     amount: Number(request.amount),
     fromName: request.from_name,
     payerName: request.payer_name,
@@ -87,8 +92,8 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
       : (request.created_at || new Date().toISOString()),
     eventDate: request.event_date
       ? (request.event_date instanceof Date ? request.event_date.toISOString() : request.event_date)
-      : null,
-    payees: Array.isArray(parsedPayees) ? parsedPayees : null,
+      : undefined,
+    payees: Array.isArray(parsedPayees) ? parsedPayees : undefined,
     // Add consolidated data
     consolidated: consolidatedRequests.map(r => ({
       id: r.id,
