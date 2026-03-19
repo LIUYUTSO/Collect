@@ -31,10 +31,12 @@ export function getPaymentInstructions(method: string) {
   }
 }
 
-import { customAlphabet } from 'nanoid'
-
-const nanoidSlug = customAlphabet('abcdefghjkmnpqrstuvwxyz23456789', 8)
-
 export function generateSlug(): string {
-  return nanoidSlug()
+  const allowedChars = 'abcdefghjkmnpqrstuvwxyz23456789'
+  let slug = ''
+  const randomBytes = crypto.getRandomValues(new Uint8Array(8))
+  for (let i = 0; i < 8; i++) {
+    slug += allowedChars.charAt(randomBytes[i] % allowedChars.length)
+  }
+  return slug
 }

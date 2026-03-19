@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, ensureTables } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
-import { nanoid } from 'nanoid'
 import { verifyAdmin } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
@@ -22,7 +21,7 @@ export async function POST(req: NextRequest) {
       if (!title || (!amount && (!payees || payees.length === 0))) continue
 
       const slug = generateSlug()
-      const id = nanoid()
+      const id = crypto.randomUUID()
 
       await db.sql`
         INSERT INTO requests (id, slug, title, amount, note, method, from_name, payer_name, payees, event_date, location)
@@ -40,12 +39,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(Array.isArray(body) ? results : results[0])
-  } catch (error: any) {
+  } catch (error) {
     console.error('API Error:', error)
     return NextResponse.json({ 
       error: 'Server error', 
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
     }, { status: 500 })
   }
 }

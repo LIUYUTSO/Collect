@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import { formatCAD, formatDate } from '@/lib/utils'
 import PaymentAccordion from '@/components/PaymentAccordion'
+import { PaymentRequest, Payee } from '@/lib/types'
 
 interface RequestPayee {
   name: string
@@ -14,7 +15,7 @@ interface RequestPayee {
 }
 
 interface RequestClientProps {
-  request: any
+  request: PaymentRequest & { consolidated?: any[] }
   tdEmail: string
   wsHandle: string
 }
@@ -148,7 +149,7 @@ const ParticipantRow = ({
       {!isPayer && (
         <div ref={expandRef} style={{ height: initialExpanded ? 'auto' : 0, opacity: initialExpanded ? 1 : 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 0, paddingBottom: 4 }}>
-             {p.items.map((item: any, iIdx: number) => (
+             {p.items.map((item: { title: string; amount: number; note?: string; paid: boolean; payerName: string }, iIdx: number) => (
                <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', opacity: 0.6 }}>
                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0, flex: 1 }}>
                    <span style={{ fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</span>
@@ -205,7 +206,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         payees: request.payees,
         status: request.status
       },
-      ...(request.consolidated || []).map((r: any) => ({
+      ...(request.consolidated || []).map((r: PaymentRequest & { payerName: string }) => ({
         title: r.title,
         amount: r.amount,
         payerName: r.payerName || request.payerName,
@@ -219,7 +220,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     // If no activePayeeName, we show all (e.g. payer's view)
     const involvedRequests = activePayeeName 
       ? allRequests.filter(r => {
-          const names = Array.isArray(r.payees) ? r.payees.map((p: any) => p.name) : [r.fromName];
+          const names = Array.isArray(r.payees) ? r.payees.map((p: Payee) => p.name) : [r.fromName];
           return names.includes(activePayeeName);
         })
       : allRequests;
@@ -236,18 +237,20 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     involvedRequests.forEach(r => {
       const isRGroup = Array.isArray(r.payees) && r.payees.length > 0;
       if (isRGroup) {
-        (r.payees as any[]).forEach(p => {
+        (r.payees as Payee[]).forEach((p: Payee) => {
+          const amount = p.amount || 0;
+          const paid = p.paid || false;
           const existing = map.get(p.name);
           if (existing) {
-            existing.amount += p.amount;
-            existing.items.push({ title: r.title, amount: p.amount, note: p.note || '', paid: p.paid, payerName: r.payerName });
-            if (!p.paid) existing.paid = false;
+            existing.amount += amount;
+            existing.items.push({ title: r.title, amount: amount, note: p.note || '', paid: paid, payerName: r.payerName || '' });
+            if (!paid) existing.paid = false;
           } else {
             map.set(p.name, {
               name: p.name,
-              amount: p.amount,
-              paid: p.paid,
-              items: [{ title: r.title, amount: p.amount, note: p.note || '', paid: p.paid, payerName: r.payerName }]
+              amount: amount,
+              paid: paid,
+              items: [{ title: r.title, amount: amount, note: p.note || '', paid: paid, payerName: r.payerName || '' }]
             });
           }
         });
@@ -256,14 +259,14 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         const existing = map.get(r.fromName);
         if (existing) {
           existing.amount += r.amount;
-          existing.items.push({ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName });
+          existing.items.push({ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName || '' });
           if (!pPaid) existing.paid = false;
         } else {
           map.set(r.fromName, {
             name: r.fromName,
             amount: r.amount,
             paid: pPaid,
-            items: [{ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName }]
+            items: [{ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName || '' }]
           });
         }
       }
@@ -274,7 +277,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     
     // Amount for Payer is how much they EXPENDED originally.
     const payerItem: Participant = {
-      name: request.payerName,
+      name: request.payerName || '',
       amount: payerTotal,
       paid: true,
       items: []
@@ -707,7 +710,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
 
               <div style={{ marginTop: 24, textAlign: 'center' }}>
                 <p style={{ fontSize: 10, color: 'var(--ash)', letterSpacing: '0.12em', fontWeight: 600 }} suppressHydrationWarning>
-                  ISSUED: {formatDate(request.createdAt)}
+                  ISSUED: {formatDate(request.createdAt || new Date().toISOString())}
                 </p>
               </div>
 
