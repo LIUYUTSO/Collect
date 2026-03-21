@@ -1,167 +1,88 @@
-# 請款 · Collect
+# Collect · 靜謐請款
 
-> 簡約的個人收款 App，侘寂美學設計。
+> **「簡單、安靜的請款體驗。」**
+> *Simple, quiet payment requests.*
 
-A minimal, Wabi-Sabi styled payment request app for collecting money from friends via **TD Interac e-Transfer** or **WealthSimple Interac**.
+`Collect` 是一個專為個人與小組設計的精品請款工具。它拋棄了傳統財務應用的繁瑣與嘈雜，採用受日本「和紙 (Washi)」與「墨 (Sumi)」啟動的極簡設計語法，提供極致流暢、優雅且具備物理質感的請款體驗。
 
----
+![專案預覽](https://collect.adamliu.uk/assets/og-image.png) *(示意圖，需實際路徑)*
 
-## Features
+## ✨ 核心特色
 
-- 📱 Mobile-first, PWA-ready
-- 🗂 Backend database (PostgreSQL via Prisma)
-- 🔐 Password-protected admin dashboard
-- 🔗 Shareable payment request links
-- ✅ Mark requests as paid/unpaid
-- 💴 TD & WealthSimple Interac support
-- 🎌 Wabi-Sabi aesthetic design
+### 🖨️ 沉浸式實體收據動畫
+當收款人打開連結時，系統會模擬真實收據打印過程。配合 **GSAP** 強大的物理引擎，收據會從頂部「出紙口」優雅滑出，並伴隨數位跑錶式的動態數位增長。
 
----
+### 🍱 智慧帳單合併 (Consolidation)
+如果您對同一位朋友有多筆零散的請款，`Collect` 會自動將它們整合在一張清單中。受款人只需點開任一連結，即可一次查看所有待結算項目，無需頻繁切換。
 
-## Stack
+### 🎨 極致設計美學
+- **和風色調**：採用 `Washi (#F2EDE4)` 作為背景與 `Sumi (#1A1714)` 作為主要文字色彩，營造平靜的視覺氛圍。
+- **微交互動畫**：按鈕具備「磁吸效應 (Magnetic Effect)」，清單展開則使用流暢的 Reveal 動畫。
+- **排版藝術**：選用 `Zen Old Mincho` 與 `DM Mono` 等精緻字體，平衡了古典美感與現代技術感。
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 14 (App Router) |
-| ORM | Prisma |
-| Database | PostgreSQL (Neon / Supabase) |
-| Hosting | Vercel |
-| Styling | Tailwind CSS + inline styles |
+### 💳 清晰的債務歸屬
+- **Pay to 標記**：在合併帳單中，清晰標註每一筆項目應付給誰（例如：`pay to Adam`）。
+- **付款引導**：整合 Wealthsimple 與 TD 等支付渠道的快速跳轉，縮短從「查看」到「付清」的距離。
 
 ---
 
-## Setup
+## 🛠️ 技術棧 (Tech Stack)
 
-### 1. Clone & Install
+### 前端
+- **框架**：[Next.js 16 (App Router)](https://nextjs.org/)
+- **語言**：TypeScript
+- **樣式**：Tailwind CSS / Styled-jsx
+- **動畫**：[GSAP (GreenSock Animation Platform)](https://greensock.com/gsap/)
 
+### 後端與數據
+- **資料庫**：[Vercel Postgres (PostgreSQL)](https://vercel.com/storage/postgres)
+- **工具**：`db.ts` (純 SQL 封裝，極致性能)
+
+---
+
+## 🚀 快速開始
+
+### 1. 克隆專案
 ```bash
-git clone https://github.com/YOUR_USERNAME/collect-app.git
-cd collect-app
+git clone https://github.com/LIUYUTSO/Collect.git
+cd collect_app
+```
+
+### 2. 安裝依賴
+```bash
 npm install
 ```
 
-### 2. Database
-
-Create a free PostgreSQL database on [Neon](https://neon.tech) or [Supabase](https://supabase.com).
-
-Copy the connection string.
-
-### 3. Environment Variables
-
-```bash
-cp .env.example .env.local
-```
-
-Fill in `.env.local`:
-
+### 3. 環境變數配置
+在根目錄創建 `.env.local` 並填入您的 Vercel Postgres 連接資訊與基礎網域：
 ```env
-# PostgreSQL connection string
-DATABASE_URL="postgresql://..."
-
-# Admin password (to access /dashboard)
-ADMIN_PASSWORD="your-secret-password"
-
-# Your TD Interac email
-TD_EMAIL="you@example.com"
-
-# Your WealthSimple handle/email
-WS_HANDLE="you@wealthsimple.com"
-
-# Your name shown to friends
-YOUR_NAME="Your Name"
+POSTGRES_URL=your_postgres_url
+NEXT_PUBLIC_BASE_URL=https://collect.adamliu.uk
 ```
 
-### 4. Push Database Schema
-
-```bash
-npx prisma db push
-```
-
-### 5. Run Locally
-
+### 4. 啟動開發伺服器
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
 ---
 
-## Deploy to Vercel
-
-### Using Vercel CLI (Antigravity / local)
-
-```bash
-npm i -g vercel
-vercel login
-vercel
-```
-
-### Using Vercel Dashboard
-
-1. Push to GitHub
-2. Go to [vercel.com/new](https://vercel.com/new)
-3. Import your GitHub repo
-4. Add all environment variables in Vercel dashboard
-5. Deploy ✓
-
----
-
-## Usage
-
-### Create a Request
-
-1. Go to `/dashboard`
-2. Enter your admin password
-3. Click **+ 新增**
-4. Fill in: title, amount, method (TD or WealthSimple)
-5. Copy the generated link and send to your friend
-
-### Friend's View
-
-Your friend opens the link and sees:
-- Amount owed
-- Your Interac email/handle
-- Instructions to transfer
-
-### Mark as Paid
-
-Back in `/dashboard`, tap **標記已收** when the money arrives.
-
----
-
-## File Structure
-
-```
-collect-app/
+## 📂 專案結構
+```text
 ├── app/
-│   ├── api/requests/       # REST API routes
-│   ├── dashboard/          # Admin dashboard (password protected)
-│   ├── request/[slug]/     # Public payment page for friends
-│   └── globals.css         # Wabi-sabi styles
-├── lib/
-│   ├── prisma.ts           # Prisma client
-│   └── utils.ts            # Formatting helpers
-├── prisma/
-│   └── schema.prisma       # Database schema
-└── vercel.json             # Vercel config
+│   ├── dashboard/          # 主控台：管理請求、聯繫人與登入
+│   ├── request/[slug]/     # 動態請款頁：實體收據動畫與帳單合併邏輯
+│   └── api/                # 後端 API 接口 (Auth, Payees, Requests)
+├── components/             # 可複用 UI 組件
+├── lib/                    # 核心邏輯工具 (DB 接接、工具函數)
+└── public/                 # 靜態資源、Manifest 檔案
 ```
 
 ---
 
-## Design Philosophy
-
-The UI follows **侘寂 (Wabi-Sabi)** — finding beauty in imperfection and transience:
-
-- Washi paper texture background
-- Ink brush dividers
-- Zen Old Mincho serif typography
-- Muted earth tones (ash, clay, rust, moss)
-- Generous negative space
-- Subtle grain overlay
+## 📜 授權協議 (License)
+本專案採私有化開發，由 **ADAM LIU** 擁有最終版權。
 
 ---
 
-## License
-
-Personal use.
+> 由 **Antigravity** 助手協力構建。旋轉箭頭也加上了。

@@ -193,6 +193,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
 
   const isPaid = request.status === 'paid';
   const isGroup = !!request.payees && Array.isArray(request.payees) && request.payees.length > 0;
+  const displayPersonName = activePayeeName || (!isGroup ? request.fromName : null);
 
   // ─── Consolidation Logic ───
   const consolidatedData = useMemo(() => {
@@ -305,6 +306,8 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     ? unpaidItems.reduce((sum: number, item) => sum + item.amount, 0)
     : (activePayeeName ? 0 : payeesList[0]?.amount || 0);
 
+  const marqueeMessage = (displayPersonName && activeParticipant?.items[0]?.note) || request.note;
+
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
@@ -382,7 +385,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     });
 
     // ─── 跑馬燈循環 ──────────────────────────────────────────────────────
-    if (noteRef.current && request.note) {
+    if (noteRef.current && marqueeMessage) {
       const noteWidth = noteRef.current.offsetWidth;
       const maskWidth = Math.min(window.innerWidth - 48, 390);
       gsap.fromTo(noteRef.current,
@@ -430,7 +433,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
       gsap.killTweensOf('*');
     };
 
-  }, [gsapLoaded, mounted, totalAmount, request.note]);
+  }, [gsapLoaded, mounted, totalAmount, marqueeMessage]);
 
   if (!mounted) return <main style={{ minHeight: '100dvh', background: '#F2EDE4' }} />;
 
@@ -459,7 +462,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
           width: 100%;
           max-width: 390px;
           position: relative;
-          margin-top: 40px;
+          margin-top: 32px;
         }
 
         .gsap-print-slot {
@@ -491,7 +494,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         }
 
         .note-mask {
-          width: 100%; max-width: 390px; margin-top: 24px; overflow: hidden;
+          width: 100%; max-width: 390px; margin-top: 4px; overflow: hidden;
           position: relative; height: 32px;
           mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
           display: flex; align-items: center;
@@ -499,7 +502,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
 
         .header-block {
           width: 100%; max-width: 390px;
-          display: flex; flex-direction: column; align-items: center; padding-top: 100px;
+          display: flex; flex-direction: column; align-items: center; padding-top: 48px;
         }
         .header-lockup {
           width: fit-content; max-width: 100%;
@@ -507,7 +510,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
         }
         .header-title-text {
           font-family: var(--font-zen, serif); font-weight: 800; color: var(--sumi);
-          line-height: 1.1; letter-spacing: -0.02em; text-align: center; margin: 16px 0; width: 100%;
+          line-height: 1.1; letter-spacing: -0.02em; text-align: center; margin: 0; margin-top: 14px; margin-bottom: 12px; width: 100%;
         }
         .header-date-text {
           font-size: 11px; letter-spacing: 0.3em; color: var(--clay);
@@ -603,20 +606,20 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
             )}
             <h1
               className="gsap-header-title header-title-text"
-              style={{ fontSize: `clamp(18px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(request.title || '')].length) * 0.55}), 48px)` }}
+              style={{ fontSize: `clamp(18px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(displayPersonName || request.title || '')].length) * 0.55}), 48px)` }}
             >
-              {request.title}
+              {displayPersonName ? displayPersonName : request.title}
             </h1>
-            {request.location && (
+            {!displayPersonName && request.location && (
               <div className="gsap-header-location header-location-text">{request.location}</div>
             )}
           </div>
         </div>
 
-        {request.note && (
+        {marqueeMessage && (
           <div className="gsap-note-container note-mask">
             <div ref={noteRef} style={{ whiteSpace: 'nowrap', display: 'inline-block', fontSize: 13, color: 'var(--ash)', fontWeight: 500, letterSpacing: '0.02em' }}>
-              {request.note}
+              {marqueeMessage}
             </div>
           </div>
         )}

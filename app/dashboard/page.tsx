@@ -477,7 +477,7 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 9, color: sumi, fontWeight: 400 }} suppressHydrationWarning>
+                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: sumi, fontWeight: 400 }} suppressHydrationWarning>
                       {formatCAD(p.amount)}
                     </span>
                     <button 
@@ -611,33 +611,6 @@ export default function Dashboard() {
         }
       }
     );
-
-    // Header 視差縮放效果搭配 ScrollTrigger scrub: true
-    // 取代原有的物理引擎
-    const headerTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: 'body',
-        start: 'top top',
-        end: '+=120',
-        scrub: true // 根據滾動距離即時更新
-      }
-    });
-    
-    headerTl
-      .to('.gsap-header-container', { height: 80, ease: 'none'}, 0)
-      .to('.gsap-logo-group', { top: 23, left: '0%', xPercent: 0, ease: 'power1.inOut' }, 0)
-      .to('.gsap-logo-text', { fontSize: 16, paddingLeft: 0, ease: 'none' }, 0)
-      .to('.gsap-admin-text', { fontSize: 7, paddingLeft: 0, ease: 'none' }, 0)
-      .to('.gsap-btn-group', { top: 23, right: '0%', xPercent: 0, ease: 'power1.inOut' }, 0)
-      .to('.gsap-btn', { height: 29, minWidth: 29, width: 29, borderRadius: 100, padding: 0, ease: 'none' }, 0)
-      .to('.gsap-btn-text', { width: 0, opacity: 0, marginLeft: 0, ease: 'none' }, 0);
-      
-      // 導覽列玻璃態過渡 (backdrop-filter)
-      gsap.to('.gsap-header-container', {
-        backgroundColor: 'rgba(242, 237, 228, 0.85)',
-        backdropFilter: 'blur(12px)',
-        scrollTrigger: { trigger: 'body', start: '30px top', end: '80px top', scrub: true }
-      });
 
     // ③ 數字計數動畫 (Counter Animation)
     if (totalPending > 0) {
@@ -1126,7 +1099,7 @@ export default function Dashboard() {
                         {!(isMultiRecipient && splitEqually) && (
                           <input type="number" step="0.01" min="0.01" value={r.amount} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], amount: e.target.value }; setRecipients(next) }} placeholder="Amt" style={{ ...capsule, width: 80, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', fontFamily: 'DM Mono, monospace', fontSize: 14 }} required />
                         )}
-                        <input type="text" value={r.note} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], note: e.target.value }; setRecipients(next) }} placeholder="Item note (memo)" style={{ ...capsule, flex: 1, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', fontSize: 12, opacity: 0.7 }} />
+                        <input type="text" value={r.note} onChange={e => { const next = [...recipients]; next[i] = { ...next[i], note: e.target.value }; setRecipients(next) }} placeholder="Private message (optional)" style={{ ...capsule, flex: 1, border: 'none', background: 'transparent', padding: 0, height: 'auto', minHeight: 'unset', fontSize: 12, opacity: 0.7 }} />
                         {recipients.length > 1 && <button type="button" onClick={() => setRecipients(recipients.filter((_, idx) => idx !== i))} style={{ ...btnGhost, color: rust, fontSize: 18, lineHeight: 1, flexShrink: 0, padding: '0 4px' }}>✕</button>}
                       </div>
                     </div>
@@ -1204,40 +1177,44 @@ export default function Dashboard() {
         position: 'fixed', 
         top: 0, left: 0, right: 0, 
         zIndex: 100,
-        height: 170, // GSAP 將動態控制為 80
-        background: washi,
+        height: 'auto',
+        background: 'rgba(242, 237, 228, 0.9)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        borderBottom: `1px solid ${fog}`,
         willChange: 'height, background-color, backdrop-filter'
       }}>
-        <div className="layout-responsive-container" style={{ width: '100%', padding: '0 20px', position: 'relative', height: '100%' }}>
+        <div className="layout-responsive-container" style={{ width: '100%', padding: '0 20px', position: 'relative' }}>
           
           {/* Combined Layout Container */}
           <div style={{ 
             width: '100%',
-            height: '100%',
-            position: 'relative'
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            paddingTop: 12,
+            paddingBottom: 12,
+            gap: 20
           }}>
             {/* Logo Group */}
             <div className="gsap-logo-group" style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: 2,
-              position: 'absolute',
-              top: 32,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              textAlign: 'left',
+              textAlign: 'center',
               willChange: 'transform, top, left', 
             }}>
               <p className="gsap-logo-text" style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
-                fontSize: 28, // GSAP: 16
+                fontSize: 28,
                 letterSpacing: '0.42em',
                 marginRight: '-0.42em',
-                paddingLeft: '0.42em', 
+                paddingLeft: '0.42em',
                 color: sumi, 
                 fontWeight: 700, 
                 marginTop: 0,
@@ -1249,10 +1226,10 @@ export default function Dashboard() {
               
               <p className="gsap-admin-text" style={{ 
                 fontFamily: 'var(--font-zen,serif)', 
-                fontSize: 11, // GSAP: 7
+                fontSize: 11,
                 letterSpacing: '0.89em',
                 marginRight: '-0.89em',
-                paddingLeft: '1.3em',
+                paddingLeft: '0.89em',
                 color: ash, 
                 fontWeight: 500,
                 opacity: 0.9,
@@ -1268,10 +1245,6 @@ export default function Dashboard() {
               display: 'flex', 
               gap: 8,
               alignItems: 'center',
-              position: 'absolute',
-              top: 106,
-              right: '50%',
-              transform: 'translateX(50%)',
               willChange: 'transform, top, right, gap'
             }}>
               {renderButtons()}
@@ -1281,7 +1254,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="layout-responsive-container gsap-list-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 174 }}>
+      <div className="layout-responsive-container gsap-list-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 142 }}>
         
         {pendingRequests.length > 0 && (
           <div className="gsap-fade-in" style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
