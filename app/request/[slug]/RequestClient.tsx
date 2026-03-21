@@ -632,9 +632,7 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
       >
         <div className="header-block">
           <div className="header-lockup">
-            {request.eventDate && (
-              <div className="gsap-header-date header-date-text">{formatDate(request.eventDate)}</div>
-            )}
+            <div className="gsap-header-date header-date-text">{formatDate(new Date().toISOString())}</div>
             <h1
               className="gsap-header-title header-title-text"
               style={{ fontSize: `clamp(18px, calc(min(100vw - 48px, 342px) / ${Math.max(1, [...(displayPersonName || request.title || '')].length) * 0.55}), 48px)` }}
