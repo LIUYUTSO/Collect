@@ -5,25 +5,83 @@ import { formatCAD } from '@/lib/utils'
 import RequestClient from './RequestClient'
 import ClientTransition from '@/components/ClientTransition'
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ 
+  params, 
+  searchParams 
+}: { 
+  params: Promise<{ slug: string }>,
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}): Promise<Metadata> {
   const { slug } = await params;
+  const { p: activePayeeName } = await searchParams;
+  
   const { rows } = await db.sql`
-    SELECT title, amount FROM requests WHERE slug = ${slug} LIMIT 1
+    SELECT * FROM requests WHERE slug = ${slug} LIMIT 1
   `
   const request = rows[0]
   if (!request) return { title: 'Not Found' }
 
-  const formattedAmount = formatCAD(Number(request.amount))
-  const title = `Collect | ${request.title} | ${formattedAmount}`
+  let displayTitle = request.title;
+  let displayAmount = Number(request.amount);
+  let recipientName = activePayeeName as string;
+
+  // If there's a specific person, calculate their personal unpaid total across all bills
+  if (activePayeeName) {
+    try {
+      // 1. Fetch current request participants details
+      const payees = typeof request.payees === 'string' ? JSON.parse(request.payees) : request.payees;
+      const participants = new Set<string>();
+      if (Array.isArray(payees)) payees.forEach((p: any) => p.name && participants.add(p.name));
+      if (request.from_name) participants.add(request.from_name);
+      const participantList = Array.from(participants);
+
+      // 2. Fetch all consolidated requests from the same payer involving these participants
+      const { rows: relatedRows } = await db.sql`
+        SELECT * FROM requests 
+        WHERE payer_name = ${request.payer_name}
+        AND (
+          from_name = ANY(${participantList as any})
+          OR payees @> ANY(${participantList.map(ns => JSON.stringify([{name: ns}])) as any})
+        )
+      `;
+      
+      const involved = [request, ...relatedRows];
+      let unpaidSum = 0;
+      involved.forEach(r => {
+        const rPayees = typeof r.payees === 'string' ? JSON.parse(r.payees) : r.payees;
+        if (Array.isArray(rPayees)) {
+          rPayees.forEach((p: any) => {
+            if (p.name === activePayeeName && !p.paid) unpaidSum += (p.amount || 0);
+          });
+        } else if (r.from_name === activePayeeName && r.status === 'pending') {
+          unpaidSum += Number(r.amount);
+        }
+      });
+      displayAmount = unpaidSum;
+      displayTitle = `Request to ${activePayeeName}`;
+    } catch (e) {
+      console.error('Metadata calc error:', e);
+    }
+  }
+
+  const formattedAmount = formatCAD(displayAmount)
+  const metaTitle = activePayeeName 
+    ? `Collect | Request to ${activePayeeName} | ${formattedAmount}`
+    : `Collect | ${request.title} | ${formattedAmount}`;
+    
+  const metaDesc = activePayeeName ? `💳 Invoice to ${activePayeeName}` : `Invoice for ${request.title}`;
+  
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
     ? new URL(process.env.NEXT_PUBLIC_BASE_URL)
     : new URL('https://collect.adamliu.uk');
 
   return {
-    title,
+    title: metaTitle,
+    description: metaDesc,
     openGraph: {
-      title,
-      images: [{ url: `/api/og?title=${encodeURIComponent(request.title)}&amount=${encodeURIComponent(formattedAmount)}`, width: 1200, height: 630 }]
+      title: metaTitle,
+      description: metaDesc,
+      images: [{ url: `/api/og?title=${encodeURIComponent(displayTitle)}&amount=${encodeURIComponent(formattedAmount)}`, width: 1200, height: 630 }]
     },
     metadataBase: baseUrl,
   }
