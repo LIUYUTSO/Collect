@@ -38,7 +38,8 @@ export async function generateMetadata({
       // 2. Fetch all consolidated requests from the same payer involving these participants
       const { rows: relatedRows } = await db.sql`
         SELECT * FROM requests 
-        WHERE payer_name = ${request.payer_name}
+        WHERE slug != ${slug}
+        AND payer_name = ${request.payer_name}
         AND (
           from_name = ANY(${participantList as any})
           OR payees @> ANY(${participantList.map(ns => JSON.stringify([{name: ns}])) as any})
@@ -58,7 +59,7 @@ export async function generateMetadata({
         }
       });
       displayAmount = unpaidSum;
-      displayTitle = `Request to ${activePayeeName}`;
+      displayTitle = activePayeeName as string; 
     } catch (e) {
       console.error('Metadata calc error:', e);
     }
@@ -66,7 +67,7 @@ export async function generateMetadata({
 
   const formattedAmount = formatCAD(displayAmount)
   const metaTitle = activePayeeName 
-    ? `Collect | Request to ${activePayeeName} | ${formattedAmount}`
+    ? `Collect | ${activePayeeName} | ${formattedAmount}`
     : `Collect | ${request.title} | ${formattedAmount}`;
     
   const metaDesc = activePayeeName ? `💳 Invoice to ${activePayeeName}` : `Invoice for ${request.title}`;
