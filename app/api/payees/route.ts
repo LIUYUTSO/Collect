@@ -39,3 +39,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Server error', details: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  const auth = req.headers.get('x-admin-key')
+  if (!verifyAdmin(auth)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  await ensureTables()
+  const { id, message } = await req.json()
+  if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+
+  try {
+    const { rows } = await db.sql`
+      UPDATE payees 
+      SET message = ${message || null}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    if (rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(rows[0])
+  } catch (e) {
+    return NextResponse.json({ error: 'Server error', details: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 })
+  }
+}

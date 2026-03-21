@@ -1,5 +1,6 @@
 export interface Payee {
   name: string;
+  message?: string;
   amount?: number;
   [key: string]: any; // fallback for other jsonb fields if any
 }

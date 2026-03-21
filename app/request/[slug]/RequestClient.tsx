@@ -15,9 +15,10 @@ interface RequestPayee {
 }
 
 interface RequestClientProps {
-  request: PaymentRequest & { consolidated?: any[] }
+  request: any
   tdEmail: string
   wsHandle: string
+  payeesMessageMap: Record<string, string>
 }
 
 const getGsap = () => (typeof window !== 'undefined' ? (window as any).gsap : undefined);
@@ -153,7 +154,6 @@ const ParticipantRow = ({
                <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', opacity: 0.6 }}>
                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0, flex: 1 }}>
                    <span style={{ fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</span>
-                   {item.note && <span style={{ fontSize: 10, color: 'var(--ash)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}> · {item.note}</span>}
                  </div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, flexShrink: 0 }}>{formatCAD(item.amount)}</span>
@@ -181,7 +181,7 @@ const ParticipantRow = ({
   );
 };
 
-export default function RequestClient({ request, tdEmail, wsHandle }: RequestClientProps) {
+export default function RequestClient({ request, tdEmail, wsHandle, payeesMessageMap }: RequestClientProps) {
   const searchParams = useSearchParams();
   const activePayeeName = searchParams.get('p');
   
@@ -306,7 +306,7 @@ export default function RequestClient({ request, tdEmail, wsHandle }: RequestCli
     ? unpaidItems.reduce((sum: number, item) => sum + item.amount, 0)
     : (activePayeeName ? 0 : payeesList[0]?.amount || 0);
 
-  const marqueeMessage = (displayPersonName && activeParticipant?.items[0]?.note) || request.note;
+  const marqueeMessage = (displayPersonName && payeesMessageMap?.[displayPersonName]) || request.note;
 
   useEffect(() => { setMounted(true); }, []);
 

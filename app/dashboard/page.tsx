@@ -11,7 +11,7 @@ type Request = {
   paidAt?: string; createdAt: string; payees?: RequestPayee[]
   payerName?: string; eventDate?: string; location?: string
 }
-type Payee = { id: string; name: string }
+type Payee = { id: string; name: string; message?: string }
 type View = 'login' | 'list' | 'create' | 'contacts'
 type Recipient = { payeeId: string; amount: string; note: string }
 
@@ -823,10 +823,32 @@ export default function Dashboard() {
 
   const handleDeleteContact = async (id: string) => {
     if (!confirm('Are you sure you want to delete this contact?')) return
-    await fetch(`/api/payees/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
-    setPayees(prev => prev.filter(p => p.id !== id))
+    try {
+      await fetch(`/api/payees/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
+      setPayees(prev => prev.filter(p => p.id !== id))
+    } catch {
+      alert('Failed to delete contact')
+    }
   }
 
+  const handleUpdateContactMessage = async (id: string, message: string) => {
+    try {
+      const res = await fetch('/api/payees', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey
+        },
+        body: JSON.stringify({ id, message })
+      })
+      if (!res.ok) throw new Error()
+      setPayees(prev => prev.map(p => p.id === id ? { ...p, message } : p))
+    } catch {
+      alert('Failed to update message')
+    }
+  }
+
+  // Edit / Delete Request Handlers
   const deleteRequest = async (id: string) => {
     if (!confirm('Are you sure you want to delete this request?')) return
     await fetch(`/api/requests/${id}`, { method: 'DELETE', headers: { 'x-admin-key': adminKey } })
@@ -965,9 +987,18 @@ export default function Dashboard() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {payees.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }}>
-                <p style={{ fontSize: 15, color: sumi }}>{p.name}</p>
-                <button onClick={() => handleDeleteContact(p.id)} style={{ ...btnGhost, color: rust, fontSize: 12 }}>DELETE</button>
+              <div key={p.id} style={{ display: 'flex', flexDirection: 'column', padding: '14px 20px', border: `1px solid ${fog}`, borderRadius: 12, background: 'rgba(255,255,255,0.4)', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <p style={{ fontSize: 15, color: sumi }}>{p.name}</p>
+                  <button onClick={() => handleDeleteContact(p.id)} style={{ ...btnGhost, color: rust, fontSize: 12 }}>DELETE</button>
+                </div>
+                <input 
+                  type="text" 
+                  defaultValue={p.message || ''} 
+                  onBlur={(e) => { if (e.target.value !== p.message) handleUpdateContactMessage(p.id, e.target.value) }} 
+                  placeholder="Private marquee message" 
+                  style={{ ...capsule, width: '100%', fontSize: 12, padding: '8px 12px', border: 'none', background: 'rgba(0,0,0,0.03)' }} 
+                />
               </div>
             ))}
           </div>

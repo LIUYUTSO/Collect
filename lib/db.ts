@@ -51,9 +51,16 @@ export async function ensureTables() {
       CREATE TABLE IF NOT EXISTS payees (
         id TEXT PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
+        message TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
+    
+    // Add columns to existing payees if missing
+    try {
+      await sql`ALTER TABLE payees ADD COLUMN IF NOT EXISTS message TEXT;`;
+    } catch (e) {}
+    
     // For WebAuthn / Biometric login
     await sql`
       CREATE TABLE IF NOT EXISTS credentials (

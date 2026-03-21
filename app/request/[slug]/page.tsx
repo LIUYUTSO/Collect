@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, ensureTables } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { formatCAD } from '@/lib/utils'
@@ -106,12 +106,27 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
     }))
   }
 
+  // 4. Fetch all payees to map their private messages
+  let payeesMessageMap: Record<string, string> = {};
+  try {
+    await ensureTables();
+    const { rows: payeesRows } = await db.sql`SELECT name, message FROM payees`;
+    payeesMessageMap = payeesRows.reduce((acc: any, p: any) => {
+      if (p.message) acc[p.name] = p.message;
+      return acc;
+    }, {});
+  } catch (e) {
+    console.error('Failed to fetch payee messages:', e);
+    // Fallback if column still missing during initial migration period
+  }
+
   return (
     <ClientTransition title={request.title as string}>
       <RequestClient
         request={clientRequest}
         tdEmail={process.env.TD_EMAIL || ''}
         wsHandle={process.env.WS_HANDLE || ''}
+        payeesMessageMap={payeesMessageMap}
       />
     </ClientTransition>
   )
