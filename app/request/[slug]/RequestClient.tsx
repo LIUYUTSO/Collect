@@ -151,9 +151,9 @@ const ParticipantRow = ({
         <div ref={expandRef} style={{ height: initialExpanded ? 'auto' : 0, opacity: initialExpanded ? 1 : 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 0, paddingBottom: 4 }}>
              {p.items.map((item: { title: string; amount: number; note?: string; paid: boolean; payerName: string }, iIdx: number) => (
-               <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', opacity: 0.6 }}>
+               <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', opacity: item.paid ? 0.4 : 1 }}>
                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0, flex: 1 }}>
-                   <span style={{ fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</span>
+                   <span style={{ fontSize: 11, fontWeight: item.paid ? 500 : 700, color: 'var(--sumi)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</span>
                  </div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                    <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, flexShrink: 0 }}>{formatCAD(item.amount)}</span>
@@ -243,13 +243,13 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
           const paid = p.paid || false;
           const existing = map.get(p.name);
           if (existing) {
-            existing.amount += amount;
+            if (!paid) existing.amount += amount; // Only increment if unpaid
             existing.items.push({ title: r.title, amount: amount, note: p.note || '', paid: paid, payerName: r.payerName || '' });
             if (!paid) existing.paid = false;
           } else {
             map.set(p.name, {
               name: p.name,
-              amount: amount,
+              amount: paid ? 0 : amount, // Initial amount is 0 if already paid
               paid: paid,
               items: [{ title: r.title, amount: amount, note: p.note || '', paid: paid, payerName: r.payerName || '' }]
             });
@@ -259,13 +259,13 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
         const pPaid = r.status === 'paid';
         const existing = map.get(r.fromName);
         if (existing) {
-          existing.amount += r.amount;
+          if (!pPaid) existing.amount += r.amount; // Only increment if unpaid
           existing.items.push({ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName || '' });
           if (!pPaid) existing.paid = false;
         } else {
           map.set(r.fromName, {
             name: r.fromName,
-            amount: r.amount,
+            amount: pPaid ? 0 : r.amount, // Initial amount is 0 if already paid
             paid: pPaid,
             items: [{ title: r.title, amount: r.amount, note: '', paid: pPaid, payerName: r.payerName || '' }]
           });
@@ -275,6 +275,11 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
 
     // 5. Build final list
     const finalItems = Array.from(map.values()) as Participant[];
+
+    // Ensure items within each participant are sorted: UNPAID first
+    finalItems.forEach(p => {
+      p.items.sort((a, b) => (a.paid === b.paid ? 0 : a.paid ? 1 : -1));
+    });
     
     // Amount for Payer is how much they EXPENDED originally.
     const payerItem: Participant = {
@@ -284,27 +289,37 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
       items: []
     };
 
-    // Filter out the Payer from the participant list to avoid double listing 
-    const otherParticipants = finalItems.filter(p => p.name !== request.payerName);
+    // Filter out the Payer and FULLY PAID participants
+    const activeParticipantName = activePayeeName;
+    const filteredParticipants = finalItems.filter(p => {
+      if (p.name === request.payerName) return false;
+      // If it's the active person, we show them as long as they have items (or you could hide if preferred)
+      // User says: hide if completed.
+      const hasUnpaid = p.items.some(i => !i.paid);
+      if (p.name === activeParticipantName) return hasUnpaid; // Hide active person too if fully paid
+      return hasUnpaid;
+    });
     
     // Sort active participant to the top among participants
-    otherParticipants.sort((a, b) => {
-      if (a.name === activePayeeName) return -1;
-      if (b.name === activePayeeName) return 1;
+    filteredParticipants.sort((a, b) => {
+      if (a.name === activeParticipantName) return -1;
+      if (b.name === activeParticipantName) return 1;
       return 0;
     });
 
-    return [payerItem, ...otherParticipants];
+    return [payerItem, ...filteredParticipants];
   }, [request, activePayeeName]);
 
   const payeesList = consolidatedData;
   
   // Owed Summary Logic
+  // totalAmount should be the sum of all UNPAID items for the ACTIVE participant (if any) or EVERYONE (if no active participant)
   const activeParticipant = activePayeeName ? payeesList.find(p => p.name === activePayeeName) : null;
-  const unpaidItems = activeParticipant ? activeParticipant.items.filter(i => !i.paid) : [];
-  const totalAmount = unpaidItems.length > 0 
-    ? unpaidItems.reduce((sum: number, item) => sum + item.amount, 0)
-    : (activePayeeName ? 0 : payeesList[0]?.amount || 0);
+  const unpaidItems = activeParticipant 
+    ? activeParticipant.items.filter(i => !i.paid) 
+    : payeesList.flatMap(p => p.items.filter(i => !i.paid));
+  
+  const totalAmount = unpaidItems.reduce((sum: number, item) => sum + item.amount, 0);
 
   const marqueeMessage = (displayPersonName && payeesMessageMap?.[displayPersonName]) || request.note;
 
@@ -698,10 +713,10 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
                   <>
                     <div className="receipt-dashed" style={{ margin: '14px 0' }} />
                     <div className="gsap-amount-display" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 13, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
+                      <span style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
                         {activePayeeName ? 'TOTAL OWED' : 'TOTAL'}
                       </span>
-                      <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 32, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
+                      <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 28, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
                         <span ref={amountRef} suppressHydrationWarning>{formatCAD(0)}</span>
                       </span>
                     </div>
@@ -713,7 +728,7 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
 
               <div style={{ marginTop: 24, textAlign: 'center' }}>
                 <p style={{ fontSize: 10, color: 'var(--ash)', letterSpacing: '0.12em', fontWeight: 600 }} suppressHydrationWarning>
-                  ISSUED: {formatDate(request.createdAt || new Date().toISOString())}
+                  ISSUED: {formatDate(new Date().toISOString())}
                 </p>
               </div>
 

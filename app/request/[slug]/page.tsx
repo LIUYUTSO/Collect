@@ -50,11 +50,10 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
   }
 
   const participants = new Set<string>();
-  if (Array.isArray(parsedPayees) && parsedPayees.length > 0) {
-    parsedPayees.forEach((p: import("@/lib/types").Payee) => {
-      if (p.name && !p.paid) participants.add(p.name);
-    });
-  } else if (request.from_name && request.status === 'pending') {
+  if (Array.isArray(parsedPayees)) {
+    parsedPayees.forEach((p: any) => p.name && participants.add(p.name));
+  }
+  if (request.from_name) {
     participants.add(request.from_name);
   }
 
@@ -67,8 +66,8 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
     // This query is optimized to hit the indexes we created
     const { rows: relatedRows } = await db.sql`
       SELECT * FROM requests 
-      WHERE status = 'pending' 
-      AND slug != ${slug}
+      WHERE slug != ${slug}
+      AND payer_name = ${request.payer_name}
       AND (
         from_name = ANY(${participantList as any})
         OR payees @> ANY(${participantList.map(name => JSON.stringify([{name}])) as any})
