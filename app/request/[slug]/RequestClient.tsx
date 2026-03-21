@@ -316,7 +316,7 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
       return 0;
     });
 
-    return [...payerItems, ...displayedParticipants];
+    return [...displayedParticipants];
   }, [request, activePayeeName]);
 
   const payeesList = consolidatedData;
@@ -728,19 +728,22 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
                 {(Object.keys(totalByPayer).length > 0) && (
                   <>
                     <div className="receipt-dashed" style={{ margin: '14px 0' }} />
-                    <div className="gsap-amount-display" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {Object.entries(totalByPayer).map(([payer, total], pIdx) => (
-                        <div key={pIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                          <span style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
-                            TOTAL OWED TO {payer.toUpperCase()}
-                          </span>
-                          <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 28, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
-                            {/* Note: I removed the amountRef because we might have multiple totals. 
-                                The big header/marquee already uses the grand total amount animation. */}
-                            {formatCAD(total)}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="gsap-amount-display" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <span style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--clay)', fontWeight: 800, textAlign: 'left' }}>
+                        TOTAL OWED
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {Object.entries(totalByPayer).map(([payer, total], pIdx) => (
+                          <div key={pIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                            <span style={{ fontSize: 13, color: 'var(--sumi)', fontWeight: 600 }}>
+                              to {payer}
+                            </span>
+                            <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
+                              {formatCAD(total)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
