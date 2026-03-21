@@ -89,16 +89,23 @@ const ParticipantRow = ({
       }}
     >
       <div 
-        onClick={() => setIsExpanded(!isExpanded)}
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={() => !isPayer && setIsExpanded(!isExpanded)}
+        style={{ 
+          display: 'flex', 
+          justifyContent: isPayer ? 'center' : 'space-between', 
+          alignItems: 'center', 
+          cursor: isPayer ? 'default' : 'pointer',
+          textAlign: isPayer ? 'center' : 'left'
+        }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: isPayer ? 'column' : 'row', alignItems: 'center', gap: isPayer ? 6 : 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: isPayer ? 'center' : 'flex-start' }}>
             <span style={{ 
-              fontSize: 15, 
+              fontSize: isPayer ? 13 : 15, 
               color: p.paid ? 'var(--clay)' : 'var(--sumi)', 
               fontWeight: isActive ? 700 : 800,
-              letterSpacing: '-0.01em'
+              letterSpacing: '-0.01em',
+              opacity: isPayer ? 0.7 : 1
             }}>
               {isPayer ? `Pay to ${p.name}` : p.name}
             </span>
@@ -124,27 +131,27 @@ const ParticipantRow = ({
               fontWeight: 800,
               flexShrink: 0
             }}>
-              PAYER
+              CREDITOR
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ 
-            fontFamily: 'DM Mono, monospace', 
-            fontSize: 18, 
-            color: p.paid ? 'var(--fog)' : 'var(--sumi)', 
-            textDecoration: (p.paid && !isPayer) ? 'line-through' : 'none', 
-            opacity: p.paid ? 0.6 : 1,
-            fontWeight: isActive ? 600 : 400
-          }} suppressHydrationWarning>
-            {formatCAD(p.amount)}
-          </span>
-          {!isPayer && (
+        {!isPayer && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ 
+              fontFamily: 'DM Mono, monospace', 
+              fontSize: 18, 
+              color: p.paid ? 'var(--fog)' : 'var(--sumi)', 
+              textDecoration: (p.paid && !isPayer) ? 'line-through' : 'none', 
+              opacity: p.paid ? 0.6 : 1,
+              fontWeight: isActive ? 600 : 400
+            }} suppressHydrationWarning>
+              {formatCAD(p.amount)}
+            </span>
             <div style={{ opacity: 0.3, flexShrink: 0 }}>
               <ChevronIcon rotated={isExpanded} size={14} />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {!isPayer && (
@@ -281,33 +288,35 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
       p.items.sort((a, b) => (a.paid === b.paid ? 0 : a.paid ? 1 : -1));
     });
     
-    // Amount for Payer is how much they EXPENDED originally.
-    const payerItem: Participant = {
-      name: request.payerName || '',
-      amount: payerTotal,
+    // Identified unique creditors (Payers)
+    const creditors = new Set<string>();
+    creditors.add(request.payerName || 'ADAM');
+    finalItems.flatMap(p => p.items).forEach(i => i.payerName && creditors.add(i.payerName));
+    
+    const payerItems: Participant[] = Array.from(creditors).map(name => ({
+      name,
+      amount: 0, // Hidden in UI for payers
       paid: true,
       items: []
-    };
+    }));
 
-    // Filter out the Payer and FULLY PAID participants
+    // Filter out participants who are also creditors to avoid double listing 
+    const otherParticipants = finalItems.filter(p => !creditors.has(p.name));
+    
     const activeParticipantName = activePayeeName;
-    const filteredParticipants = finalItems.filter(p => {
-      if (p.name === request.payerName) return false;
-      // If it's the active person, we show them as long as they have items (or you could hide if preferred)
-      // User says: hide if completed.
+    const displayedParticipants = otherParticipants.filter(p => {
       const hasUnpaid = p.items.some(i => !i.paid);
-      if (p.name === activeParticipantName) return hasUnpaid; // Hide active person too if fully paid
+      if (p.name === activeParticipantName) return hasUnpaid;
       return hasUnpaid;
     });
-    
-    // Sort active participant to the top among participants
-    filteredParticipants.sort((a, b) => {
+
+    displayedParticipants.sort((a, b) => {
       if (a.name === activeParticipantName) return -1;
       if (b.name === activeParticipantName) return 1;
       return 0;
     });
 
-    return [payerItem, ...filteredParticipants];
+    return [...payerItems, ...displayedParticipants];
   }, [request, activePayeeName]);
 
   const payeesList = consolidatedData;
@@ -320,6 +329,13 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
     : payeesList.flatMap(p => p.items.filter(i => !i.paid));
   
   const totalAmount = unpaidItems.reduce((sum: number, item) => sum + item.amount, 0);
+
+  // Grouped by payer for flexible bottom summary
+  const totalByPayer = unpaidItems.reduce((acc, item) => {
+    const payer = item.payerName || request.payerName || 'ADAM';
+    acc[payer] = (acc[payer] || 0) + item.amount;
+    return acc;
+  }, {} as Record<string, number>);
 
   const marqueeMessage = (displayPersonName && payeesMessageMap?.[displayPersonName]) || request.note;
 
@@ -709,16 +725,22 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
                   </>
                 )}
 
-                {(payeesList.length > 1 || (payeesList[0]?.items.length > 1)) && (
+                {(Object.keys(totalByPayer).length > 0) && (
                   <>
                     <div className="receipt-dashed" style={{ margin: '14px 0' }} />
-                    <div className="gsap-amount-display" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
-                        {activePayeeName ? 'TOTAL OWED' : 'TOTAL'}
-                      </span>
-                      <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 28, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
-                        <span ref={amountRef} suppressHydrationWarning>{formatCAD(0)}</span>
-                      </span>
+                    <div className="gsap-amount-display" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {Object.entries(totalByPayer).map(([payer, total], pIdx) => (
+                        <div key={pIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                          <span style={{ fontSize: 11, letterSpacing: '0.2em', color: 'var(--sumi)', fontWeight: 800 }}>
+                            TOTAL OWED TO {payer.toUpperCase()}
+                          </span>
+                          <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 28, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 600 }}>
+                            {/* Note: I removed the amountRef because we might have multiple totals. 
+                                The big header/marquee already uses the grand total amount animation. */}
+                            {formatCAD(total)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}
