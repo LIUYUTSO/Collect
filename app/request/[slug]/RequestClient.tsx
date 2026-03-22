@@ -147,7 +147,7 @@ const ParticipantRow = ({
             }} suppressHydrationWarning>
               {formatCAD(p.amount)}
             </span>
-            <div style={{ opacity: 0.3, flexShrink: 0 }}>
+            <div style={{ opacity: p.items.length > 0 ? 0.3 : 0, flexShrink: 0, pointerEvents: p.items.length > 0 ? 'auto' : 'none' }}>
               <ChevronIcon rotated={isExpanded} size={14} />
             </div>
           </div>
@@ -318,8 +318,7 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
       return p;
     }).filter(p => {
       if (activeParticipantName) {
-        if (p.name === activeParticipantName) return true;
-        return p.items.length > 0; // Show other people only if they have unpaid items
+        return true; // Keep EVERYONE (including fully paid people like Kay) on the personal page
       }
       return p.items.some(i => !i.paid); // Admin dashboard only shows people with unpaid items
     });
