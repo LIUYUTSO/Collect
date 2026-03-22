@@ -305,11 +305,17 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
     
     const activeParticipantName = activePayeeName;
     const displayedParticipants = otherParticipants.filter(p => {
-      // If viewing a specific person's page, strictly HIDE everyone else!
-      if (activeParticipantName && p.name !== activeParticipantName) return false;
-
-      // Show if they have unpaid items
       const hasUnpaid = p.items.some(i => !i.paid);
+      
+      if (activeParticipantName) {
+        if (p.name === activeParticipantName) {
+          return true; // Always show active person
+        }
+        // "其他有欠款的情況...把該項目其他人已經付款的資訊排在下面"
+        return !hasUnpaid;
+      }
+      
+      // Admin dashboard (no active person), only show unpaid
       return hasUnpaid;
     });
 
@@ -678,6 +684,15 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {totalAmount === 0 && (
+                  <div className="gsap-amount-display" style={{ textAlign: 'center', marginBottom: 24 }}>
+                    <p style={{ fontSize: 11, color: 'var(--ash)', marginBottom: 12, letterSpacing: '0.15em', fontWeight: 700 }}>AMOUNT DUE</p>
+                    <p style={{ fontFamily: 'DM Mono, monospace', fontSize: 52, fontWeight: 400, color: 'var(--moss)', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                      $0.00
+                    </p>
+                  </div>
+                )}
+
                 <div className="gsap-payee-list" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   {payeesList.map((p, idx) => {
                     const isActive = p.name === activePayeeName;
