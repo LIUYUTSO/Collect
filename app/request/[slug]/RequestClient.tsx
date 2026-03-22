@@ -745,17 +745,6 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
                             </span>
                           </div>
                         ))}
-                        {Object.keys(totalByPayer).length > 1 && (
-                          <>
-                            <div style={{ height: 1, background: 'var(--fog)', margin: '8px 0', opacity: 0.5 }} />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                              <span style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ash)', fontWeight: 800 }}>GRAND TOTAL</span>
-                              <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 24, color: isPaid ? 'var(--moss)' : 'var(--rust)', fontWeight: 700 }}>
-                                <span ref={amountRef} suppressHydrationWarning>{formatCAD(totalAmount)}</span>
-                              </span>
-                            </div>
-                          </>
-                        )}
                       </div>
                     </div>
                   </>
