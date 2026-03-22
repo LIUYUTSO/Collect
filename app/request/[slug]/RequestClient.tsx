@@ -304,19 +304,24 @@ export default function RequestClient({ request, tdEmail, wsHandle, payeesMessag
     const otherParticipants = finalItems.filter(p => !creditors.has(p.name));
     
     const activeParticipantName = activePayeeName;
-    const displayedParticipants = otherParticipants.filter(p => {
-      const hasUnpaid = p.items.some(i => !i.paid);
-      
-      if (activeParticipantName) {
-        if (p.name === activeParticipantName) {
-          return true; // Always show active person
-        }
-        // "其他有欠款的情況...把該項目其他人已經付款的資訊排在下面"
-        return !hasUnpaid;
+    const displayedParticipants = otherParticipants.map(p => {
+      if (activeParticipantName && p.name !== activeParticipantName) {
+        // For other people on a personal link, ONLY keep their UNPAID items
+        const unpaidOnly = p.items.filter(i => !i.paid);
+        return {
+          ...p,
+          items: unpaidOnly,
+          amount: unpaidOnly.reduce((sum, item) => sum + item.amount, 0),
+          paid: unpaidOnly.length === 0
+        };
       }
-      
-      // Admin dashboard (no active person), only show unpaid
-      return hasUnpaid;
+      return p;
+    }).filter(p => {
+      if (activeParticipantName) {
+        if (p.name === activeParticipantName) return true;
+        return p.items.length > 0; // Show other people only if they have unpaid items
+      }
+      return p.items.some(i => !i.paid); // Admin dashboard only shows people with unpaid items
     });
 
     displayedParticipants.sort((a, b) => {
