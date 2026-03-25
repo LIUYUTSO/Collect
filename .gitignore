@@ -28,6 +28,3 @@ yarn-error.log*
 # Prisma
 prisma/dev.db
 .env*.local
-
-# Jules
-.Jules/
