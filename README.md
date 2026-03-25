@@ -38,33 +38,6 @@
 
 ---
 
-## 🚀 快速開始
-
-### 1. 克隆專案
-```bash
-git clone https://github.com/LIUYUTSO/Collect.git
-cd collect_app
-```
-
-### 2. 安裝依賴
-```bash
-npm install
-```
-
-### 3. 環境變數配置
-在根目錄創建 `.env.local` 並填入您的 Vercel Postgres 連接資訊與基礎網域：
-```env
-POSTGRES_URL=your_postgres_url
-NEXT_PUBLIC_BASE_URL=https://collect.adamliu.uk
-```
-
-### 4. 啟動開發伺服器
-```bash
-npm run dev
-```
-
----
-
 ## 📂 專案結構
 ```text
 ├── app/
