@@ -124,11 +124,11 @@ function MagneticButton({ children, style, onClick, className, 'aria-label': ari
   useMagnetic(ref);
   const handleEnter = () => {
     const gsap = getGsap();
-    if(gsap) gsap.to('.custom-cursor', { scale: 1.5, opacity: 0.5, duration: 0.2 })
+    if (gsap) gsap.to('.custom-cursor', { scale: 1.5, opacity: 0.5, duration: 0.2 })
   };
   const handleLeave = () => {
     const gsap = getGsap();
-    if(gsap) gsap.to('.custom-cursor', { scale: 1, opacity: 1, duration: 0.2 })
+    if (gsap) gsap.to('.custom-cursor', { scale: 1, opacity: 1, duration: 0.2 })
   };
   return (
     <button ref={ref} type={type} disabled={disabled} onClick={onClick} style={style} className={className} aria-label={ariaLabel} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
@@ -143,9 +143,9 @@ const CustomCursor = () => {
     const gsap = getGsap();
     if (!gsap || !cursorRef.current) return;
     // 自訂游標跟隨：使用 gsap.quickTo() 確保平滑 60fps
-    const xTo = gsap.quickTo(cursorRef.current, "x", {duration: 0.3, ease: "power3", force3D: true});
-    const yTo = gsap.quickTo(cursorRef.current, "y", {duration: 0.3, ease: "power3", force3D: true});
-    
+    const xTo = gsap.quickTo(cursorRef.current, "x", { duration: 0.3, ease: "power3", force3D: true });
+    const yTo = gsap.quickTo(cursorRef.current, "y", { duration: 0.3, ease: "power3", force3D: true });
+
     const moveCursor = (e: MouseEvent) => {
       xTo(e.clientX);
       yTo(e.clientY);
@@ -155,15 +155,15 @@ const CustomCursor = () => {
   }, []);
 
   return (
-    <div 
-      ref={cursorRef} 
-      className="custom-cursor" 
+    <div
+      ref={cursorRef}
+      className="custom-cursor"
       style={{
-        position: 'fixed', top: 0, left: 0, width: 16, height: 16, 
-        backgroundColor: '#1A1714', borderRadius: '50%', pointerEvents: 'none', 
+        position: 'fixed', top: 0, left: 0, width: 16, height: 16,
+        backgroundColor: '#1A1714', borderRadius: '50%', pointerEvents: 'none',
         zIndex: 9999, transform: 'translate(-50%, -50%)', opacity: 1,
         mixBlendMode: 'difference' // 給予高端視覺過濾
-      }} 
+      }}
     />
   );
 };
@@ -201,7 +201,7 @@ function GlobeIcon({ size = 15 }: { size?: number }) {
 function EditIcon({ size = 15 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   )
 }
@@ -209,7 +209,7 @@ function EditIcon({ size = 15 }: { size?: number }) {
 function TrashIcon({ size = 15 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
   )
 }
@@ -217,7 +217,7 @@ function TrashIcon({ size = 15 }: { size?: number }) {
 function LockIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   )
 }
@@ -225,14 +225,14 @@ function LockIcon({ size = 14 }: { size?: number }) {
 function MoreIcon({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+      <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
     </svg>
   )
 }
 
 function ChevronIcon({ size = 12, rotated = false }: { size?: number, rotated?: boolean }) {
   return (
-    <svg 
+    <svg
       width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
       style={{ transform: rotated ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
     >
@@ -244,7 +244,7 @@ function ChevronIcon({ size = 12, rotated = false }: { size?: number, rotated?: 
 function ContactIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }
@@ -261,22 +261,22 @@ interface RequestCardProps {
 
 const ParticipantMenu = ({ open, onShare, onPreview, fog, washi, sumi }: { open: boolean, onShare: () => void, onPreview: () => void, fog: string, washi: string, sumi: string }) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   useLayoutEffect(() => {
     const gsap = getGsap();
     if (!gsap || !menuRef.current) return;
-    
+
     if (open) {
       gsap.set(menuRef.current, { display: 'flex' });
-      gsap.fromTo(menuRef.current, 
-        { height: 0, opacity: 0 }, 
+      gsap.fromTo(menuRef.current,
+        { height: 0, opacity: 0 },
         { height: 'auto', opacity: 1, duration: 0.4, ease: 'power3.out' }
       );
     } else {
-      gsap.to(menuRef.current, { 
-        height: 0, 
-        opacity: 0, 
-        duration: 0.3, 
+      gsap.to(menuRef.current, {
+        height: 0,
+        opacity: 0,
+        duration: 0.3,
         ease: 'power3.in',
         onComplete: () => {
           if (menuRef.current) menuRef.current.style.display = 'none';
@@ -322,15 +322,15 @@ const ParticipantMenu = ({ open, onShare, onPreview, fog, washi, sumi }: { open:
 
 function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onEdit, paid }: RequestCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  
+
   // Card hover removed per user request
-  const handleMouseEnter = () => {};
-  const handleMouseLeave = () => {};
+  const handleMouseEnter = () => { };
+  const handleMouseLeave = () => { };
 
   const [isExpanded, setIsExpanded] = useState(false)
   const [showActions, setShowActions] = useState(false)
   const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null)
-  
+
   const payeeList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
 
   const expandRef = useRef<HTMLDivElement>(null);
@@ -339,17 +339,19 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
     if (!gsap || !expandRef.current) return;
     if (isExpanded) {
       gsap.set(expandRef.current, { overflow: 'hidden', display: 'block' });
-      gsap.fromTo(expandRef.current, 
-        { height: 0 }, 
-        { height: 'auto', duration: 0.6, ease: 'power3.inOut', onComplete: () => {
-          if (expandRef.current) expandRef.current.style.overflow = 'visible';
-        }}
+      gsap.fromTo(expandRef.current,
+        { height: 0 },
+        {
+          height: 'auto', duration: 0.6, ease: 'power3.inOut', onComplete: () => {
+            if (expandRef.current) expandRef.current.style.overflow = 'visible';
+          }
+        }
       );
     } else {
-      gsap.to(expandRef.current, { 
-        height: 0, 
-        duration: 0.5, 
-        ease: 'power3.inOut', 
+      gsap.to(expandRef.current, {
+        height: 0,
+        duration: 0.5,
+        ease: 'power3.inOut',
         onStart: () => {
           if (expandRef.current) expandRef.current.style.overflow = 'hidden';
         }
@@ -361,9 +363,9 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
     // Note: overflow is NOT hidden here so dropdowns can escape the card boundary
     <div ref={cardRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="gsap-request-card" style={{ position: 'relative', padding: '14px 18px', border: `1.5px solid ${fog}`, borderRadius: 12, background: paid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.45)', opacity: paid ? 0.75 : 1 }}>
       {/* Full-Card Action Overlay */}
-      <div 
+      <div
         onClick={() => setShowActions(false)}
-        style={{ 
+        style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(255, 255, 255, 0.4)',
@@ -379,11 +381,11 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
           borderRadius: 12,
         }}
       >
-        <div style={{ 
-          display: 'flex', 
-          gap: 12, 
-          transform: showActions ? 'translateX(0)' : 'translateX(-30px)', 
-          transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)' 
+        <div style={{
+          display: 'flex',
+          gap: 12,
+          transform: showActions ? 'translateX(0)' : 'translateX(-30px)',
+          transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
           <button aria-label="Share request" onClick={(e) => { e.stopPropagation(); onShare(r.slug, r.title, r.amount) }} style={{ ...pill, padding: 0, background: sumi, color: washi, border: 'none', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 15 }}>
             <ShareIcon size={18} />
@@ -401,7 +403,7 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div 
+        <div
           onClick={() => setIsExpanded(!isExpanded)}
           style={{ flex: 1, minWidth: 0, paddingRight: 12, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
         >
@@ -415,17 +417,17 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <button 
-            onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }} 
-            style={{ 
-              ...pill, 
-              padding: 0, 
-              background: 'transparent', 
-              width: 34, 
-              height: 34, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
+            style={{
+              ...pill,
+              padding: 0,
+              background: 'transparent',
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               borderRadius: 10,
               color: ash,
               opacity: 0.3,
@@ -453,7 +455,7 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
                 <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 36, paddingTop: idx === 0 ? 6 : 0 }}>
 
                   {/* Participant dropdown menu — using GSAP reveal */}
-                  <ParticipantMenu 
+                  <ParticipantMenu
                     open={menuOpen}
                     onShare={() => { setOpenMenuIdx(null); onShareIndividual(r.slug, r.title, p.amount, p.name); }}
                     onPreview={() => { setOpenMenuIdx(null); window.open(`/request/${r.slug}?p=${encodeURIComponent(p.name)}`, '_blank'); }}
@@ -480,8 +482,8 @@ function RequestCard({ r, onShare, onShareIndividual, onPayeePaid, onDelete, onE
                     <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: sumi, fontWeight: 400 }} suppressHydrationWarning>
                       {formatCAD(p.amount)}
                     </span>
-                    <button 
-                      onClick={() => onPayeePaid(r, idx)} 
+                    <button
+                      onClick={() => onPayeePaid(r, idx)}
                       disabled={isCreditor}
                       style={{
                         width: 45, height: 22, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -562,7 +564,7 @@ export default function Dashboard() {
   const isMultiRecipient = recipients.length > 1
 
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  
+
   // ─── GSAP Animations ───
   // Page Load Sequence & View Transitions
   const mainRef = useRef<HTMLElement>(null);
@@ -571,11 +573,11 @@ export default function Dashboard() {
   useEffect(() => {
     const gsap = getGsap();
     if (!gsap || !gsapLoaded) return;
-    
+
     // 清除舊的動畫以防衝突
     gsap.killTweensOf('.split-char');
     gsap.killTweensOf('.gsap-fade-in');
-    
+
     // ① 頁面進場 (Page Load Sequence)
     // - 標題文字按字元浮現
     // - UI 元素依序入場
@@ -583,11 +585,11 @@ export default function Dashboard() {
     tl.to('.split-char', {
       y: 0, opacity: 1, stagger: 0.05, duration: 0.8, ease: 'expo.out' // 奢華緩動：極快入場、極長尾巴
     })
-    .fromTo('.gsap-fade-in', 
-      { y: 20, autoAlpha: 0 }, 
-      { y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out' }, // 快入慢出，自然降落
-      "-=0.6"
-    );
+      .fromTo('.gsap-fade-in',
+        { y: 20, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out' }, // 快入慢出，自然降落
+        "-=0.6"
+      );
 
   }, [view, gsapLoaded]);
 
@@ -596,13 +598,13 @@ export default function Dashboard() {
     const gsap = getGsap();
     const ScrollTrigger = getScrollTrigger();
     if (!gsap || !ScrollTrigger || view !== 'list' || !gsapLoaded) return;
-    
+
     gsap.registerPlugin(ScrollTrigger);
-    
+
     // 列表項目依序滑入 (Stagger)
-    gsap.fromTo('.gsap-request-card', 
+    gsap.fromTo('.gsap-request-card',
       { y: 50, autoAlpha: 0 },
-      { 
+      {
         y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.8, ease: 'power3.out',
         scrollTrigger: {
           trigger: '.gsap-list-container',
@@ -717,13 +719,13 @@ export default function Dashboard() {
       setEventDate(editingRequest.eventDate?.split('T')[0] || '')
       setLocation(editingRequest.location || '')
       setPayerName(editingRequest.payerName || '')
-      
+
       const isGroup = !!editingRequest.payees
       setGroupRequest(isGroup)
       if (isGroup) {
         setRecipients(editingRequest.payees!.map((p: RequestPayee) => {
-            const payee = payees.find(contact => contact.name === p.name)
-            return { payeeId: payee?.id || '', amount: p.amount.toString(), note: p.note || '' }
+          const payee = payees.find(contact => contact.name === p.name)
+          return { payeeId: payee?.id || '', amount: p.amount.toString(), note: p.note || '' }
         }))
         setTotalAmount(editingRequest.amount.toString())
       } else {
@@ -742,11 +744,11 @@ export default function Dashboard() {
     if (validRecipients.length === 0) { setError('Please select at least one recipient'); return }
     setCreating(true); setError('')
 
-    const commonFields = { 
-      title: currentTitle, 
-      note: currentNote, 
-      method: 'all', 
-      eventDate: eventDate || null, 
+    const commonFields = {
+      title: currentTitle,
+      note: currentNote,
+      method: 'all',
+      eventDate: eventDate || null,
       location: location || null,
       payerName: payerName || null
     }
@@ -761,7 +763,7 @@ export default function Dashboard() {
         return { name: payee?.name || '', amount: parseFloat(amt as string), paid: payee?.name === payerName, note: r.note }
       })
       const totalAmt = parseFloat(totalAmount) || recipientItems.reduce((sum, item) => sum + item.amount, 0)
-      
+
       // Determine initial status based on recipients
       const allPaid = recipientItems.length > 0 && recipientItems.every(r => r.paid)
       payload = { ...commonFields, amount: totalAmt, payees: recipientItems, status: allPaid ? 'paid' : 'pending' }
@@ -859,18 +861,18 @@ export default function Dashboard() {
     const payeesList: RequestPayee[] = r.payees || (r.fromName ? [{ name: r.fromName, amount: r.amount, paid: r.status === 'paid' }] : [])
     const updatedPayees = [...payeesList]
     updatedPayees[index].paid = !updatedPayees[index].paid
-    
+
     // Determine overall status
     const allPaid = updatedPayees.every((p: RequestPayee) => p.paid)
     const newStatus = allPaid ? 'paid' : 'pending'
 
-    await fetch(`/api/requests/${r.id}`, { 
-      method: 'PATCH', 
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey }, 
-      body: JSON.stringify({ 
+    await fetch(`/api/requests/${r.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify({
         payees: updatedPayees,
         status: newStatus
-      }) 
+      })
     })
     fetchData(adminKey)
   }
@@ -879,22 +881,22 @@ export default function Dashboard() {
     const base = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
     return `${base}/request/${slug}`
   }
-  const copyLink = (slug: string, payeeName?: string) => { 
+  const copyLink = (slug: string, payeeName?: string) => {
     const url = getUrl(slug) + (payeeName ? `?p=${encodeURIComponent(payeeName)}` : '')
-    navigator.clipboard.writeText(url); 
-    setCopied(slug + (payeeName || '')); 
-    setTimeout(() => setCopied(''), 2000) 
+    navigator.clipboard.writeText(url);
+    setCopied(slug + (payeeName || ''));
+    setTimeout(() => setCopied(''), 2000)
   }
   const shareLink = async (slug: string, title?: string, amount?: number, payeeName?: string) => {
     const url = getUrl(slug) + (payeeName ? `?p=${encodeURIComponent(payeeName)}` : '')
     if (typeof navigator !== 'undefined' && (navigator as any).share) {
-      try { 
-        await (navigator as any).share({ 
-          title: `Collect · ${title}${payeeName ? ` for ${payeeName}` : ''}`, 
-          text: `Request for ${formatCAD(amount || 0)}`, 
-          url 
-        }) 
-      } catch {}
+      try {
+        await (navigator as any).share({
+          title: `Collect · ${title}${payeeName ? ` for ${payeeName}` : ''}`,
+          text: `Request for ${formatCAD(amount || 0)}`,
+          url
+        })
+      } catch { }
     } else copyLink(slug, payeeName)
   }
 
@@ -935,16 +937,16 @@ export default function Dashboard() {
       <CustomCursor />
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
-      
+
       <div style={{ width: '100%', maxWidth: 360 }}>
         <p className="gsap-fade-in" style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 11, letterSpacing: '0.3em', color: ash, marginBottom: 8 }}>ADMIN PORTAL</p>
         <h1 style={{ fontFamily: 'var(--font-zen,serif)', fontSize: 32, fontWeight: 700, color: sumi, marginBottom: 48 }}><SplitText text="COLLECT" /></h1>
         <form onSubmit={handleLogin} autoComplete="off" className="gsap-fade-in">
           <div style={{ position: 'relative' }}>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ ...capsule, marginBottom: 12, paddingRight: 48 }} autoFocus />
-            <button 
-              type="button" 
-              onClick={handleWebAuthnLogin} 
+            <button
+              type="button"
+              onClick={handleWebAuthnLogin}
               style={{ position: 'absolute', right: 12, top: 12, background: 'transparent', border: 'none', cursor: 'pointer', color: ash, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, width: 28 }}
               title="Login with FaceID"
             >
@@ -992,12 +994,12 @@ export default function Dashboard() {
                   <p style={{ fontSize: 15, color: sumi }}>{p.name}</p>
                   <button onClick={() => handleDeleteContact(p.id)} style={{ ...btnGhost, color: rust, fontSize: 12 }}>DELETE</button>
                 </div>
-                <input 
-                  type="text" 
-                  defaultValue={p.message || ''} 
-                  onBlur={(e) => { if (e.target.value !== p.message) handleUpdateContactMessage(p.id, e.target.value) }} 
-                  placeholder="Private marquee message" 
-                  style={{ ...capsule, width: '100%', fontSize: 12, padding: '8px 12px', border: 'none', background: 'rgba(0,0,0,0.03)' }} 
+                <input
+                  type="text"
+                  defaultValue={p.message || ''}
+                  onBlur={(e) => { if (e.target.value !== p.message) handleUpdateContactMessage(p.id, e.target.value) }}
+                  placeholder="Private marquee message"
+                  style={{ ...capsule, width: '100%', fontSize: 12, padding: '8px 12px', border: 'none', background: 'rgba(0,0,0,0.03)' }}
                 />
               </div>
             ))}
@@ -1077,9 +1079,9 @@ export default function Dashboard() {
 
             <div style={{ marginBottom: 16 }}>
               <p style={{ fontSize: 10, letterSpacing: '0.2em', color: ash, marginBottom: 8, fontWeight: 700 }}>ADVANCED BY (PAYER)</p>
-              <select 
-                value={payerName} 
-                onChange={e => setPayerName(e.target.value)} 
+              <select
+                value={payerName}
+                onChange={e => setPayerName(e.target.value)}
                 style={{ ...capsule, color: payerName ? sumi : ash, fontWeight: 500 }}
               >
                 <option value="">Select who paid (None)</option>
@@ -1153,16 +1155,16 @@ export default function Dashboard() {
 
   // ─── LIST ────────────────────────────────────────────────────────────────
   // ─── LIST ────────────────────────────────────────────────────────────────
- 
+
 
   const renderButtons = () => {
     return (
       <>
         {/* New Button */}
-        <MagneticButton onClick={() => setView('create')} aria-label="New request" style={{ 
-          ...pill, 
-          background: sumi, color: washi, border: 'none', 
-          height: 34, minWidth: 34, width: 82, padding: '0 16px', borderRadius: 100, 
+        <MagneticButton onClick={() => setView('create')} aria-label="New request" style={{
+          ...pill,
+          background: sumi, color: washi, border: 'none',
+          height: 34, minWidth: 34, width: 82, padding: '0 16px', borderRadius: 100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height, padding'
         }} className="gsap-btn">
@@ -1171,10 +1173,10 @@ export default function Dashboard() {
         </MagneticButton>
 
         {/* Contacts Button */}
-        <MagneticButton onClick={() => setView('contacts')} aria-label="Contacts" style={{ 
-          ...pill, 
+        <MagneticButton onClick={() => setView('contacts')} aria-label="Contacts" style={{
+          ...pill,
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
-          height: 34, minWidth: 34, width: 98, padding: '0 14px', borderRadius: 100, 
+          height: 34, minWidth: 34, width: 98, padding: '0 14px', borderRadius: 100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
         }} className="gsap-btn">
@@ -1183,10 +1185,10 @@ export default function Dashboard() {
         </MagneticButton>
 
         {/* FaceID Button */}
-        <MagneticButton onClick={handleRegisterPasskey} aria-label="FaceID" style={{ 
-          ...pill, 
+        <MagneticButton onClick={handleRegisterPasskey} aria-label="FaceID" style={{
+          ...pill,
           background: 'none', border: `1.5px solid ${fog}`, color: sumi,
-          height: 34, minWidth: 34, width: 88, padding: '0 14px', borderRadius: 100, 
+          height: 34, minWidth: 34, width: 88, padding: '0 14px', borderRadius: 100,
           display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           willChange: 'width, height'
         }} className="gsap-btn">
@@ -1202,11 +1204,11 @@ export default function Dashboard() {
       <CustomCursor />
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
       <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="afterInteractive" onLoad={() => setGsapLoaded(true)} />
-      
+
       {/* Sticky Header Container */}
-      <div className="gsap-header-container" style={{ 
-        position: 'fixed', 
-        top: 0, left: 0, right: 0, 
+      <div className="gsap-header-container" style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
         zIndex: 100,
         height: 'auto',
         background: 'rgba(242, 237, 228, 0.9)',
@@ -1219,9 +1221,9 @@ export default function Dashboard() {
         willChange: 'height, background-color, backdrop-filter'
       }}>
         <div className="layout-responsive-container" style={{ width: '100%', padding: '0 20px', position: 'relative' }}>
-          
+
           {/* Combined Layout Container */}
-          <div style={{ 
+          <div style={{
             width: '100%',
             position: 'relative',
             display: 'flex',
@@ -1232,36 +1234,36 @@ export default function Dashboard() {
             gap: 20
           }}>
             {/* Logo Group */}
-            <div className="gsap-logo-group" style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
+            <div className="gsap-logo-group" style={{
+              display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               gap: 2,
               textAlign: 'center',
-              willChange: 'transform, top, left', 
+              willChange: 'transform, top, left',
             }}>
-              <p className="gsap-logo-text" style={{ 
-                fontFamily: 'var(--font-zen,serif)', 
+              <p className="gsap-logo-text" style={{
+                fontFamily: 'var(--font-zen,serif)',
                 fontSize: 28,
                 letterSpacing: '0.42em',
                 marginRight: '-0.42em',
                 paddingLeft: '0.42em',
-                color: sumi, 
-                fontWeight: 700, 
+                color: sumi,
+                fontWeight: 700,
                 marginTop: 0,
                 marginBottom: 0,
                 marginLeft: 0,
                 lineHeight: 1,
                 willChange: 'font-size, padding-left'
               }}>COLLECT</p>
-              
-              <p className="gsap-admin-text" style={{ 
-                fontFamily: 'var(--font-zen,serif)', 
+
+              <p className="gsap-admin-text" style={{
+                fontFamily: 'var(--font-zen,serif)',
                 fontSize: 11,
                 letterSpacing: '0.89em',
                 marginRight: '-0.89em',
                 paddingLeft: '0.89em',
-                color: ash, 
+                color: ash,
                 fontWeight: 500,
                 opacity: 0.9,
                 marginTop: 0,
@@ -1272,8 +1274,8 @@ export default function Dashboard() {
             </div>
 
             {/* Button Group */}
-            <div className="gsap-btn-group" style={{ 
-              display: 'flex', 
+            <div className="gsap-btn-group" style={{
+              display: 'flex',
               gap: 8,
               alignItems: 'center',
               willChange: 'transform, top, right, gap'
@@ -1286,7 +1288,7 @@ export default function Dashboard() {
       </div>
 
       <div className="layout-responsive-container gsap-list-container" style={{ width: '100%', margin: '0 auto', padding: '0 20px', paddingTop: 142 }}>
-        
+
         {pendingRequests.length > 0 && (
           <div className="gsap-fade-in" style={{ padding: '20px', border: `1.5px solid ${fog}`, borderRadius: 12, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.3)', height: 72 }}>
             <div>
@@ -1316,7 +1318,7 @@ export default function Dashboard() {
         )}
 
         {!loading && requests.length === 0 && <div style={{ textAlign: 'center', paddingTop: 64 }}><p style={{ fontSize: 13, color: fog, letterSpacing: '0.1em' }}>No records found.</p></div>}
-        
+
         {/* Generous bottom spacer mathematically guarantees enough scroll real-estate (80px minimum needed) to trigger the completed collapsed header state, even on near-empty lists */}
         <div style={{ height: '40vh' }} />
       </div>

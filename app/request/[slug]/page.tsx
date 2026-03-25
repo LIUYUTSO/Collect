@@ -5,16 +5,16 @@ import { formatCAD } from '@/lib/utils'
 import RequestClient from './RequestClient'
 import ClientTransition from '@/components/ClientTransition'
 
-export async function generateMetadata({ 
-  params, 
-  searchParams 
-}: { 
+export async function generateMetadata({
+  params,
+  searchParams
+}: {
   params: Promise<{ slug: string }>,
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }): Promise<Metadata> {
   const { slug } = await params;
   const { p: activePayeeName } = await searchParams;
-  
+
   const { rows } = await db.sql`
     SELECT * FROM requests WHERE slug = ${slug} LIMIT 1
   `
@@ -42,10 +42,10 @@ export async function generateMetadata({
         AND payer_name = ${request.payer_name}
         AND (
           from_name = ANY(${participantList as any})
-          OR payees @> ANY(${participantList.map(ns => JSON.stringify([{name: ns}])) as any})
+          OR payees @> ANY(${participantList.map(ns => JSON.stringify([{ name: ns }])) as any})
         )
       `;
-      
+
       const involved = [request, ...relatedRows];
       let unpaidSum = 0;
       involved.forEach(r => {
@@ -59,19 +59,19 @@ export async function generateMetadata({
         }
       });
       displayAmount = unpaidSum;
-      displayTitle = activePayeeName as string; 
+      displayTitle = activePayeeName as string;
     } catch (e) {
       console.error('Metadata calc error:', e);
     }
   }
 
   const formattedAmount = formatCAD(displayAmount)
-  const metaTitle = activePayeeName 
+  const metaTitle = activePayeeName
     ? `Collect | ${activePayeeName} | ${formattedAmount}`
     : `Collect | ${request.title} | ${formattedAmount}`;
-    
+
   const metaDesc = activePayeeName ? `💳 Invoice to ${activePayeeName}` : `Invoice for ${request.title}`;
-  
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
     ? new URL(process.env.NEXT_PUBLIC_BASE_URL)
     : new URL('https://collect.adamliu.uk');
@@ -90,7 +90,7 @@ export async function generateMetadata({
 
 export default async function RequestPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  
+
   // 1. Fetch the primary request
   const { rows } = await db.sql`
     SELECT * FROM requests WHERE slug = ${slug} LIMIT 1
@@ -120,7 +120,7 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
   let consolidatedRequests: any[] = [];
   if (participants.size > 0) {
     const participantList = Array.from(participants);
-    
+
     // We search for requests where the participant is from_name OR in payees list
     // This query is optimized to hit the indexes we created
     const { rows: relatedRows } = await db.sql`
@@ -129,7 +129,7 @@ export default async function RequestPage({ params }: { params: Promise<{ slug: 
       AND payer_name = ${request.payer_name}
       AND (
         from_name = ANY(${participantList as any})
-        OR payees @> ANY(${participantList.map(name => JSON.stringify([{name}])) as any})
+        OR payees @> ANY(${participantList.map(name => JSON.stringify([{ name }])) as any})
       )
     `;
     consolidatedRequests = relatedRows;
